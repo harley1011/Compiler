@@ -1,0 +1,3 @@
+char scan() {
+    return 'c';
+}
