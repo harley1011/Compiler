@@ -1,6 +1,6 @@
-//
-// Created by Harley Mcphee on 2017-01-18.
-//
+#include <string>
+
+using namespace std;
 
 #ifndef UNTITLED_SCANNER_H_H
 #define UNTITLED_SCANNER_H_H
@@ -9,3 +9,6 @@
 
 
 char scan();
+
+string nextToken();
+
