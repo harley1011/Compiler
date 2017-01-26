@@ -15,21 +15,27 @@ public:
     bool is_final_state_;
     map<char, int> next_states_;
 
-    State(string token, bool backup, bool is_final_state, map<char, int> next_states);
-    State(string token, bool backup, bool is_final_state);
+    int get_next_state(char lookup);
+
+    State(string token, bool backup, bool is_final_state, map<char, int> next_states) {
+        token_ = token;
+        backup_ = backup;
+        is_final_state_ = is_final_state;
+        next_states_ = next_states;
+    }
+
+    State(string token, bool backup, bool is_final_state) {
+        token_ = token;
+        backup_ = backup;
+        is_final_state_ = is_final_state;
+    }
+
+    State() {
+        backup_ = false;
+        is_final_state_ = false;
+    }
 
 };
 
-State::State(string token, bool backup, bool is_final_state, map<char, int> next_states) {
-    token_ = token;
-    backup_ = backup;
-    is_final_state_ = is_final_state;
-    next_states_ = next_states;
-}
 
-State::State(string token, bool backup, bool is_final_state) {
-    token_ = token;
-    backup_ = backup;
-    is_final_state_ = is_final_state;
-}
 #endif //UNTITLED_STATE_H

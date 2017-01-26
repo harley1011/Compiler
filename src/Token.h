@@ -6,9 +6,15 @@
 
 class token {
 public:
-    string tokenIdentifier;
-    string lexeme;
-    int location;
+    string token_identifier_;
+    string lexeme_;
+    int location_;
+
+    token(string token_identifier, string lexeme, int location) {
+        token_identifier_ = token_identifier;
+        lexeme_ = lexeme;
+        location_ = location;
+    }
 
 };
 
