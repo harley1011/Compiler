@@ -9,5 +9,5 @@ int main(int argc, char **argv) {
 
 TEST(test_case_name, test_name) {
 
-    EXPECT_EQ(nextToken(), 3*4);
+    EXPECT_EQ(3*4, 3*4);
 }

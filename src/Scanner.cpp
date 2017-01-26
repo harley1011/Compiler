@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <list>
+#include <map>
 #include "State.h"
 #include "Token.h"
 #include <fstream>
@@ -8,10 +9,11 @@
 
 using namespace std;
 
-State initialState;
+State initial_state("", false, false);
+
 ifstream fs;
 
-
+map<int, State> table;
 
 list<token> generateTokens(char* path) {
     fs.open(path);
@@ -22,12 +24,12 @@ list<token> generateTokens(char* path) {
 }
 
 string nextToken() {
-    State currentState;
+    State currentState = initial_state;
 
-    while(currentState.token.length() == 0) {
+    while(currentState.token_.length() == 0) {
 
     }
-    return currentState.token;
+    return currentState.token_;
 
 
 }

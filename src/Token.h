@@ -4,11 +4,10 @@
 #ifndef COMPILER_TOKEN_H
 #define COMPILER_TOKEN_H
 
-template <class T>
 class token {
 public:
     string tokenIdentifier;
-    T lexeme;
+    string lexeme;
     int location;
 
 };

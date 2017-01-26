@@ -10,12 +10,26 @@ using namespace std;
 
 class State {
 public:
-    string token;
-    bool backup;
-    bool isFinalState;
-    map<char, int> nextStates;
+    string token_;
+    bool backup_;
+    bool is_final_state_;
+    map<char, int> next_states_;
+
+    State(string token, bool backup, bool is_final_state, map<char, int> next_states);
+    State(string token, bool backup, bool is_final_state);
 
 };
 
+State::State(string token, bool backup, bool is_final_state, map<char, int> next_states) {
+    token_ = token;
+    backup_ = backup;
+    is_final_state_ = is_final_state;
+    next_states_ = next_states;
+}
 
+State::State(string token, bool backup, bool is_final_state) {
+    token_ = token;
+    backup_ = backup;
+    is_final_state_ = is_final_state;
+}
 #endif //UNTITLED_STATE_H
