@@ -21,7 +21,7 @@ public:
     State table[45];
     bool use_backup_;
     char backup_buffer_;
-
+    static const string reserved_words[];
 
     char scan();
     token next_token();
@@ -29,4 +29,7 @@ public:
     vector<token> generate_tokens(string path, bool is_file);
     Scanner();
 
+private:
+    bool check_if_reserved_word(string word);
 };
+
