@@ -6,6 +6,8 @@
 #include "Token.h"
 #include <fstream>
 #include "Scanner.h"
+#include "IntegerToken.h"
+#include "FloatToken.h"
 #include <algorithm>
 
 using namespace std;
@@ -202,7 +204,7 @@ Scanner::Scanner() {
 
 }
 
-vector<token> Scanner::generate_tokens(string path, bool is_file) {
+vector<Token*> Scanner::generate_tokens(string path, bool is_file) {
     is_file_ = is_file;
     if (is_file)
         fs_.open(path.c_str());
@@ -211,11 +213,11 @@ vector<token> Scanner::generate_tokens(string path, bool is_file) {
         program_string_ = path;
     }
 
-    vector<token> tokens;
+    vector<Token*> tokens;
 
     while(true) {
-        token result = next_token();
-        if (result.token_identifier_ == "END")
+        Token* result = next_token();
+        if (result->token_identifier_ == "END")
             break;
         tokens.push_back(result);
     }
@@ -243,13 +245,21 @@ char Scanner::next_char() {
 
 }
 
-token Scanner::next_token() {
+Token* Scanner::next_token() {
     State current_state = initial_state;
     string lexeme = "";
     while(current_state.token_.length() == 0) {
         char lookup = next_char();
 
         int next_state = current_state.get_next_state(lookup);
+
+        if (next_state == -1) {
+            // If we reach an invalid character than everything before the current character and previous Token will be considered apart of the error
+            use_backup_ = true;
+            program_count_--;
+            return new Token(current_state.token_, lexeme, program_count_ - lexeme.size());
+
+        }
         current_state = table[next_state];
 
         if (current_state.is_final_state_) {
@@ -260,20 +270,25 @@ token Scanner::next_token() {
             else {
                 lexeme += lookup;
             }
+            int location = program_count_ - lexeme.size();
 
             if(check_if_reserved_word(lexeme))
             {
                 string copy = lexeme;
                 transform(copy.begin(), copy.end(),copy.begin(), ::tolower);
-                return token(lexeme, lexeme, program_count_ - lexeme.size());
+                return new Token(lexeme, lexeme, location);
             }
+            else if (current_state.token_ == "INUM")
+                return new IntegerToken(lexeme, location);
+            else if (current_state.token_ == "FNUM")
+                return new FloatToken(lexeme, location);
 
-            return token(current_state.token_, lexeme, program_count_ - lexeme.size());
+            return new Token(current_state.token_, lexeme, location);
         }
 
         lexeme += lookup;
     }
-    return token(current_state.token_, lexeme, program_count_);
+    return new Token(current_state.token_, lexeme, program_count_);
 
 }
 

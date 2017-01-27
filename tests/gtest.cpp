@@ -1,5 +1,7 @@
 #include "gtest/gtest.h"
 #include "../src/Scanner.h"
+#include "../src/IntegerToken.h"
+#include "../src/FloatToken.h"
 #include <vector>
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
@@ -18,11 +20,11 @@ TEST(test_case_keywords, keyword_test) {
         string res = scanner.reserved_words[i];
         string copy_res = res;
         transform(copy_res.begin(), copy_res.end(),copy_res.begin(), ::tolower);
-        vector<token> result = scanner.generate_tokens(res, false);
+        vector<Token*> result = scanner.generate_tokens(res, false);
         EXPECT_EQ(result.size(), 1);
-        EXPECT_EQ(result[0].token_identifier_, copy_res);
-        EXPECT_EQ(result[0].lexeme_, res);
-        EXPECT_EQ(result[0].location_, 0);
+        EXPECT_EQ(result[0]->token_identifier_, copy_res);
+        EXPECT_EQ(result[0]->lexeme_, res);
+        EXPECT_EQ(result[0]->location_, 0);
     }
 
 }
@@ -31,94 +33,107 @@ TEST(test_case_keywords, keyword_test) {
 
 TEST(test_case_letter_identifier, identifier_test) {
     Scanner scanner;
-    vector<token> result = scanner.generate_tokens("ide", false);
+    vector<Token*> result = scanner.generate_tokens("ide", false);
     EXPECT_EQ(result.size(), 1);
-    EXPECT_EQ(result[0].token_identifier_, "ID");
-    EXPECT_EQ(result[0].lexeme_, "ide");
-    EXPECT_EQ(result[0].location_, 0);
+    EXPECT_EQ(result[0]->token_identifier_, "ID");
+    EXPECT_EQ(result[0]->lexeme_, "ide");
+    EXPECT_EQ(result[0]->location_, 0);
 }
 
 
 TEST(test_case_alphanum_identifier, identifier_test) {
     Scanner scanner;
-    vector<token> result = scanner.generate_tokens("ide123", false);
+    vector<Token*> result = scanner.generate_tokens("ide123", false);
     EXPECT_EQ(result.size(), 1);
-    EXPECT_EQ(result[0].token_identifier_, "ID");
-    EXPECT_EQ(result[0].lexeme_, "ide123");
-    EXPECT_EQ(result[0].location_, 0);
+    EXPECT_EQ(result[0]->token_identifier_, "ID");
+    EXPECT_EQ(result[0]->lexeme_, "ide123");
+    EXPECT_EQ(result[0]->location_, 0);
 }
 
 
 TEST(test_case_underscore_identifier, identifier_test) {
     Scanner scanner;
-    vector<token> result = scanner.generate_tokens("ide_123_aaa_1_a", false);
+    vector<Token*> result = scanner.generate_tokens("ide_123_aaa_1_a", false);
     EXPECT_EQ(result.size(), 1);
-    EXPECT_EQ(result[0].token_identifier_, "ID");
-    EXPECT_EQ(result[0].lexeme_, "ide_123_aaa_1_a");
-    EXPECT_EQ(result[0].location_, 0);
+    EXPECT_EQ(result[0]->token_identifier_, "ID");
+    EXPECT_EQ(result[0]->lexeme_, "ide_123_aaa_1_a");
+    EXPECT_EQ(result[0]->location_, 0);
 }
 
 // INTEGER TESTS
 
 TEST(test_case_integer, integer_test) {
     Scanner scanner;
-    vector<token> result = scanner.generate_tokens("1", false);
+    vector<Token*> result = scanner.generate_tokens("1", false);
     EXPECT_EQ(result.size(), 1);
-    EXPECT_EQ(result[0].token_identifier_, "INUM");
-    EXPECT_EQ(result[0].lexeme_, "1");
-    EXPECT_EQ(result[0].location_, 0);
+    EXPECT_EQ(result[0]->token_identifier_, "INUM");
+    EXPECT_EQ(result[0]->lexeme_, "1");
+    EXPECT_EQ(result[0]->location_, 0);
+    IntegerToken int_token = static_cast<IntegerToken&>(*result[0]);
+    EXPECT_EQ(int_token.converted_lexeme_, 1);
 }
 
 TEST(test_case_zero, integer_test) {
     Scanner scanner;
-    vector<token> result = scanner.generate_tokens("0", false);
+    vector<Token*> result = scanner.generate_tokens("0", false);
     EXPECT_EQ(result.size(), 1);
-    EXPECT_EQ(result[0].token_identifier_, "INUM");
-    EXPECT_EQ(result[0].lexeme_, "0");
-    EXPECT_EQ(result[0].location_, 0);
+    EXPECT_EQ(result[0]->token_identifier_, "INUM");
+    EXPECT_EQ(result[0]->lexeme_, "0");
+    EXPECT_EQ(result[0]->location_, 0);
+    IntegerToken int_token = static_cast<IntegerToken&>(*result[0]);
+    EXPECT_EQ(int_token.converted_lexeme_, 0);
 }
 
 TEST(test_case_multi_integer, integer_test) {
     Scanner scanner;
-    vector<token> result = scanner.generate_tokens("1078000", false);
+    vector<Token*> result = scanner.generate_tokens("1078000", false);
     EXPECT_EQ(result.size(), 1);
-    EXPECT_EQ(result[0].token_identifier_, "INUM");
-    EXPECT_EQ(result[0].lexeme_, "1078000");
-    EXPECT_EQ(result[0].location_, 0);
+    EXPECT_EQ(result[0]->token_identifier_, "INUM");
+    EXPECT_EQ(result[0]->lexeme_, "1078000");
+    EXPECT_EQ(result[0]->location_, 0);
+    IntegerToken int_token = static_cast<IntegerToken&>(*result[0]);
+    EXPECT_EQ(int_token.converted_lexeme_, 1078000);
 }
+
 
 
 // FLOAT TESTS
 
 TEST(test_case_float_zero, float_test) {
     Scanner scanner;
-    vector<token> result = scanner.generate_tokens("0.0", false);
+    vector<Token*> result = scanner.generate_tokens("0.0", false);
     EXPECT_EQ(result.size(), 1);
-    EXPECT_EQ(result[0].token_identifier_, "FNUM");
-    EXPECT_EQ(result[0].lexeme_, "0.0");
-    EXPECT_EQ(result[0].location_, 0);
+    EXPECT_EQ(result[0]->token_identifier_, "FNUM");
+    EXPECT_EQ(result[0]->lexeme_, "0.0");
+    EXPECT_EQ(result[0]->location_, 0);
+    FloatToken int_token = static_cast<FloatToken&>(*result[0]);
+    EXPECT_EQ(int_token.converted_lexeme_, (float)0.0);
 }
 
 
 
 TEST(test_case_float_only_fraction, float_test) {
     Scanner scanner;
-    vector<token> result = scanner.generate_tokens("0.11101", false);
+    vector<Token*> result = scanner.generate_tokens("0.11101", false);
     EXPECT_EQ(result.size(), 1);
-    EXPECT_EQ(result[0].token_identifier_, "FNUM");
-    EXPECT_EQ(result[0].lexeme_, "0.11101");
-    EXPECT_EQ(result[0].location_, 0);
+    EXPECT_EQ(result[0]->token_identifier_, "FNUM");
+    EXPECT_EQ(result[0]->lexeme_, "0.11101");
+    EXPECT_EQ(result[0]->location_, 0);
+    FloatToken int_token = static_cast<FloatToken&>(*result[0]);
+    EXPECT_EQ(int_token.converted_lexeme_, (float)0.11101);
 }
 
 
 
 TEST(test_case_float, float_test) {
     Scanner scanner;
-    vector<token> result = scanner.generate_tokens("100000.11101", false);
+    vector<Token*> result = scanner.generate_tokens("100000.11101", false);
     EXPECT_EQ(result.size(), 1);
-    EXPECT_EQ(result[0].token_identifier_, "FNUM");
-    EXPECT_EQ(result[0].lexeme_, "100000.11101");
-    EXPECT_EQ(result[0].location_, 0);
+    EXPECT_EQ(result[0]->token_identifier_, "FNUM");
+    EXPECT_EQ(result[0]->lexeme_, "100000.11101");
+    EXPECT_EQ(result[0]->location_, 0);
+    FloatToken int_token = static_cast<FloatToken&>(*result[0]);
+    EXPECT_EQ(int_token.converted_lexeme_, (float)100000.11101);
 }
 
 // (, ), [, ], {, } TESTS
@@ -128,11 +143,11 @@ TEST(test_case_brackets, brackets_test) {
     for (int i = 0; i < scanner.brackets_size; i++) {
         pair<char, string> c = scanner.brackets[i];
         string convert_string = string (1, c.first);
-        vector<token> result = scanner.generate_tokens(string (1, c.first), false);
+        vector<Token*> result = scanner.generate_tokens(string (1, c.first), false);
         EXPECT_EQ(result.size(), 1);
-        EXPECT_EQ(result[0].token_identifier_, c.second);
-        EXPECT_EQ(result[0].lexeme_, string (1, c.first));
-        EXPECT_EQ(result[0].location_, 0);
+        EXPECT_EQ(result[0]->token_identifier_, c.second);
+        EXPECT_EQ(result[0]->lexeme_, string (1, c.first));
+        EXPECT_EQ(result[0]->location_, 0);
     }
 }
 
@@ -141,127 +156,127 @@ TEST(test_case_brackets, brackets_test) {
 
 TEST(test_case_single_line_cmt, comment_test) {
     Scanner scanner;
-    vector<token> result = scanner.generate_tokens("//Test cmt fdhhgfd rdghfd hgfd \n", false);
+    vector<Token*> result = scanner.generate_tokens("//Test cmt fdhhgfd rdghfd hgfd \n", false);
     EXPECT_EQ(result.size(), 1);
-    EXPECT_EQ(result[0].token_identifier_, "CMT");
-    EXPECT_EQ(result[0].lexeme_, "//Test cmt fdhhgfd rdghfd hgfd \n");
-    EXPECT_EQ(result[0].location_, 0);
+    EXPECT_EQ(result[0]->token_identifier_, "CMT");
+    EXPECT_EQ(result[0]->lexeme_, "//Test cmt fdhhgfd rdghfd hgfd \n");
+    EXPECT_EQ(result[0]->location_, 0);
 }
 
 TEST(test_case_single_multiline_cmt, comment_test) {
     Scanner scanner;
-    vector<token> result = scanner.generate_tokens("/*Test cmt fdhhgfd rdghfd hgfd \n \n jkghkjhgkjhg \n \n 78968796 */", false);
+    vector<Token*> result = scanner.generate_tokens("/*Test cmt fdhhgfd rdghfd hgfd \n \n jkghkjhgkjhg \n \n 78968796 */", false);
     EXPECT_EQ(result.size(), 1);
-    EXPECT_EQ(result[0].token_identifier_, "CMT");
-    EXPECT_EQ(result[0].lexeme_, "/*Test cmt fdhhgfd rdghfd hgfd \n \n jkghkjhgkjhg \n \n 78968796 */");
-    EXPECT_EQ(result[0].location_, 0);
+    EXPECT_EQ(result[0]->token_identifier_, "CMT");
+    EXPECT_EQ(result[0]->lexeme_, "/*Test cmt fdhhgfd rdghfd hgfd \n \n jkghkjhgkjhg \n \n 78968796 */");
+    EXPECT_EQ(result[0]->location_, 0);
 }
 
 // TEST DASH
 TEST(test_case_dash, dash_test) {
     Scanner scanner;
-    vector<token> result = scanner.generate_tokens("/", false);
+    vector<Token*> result = scanner.generate_tokens("/", false);
     EXPECT_EQ(result.size(), 1);
-    EXPECT_EQ(result[0].token_identifier_, "DASH");
-    EXPECT_EQ(result[0].lexeme_, "/");
-    EXPECT_EQ(result[0].location_, 0);
+    EXPECT_EQ(result[0]->token_identifier_, "DASH");
+    EXPECT_EQ(result[0]->lexeme_, "/");
+    EXPECT_EQ(result[0]->location_, 0);
 }
 
 // TEST OPERATORS
 
 TEST(test_case_equal, operator_test) {
     Scanner scanner;
-    vector<token> result = scanner.generate_tokens("=", false);
+    vector<Token*> result = scanner.generate_tokens("=", false);
     EXPECT_EQ(result.size(), 1);
-    EXPECT_EQ(result[0].token_identifier_, "EQUAL");
-    EXPECT_EQ(result[0].lexeme_, "=");
-    EXPECT_EQ(result[0].location_, 0);
+    EXPECT_EQ(result[0]->token_identifier_, "EQUAL");
+    EXPECT_EQ(result[0]->lexeme_, "=");
+    EXPECT_EQ(result[0]->location_, 0);
 }
 
 
 TEST(test_case_equiv, operator_test) {
     Scanner scanner;
-    vector<token> result = scanner.generate_tokens("==", false);
+    vector<Token*> result = scanner.generate_tokens("==", false);
     EXPECT_EQ(result.size(), 1);
-    EXPECT_EQ(result[0].token_identifier_, "EQUIV");
-    EXPECT_EQ(result[0].lexeme_, "==");
-    EXPECT_EQ(result[0].location_, 0);
+    EXPECT_EQ(result[0]->token_identifier_, "EQUIV");
+    EXPECT_EQ(result[0]->lexeme_, "==");
+    EXPECT_EQ(result[0]->location_, 0);
 }
 
 
 
 TEST(test_case_lt, operator_test) {
     Scanner scanner;
-    vector<token> result = scanner.generate_tokens("<", false);
+    vector<Token*> result = scanner.generate_tokens("<", false);
     EXPECT_EQ(result.size(), 1);
-    EXPECT_EQ(result[0].token_identifier_, "LT");
-    EXPECT_EQ(result[0].lexeme_, "<");
-    EXPECT_EQ(result[0].location_, 0);
+    EXPECT_EQ(result[0]->token_identifier_, "LT");
+    EXPECT_EQ(result[0]->lexeme_, "<");
+    EXPECT_EQ(result[0]->location_, 0);
 }
 
 
 TEST(test_case_noteq, operator_test) {
       Scanner scanner;
-    vector<token> result = scanner.generate_tokens("<>", false);
+    vector<Token*> result = scanner.generate_tokens("<>", false);
     EXPECT_EQ(result.size(), 1);
-    EXPECT_EQ(result[0].token_identifier_, "NOTEQ");
-    EXPECT_EQ(result[0].lexeme_, "<>");
-    EXPECT_EQ(result[0].location_, 0);
+    EXPECT_EQ(result[0]->token_identifier_, "NOTEQ");
+    EXPECT_EQ(result[0]->lexeme_, "<>");
+    EXPECT_EQ(result[0]->location_, 0);
 }
 
 
 TEST(test_case_lteq, operator_test) {
     Scanner scanner;
-    vector<token> result = scanner.generate_tokens("<=", false);
+    vector<Token*> result = scanner.generate_tokens("<=", false);
     EXPECT_EQ(result.size(), 1);
-    EXPECT_EQ(result[0].token_identifier_, "LTEQ");
-    EXPECT_EQ(result[0].lexeme_, "<=");
-    EXPECT_EQ(result[0].location_, 0);
+    EXPECT_EQ(result[0]->token_identifier_, "LTEQ");
+    EXPECT_EQ(result[0]->lexeme_, "<=");
+    EXPECT_EQ(result[0]->location_, 0);
 }
 
 TEST(test_case_gt, operator_test) {
     Scanner scanner;
-    vector<token> result = scanner.generate_tokens(">", false);
+    vector<Token*> result = scanner.generate_tokens(">", false);
     EXPECT_EQ(result.size(), 1);
-    EXPECT_EQ(result[0].token_identifier_, "GT");
-    EXPECT_EQ(result[0].lexeme_, ">");
-    EXPECT_EQ(result[0].location_, 0);
+    EXPECT_EQ(result[0]->token_identifier_, "GT");
+    EXPECT_EQ(result[0]->lexeme_, ">");
+    EXPECT_EQ(result[0]->location_, 0);
 }
 
 TEST(test_case_gteq, operator_test) {
     Scanner scanner;
-    vector<token> result = scanner.generate_tokens(">=", false);
+    vector<Token*> result = scanner.generate_tokens(">=", false);
     EXPECT_EQ(result.size(), 1);
-    EXPECT_EQ(result[0].token_identifier_, "GTEQ");
-    EXPECT_EQ(result[0].lexeme_, ">=");
-    EXPECT_EQ(result[0].location_, 0);
+    EXPECT_EQ(result[0]->token_identifier_, "GTEQ");
+    EXPECT_EQ(result[0]->lexeme_, ">=");
+    EXPECT_EQ(result[0]->location_, 0);
 }
 
 TEST(test_case_add, operator_test) {
     Scanner scanner;
-    vector<token> result = scanner.generate_tokens("+", false);
+    vector<Token*> result = scanner.generate_tokens("+", false);
     EXPECT_EQ(result.size(), 1);
-    EXPECT_EQ(result[0].token_identifier_, "ADD");
-    EXPECT_EQ(result[0].lexeme_, "+");
-    EXPECT_EQ(result[0].location_, 0);
+    EXPECT_EQ(result[0]->token_identifier_, "ADD");
+    EXPECT_EQ(result[0]->lexeme_, "+");
+    EXPECT_EQ(result[0]->location_, 0);
 }
 
 TEST(test_case_sub, operator_test) {
     Scanner scanner;
-    vector<token> result = scanner.generate_tokens("-", false);
+    vector<Token*> result = scanner.generate_tokens("-", false);
     EXPECT_EQ(result.size(), 1);
-    EXPECT_EQ(result[0].token_identifier_, "SUB");
-    EXPECT_EQ(result[0].lexeme_, "-");
-    EXPECT_EQ(result[0].location_, 0);
+    EXPECT_EQ(result[0]->token_identifier_, "SUB");
+    EXPECT_EQ(result[0]->lexeme_, "-");
+    EXPECT_EQ(result[0]->location_, 0);
 }
 
 TEST(test_case_mult, operator_test) {
     Scanner scanner;
-    vector<token> result = scanner.generate_tokens("*", false);
+    vector<Token*> result = scanner.generate_tokens("*", false);
     EXPECT_EQ(result.size(), 1);
-    EXPECT_EQ(result[0].token_identifier_, "MULT");
-    EXPECT_EQ(result[0].lexeme_, "*");
-    EXPECT_EQ(result[0].location_, 0);
+    EXPECT_EQ(result[0]->token_identifier_, "MULT");
+    EXPECT_EQ(result[0]->lexeme_, "*");
+    EXPECT_EQ(result[0]->location_, 0);
 }
 
 
@@ -269,33 +284,57 @@ TEST(test_case_mult, operator_test) {
 
 TEST(test_case_semicolon, punctuation_test) {
     Scanner scanner;
-    vector<token> result = scanner.generate_tokens(";", false);
+    vector<Token*> result = scanner.generate_tokens(";", false);
     EXPECT_EQ(result.size(), 1);
-    EXPECT_EQ(result[0].token_identifier_, "DELI");
-    EXPECT_EQ(result[0].lexeme_, ";");
-    EXPECT_EQ(result[0].location_, 0);
+    EXPECT_EQ(result[0]->token_identifier_, "DELI");
+    EXPECT_EQ(result[0]->lexeme_, ";");
+    EXPECT_EQ(result[0]->location_, 0);
 }
 
 
 TEST(test_case_comma, punctuation_test) {
     Scanner scanner;
-    vector<token> result = scanner.generate_tokens(",", false);
+    vector<Token*> result = scanner.generate_tokens(",", false);
     EXPECT_EQ(result.size(), 1);
-    EXPECT_EQ(result[0].token_identifier_, "COM");
-    EXPECT_EQ(result[0].lexeme_, ",");
-    EXPECT_EQ(result[0].location_, 0);
+    EXPECT_EQ(result[0]->token_identifier_, "COM");
+    EXPECT_EQ(result[0]->lexeme_, ",");
+    EXPECT_EQ(result[0]->location_, 0);
 }
 
 TEST(test_case_dot, punctuation_test) {
     Scanner scanner;
-    vector<token> result = scanner.generate_tokens(".", false);
+    vector<Token*> result = scanner.generate_tokens(".", false);
     EXPECT_EQ(result.size(), 1);
-    EXPECT_EQ(result[0].token_identifier_, "DOT");
-    EXPECT_EQ(result[0].lexeme_, ".");
-    EXPECT_EQ(result[0].location_, 0);
+    EXPECT_EQ(result[0]->token_identifier_, "DOT");
+    EXPECT_EQ(result[0]->lexeme_, ".");
+    EXPECT_EQ(result[0]->location_, 0);
 }
 
 
+// TEST INT AND FLOAT CONVERTERS
+TEST(test_case_string_int_convert, conversion_test) {
+    IntegerToken token("23929083", 0);
+    EXPECT_EQ(token.converted_lexeme_, 23929083);
+
+}
+
+TEST(test_case_string_neg_int_convert, conversion_test) {
+    IntegerToken token("-23929083", 0);
+    EXPECT_EQ(token.converted_lexeme_, -23929083);
+
+}
+
+TEST(test_case_string_float_convert, conversion_test) {
+    FloatToken token("239.2035", 0);
+    EXPECT_EQ(token.converted_lexeme_, (float)239.2035);
+
+}
+
+TEST(test_case_string_neg_float_convert, conversion_test) {
+    FloatToken token("-239.2035", 0);
+    EXPECT_EQ(token.converted_lexeme_, (float)-239.2035);
+
+}
 
 
 

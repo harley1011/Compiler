@@ -3,6 +3,8 @@
 #include <list>
 #include <iostream>
 #include <fstream>
+#include <vector>
+
 using namespace std;
 
 #ifndef UNTITLED_SCANNER_H_H
@@ -25,9 +27,9 @@ public:
     static const int brackets_size = 6;
     pair<char, string> brackets[brackets_size];
 
-    token next_token();
+    Token* next_token();
     char next_char();
-    vector<token> generate_tokens(string path, bool is_file);
+    vector<Token*> generate_tokens(string path, bool is_file);
     Scanner();
 
 private:
