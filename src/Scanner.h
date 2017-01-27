@@ -22,8 +22,9 @@ public:
     bool use_backup_;
     char backup_buffer_;
     static const string reserved_words[];
+    static const int brackets_size = 6;
+    pair<char, string> brackets[brackets_size];
 
-    char scan();
     token next_token();
     char next_char();
     vector<token> generate_tokens(string path, bool is_file);

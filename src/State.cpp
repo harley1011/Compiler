@@ -20,7 +20,8 @@ int State::get_next_state(char lookup) {
                 return next_states_['a'];
             else if (next_states_.count('n') && int(lookup) > 0) // Not zero
                 return next_states_['n'];
-        } else if (next_states_.count('t')) {
+        }
+        if (next_states_.count('t')) {
             return next_states_['t'];
         }
     }
