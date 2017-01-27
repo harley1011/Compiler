@@ -25,4 +25,5 @@ int State::get_next_state(char lookup) {
          if (any_match_state != -1)
             return any_match_state;
     }
+    return -1;
 }

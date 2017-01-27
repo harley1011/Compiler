@@ -186,6 +186,15 @@ Scanner::Scanner() {
     //State 37
     table[37] = State("MULT", false, true);
 
+    //State 38
+    table[38] = State("DELI", false, true);
+
+    //State 39
+    table[39] = State("COM", false, true);
+
+    //State 40
+    table[40] = State("DOT", false, true);
+
     table[41] = State("END", false, true);
 
 

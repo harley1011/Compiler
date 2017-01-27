@@ -265,6 +265,37 @@ TEST(test_case_mult, operator_test) {
 }
 
 
+//TEST PUNCTUATION
+
+TEST(test_case_semicolon, punctuation_test) {
+    Scanner scanner;
+    vector<token> result = scanner.generate_tokens(";", false);
+    EXPECT_EQ(result.size(), 1);
+    EXPECT_EQ(result[0].token_identifier_, "DELI");
+    EXPECT_EQ(result[0].lexeme_, ";");
+    EXPECT_EQ(result[0].location_, 0);
+}
+
+
+TEST(test_case_comma, punctuation_test) {
+    Scanner scanner;
+    vector<token> result = scanner.generate_tokens(",", false);
+    EXPECT_EQ(result.size(), 1);
+    EXPECT_EQ(result[0].token_identifier_, "COM");
+    EXPECT_EQ(result[0].lexeme_, ",");
+    EXPECT_EQ(result[0].location_, 0);
+}
+
+TEST(test_case_dot, punctuation_test) {
+    Scanner scanner;
+    vector<token> result = scanner.generate_tokens(".", false);
+    EXPECT_EQ(result.size(), 1);
+    EXPECT_EQ(result[0].token_identifier_, "DOT");
+    EXPECT_EQ(result[0].lexeme_, ".");
+    EXPECT_EQ(result[0].location_, 0);
+}
+
+
 
 
 
