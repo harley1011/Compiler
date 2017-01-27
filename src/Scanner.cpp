@@ -24,9 +24,9 @@ Scanner::Scanner() {
     initial_state = State();
     initial_state.next_states_[' '] = 0;
     initial_state.next_states_['\n'] = 0;
-    initial_state.next_states_['l'] = 1;
+    initial_state.letter_state = 1;
+    initial_state.non_zero_state = 5;
     initial_state.next_states_['0'] = 3;
-    initial_state.next_states_['n'] = 5;
     initial_state.next_states_['/'] = 18;
     initial_state.next_states_['='] = 24;
     initial_state.next_states_['<'] = 27;
@@ -37,15 +37,15 @@ Scanner::Scanner() {
     initial_state.next_states_[';'] = 38;
     initial_state.next_states_[','] = 39;
     initial_state.next_states_['.'] = 40;
+    initial_state.next_states_['\000'] = 41;
 
     //State 0
     table[0] = initial_state;
 
     // State 1
     table[1] = State();
-    table[1].next_states_['a'] = 1;
-    table[1].next_states_['_'] = 1;
-    table[1].next_states_['t'] = 2;
+    table[1].alphanum_state = 1;
+    table[1].any_match_state = 2;
 
     // State 2 ID TOKEN
     table[2] = State("ID", true, true);
@@ -53,38 +53,38 @@ Scanner::Scanner() {
     //State 3
     table[3] = State();
     table[3].next_states_['.'] = 6;
-    table[3].next_states_['t'] = 4;
+    table[3].any_match_state = 4;
 
     //State 4 INUM TOKEN
     table[4] = State("INUM", true, true);
 
     //State 5
     table[5] = State();
-    table[5].next_states_['d'] = 5;
+    table[5].digit_state = 5;
     table[5].next_states_['.'] = 6;
-    table[5].next_states_['t'] = 4;
+    table[5].any_match_state = 4;
 
     //State 6
     table[6] = State();
-    table[6].next_states_['n'] = 7;
+    table[6].non_zero_state = 7;
     table[6].next_states_['0'] = 8;
 
     //State 7
     table[7] = State();
-    table[7].next_states_['n'] = 7;
+    table[7].non_zero_state = 7;
     table[7].next_states_['0'] = 9;
-    table[7].next_states_['t'] = 10;
+    table[7].any_match_state = 10;
 
     // State 8
     table[8] = State();
-    table[8].next_states_['n'] = 7;
+    table[8].non_zero_state = 7;
     table[8].next_states_['0'] = 9;
-    table[8].next_states_['t'] = 10;
+    table[8].any_match_state = 10;
 
     // State 9
     table[9] = State();
     table[9].next_states_['0'] = 9;
-    table[9].next_states_['n'] = 7;
+    table[9].non_zero_state = 7;
 
     // State 10 FNUM TOKEN
     table[10] = State("FNUM", true, true);
@@ -111,22 +111,22 @@ Scanner::Scanner() {
     table[18] = State();
     table[18].next_states_['*'] = 19;
     table[18].next_states_['/'] = 21;
-    table[18].next_states_['t'] = 23;
+    table[18].any_match_state = 23;
 
     //State 19
     table[19] = State();
     table[19].next_states_['*'] = 20;
-    table[19].next_states_['t'] = 19;
+    table[19].any_match_state = 19;
 
     //State 20
     table[20] = State();
     table[20].next_states_['/'] = 22;
-    table[20].next_states_['t'] = 19;
+    table[20].any_match_state = 19;
     table[20].next_states_['\000'] = 17;
 
     //State 21
     table[21] = State();
-    table[21].next_states_['t'] = 21;
+    table[21].any_match_state = 21;
     table[21].next_states_['\n'] = 22;
 
     //State 22
@@ -137,12 +137,19 @@ Scanner::Scanner() {
 
     //State 24
     table[24] = State();
-    table[24].next_states_['t'] = 25;
+    table[24].any_match_state = 25;
     table[24].next_states_['='] = 26;
+
+    //State 25
+    table[25] = State("EQUAL", true, true);
+
+    //State 26
+    table[26] = State("EQUIV", false, true);
+
 
     //State 27
     table[27] = State();
-    table[27].next_states_['t'] = 28;
+    table[27].any_match_state = 28;
     table[27].next_states_['>'] = 29;
     table[27].next_states_['='] = 31;
 
@@ -151,17 +158,17 @@ Scanner::Scanner() {
 
     //State 29
     table[29] = State();
-    table[29].next_states_['t'] = 30;
+    table[29].any_match_state = 30;
 
     //State 30
-    table[30] = State("NOTEQ", false, true);
+    table[30] = State("NOTEQ", true, true);
 
     //State 31
     table[31] = State("LTEQ", false, true);
 
     //State 32
     table[32] = State();
-    table[32].next_states_['t'] = 33;
+    table[32].any_match_state = 33;
     table[32].next_states_['='] = 34;
 
     //State 33
@@ -178,6 +185,8 @@ Scanner::Scanner() {
 
     //State 37
     table[37] = State("MULT", false, true);
+
+    table[41] = State("END", false, true);
 
 
 
@@ -254,12 +263,6 @@ token Scanner::next_token() {
         }
 
         lexeme += lookup;
-
-        if (lookup == '\000')
-            return token("END", lexeme, program_count_);
-
-
-
     }
     return token(current_state.token_, lexeme, program_count_);
 

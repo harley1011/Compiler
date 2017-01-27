@@ -3,7 +3,10 @@
 #include <vector>
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+    cout << RUN_ALL_TESTS();
+    string c;
+    //cin >> c;
+    return 0 ;
 }
 
 // TEST KEYWORDS
@@ -178,7 +181,7 @@ TEST(test_case_equal, operator_test) {
 
 TEST(test_case_equiv, operator_test) {
     Scanner scanner;
-    vector<token> result = scanner.generate_tokens("=", false);
+    vector<token> result = scanner.generate_tokens("==", false);
     EXPECT_EQ(result.size(), 1);
     EXPECT_EQ(result[0].token_identifier_, "EQUIV");
     EXPECT_EQ(result[0].lexeme_, "==");
@@ -198,7 +201,7 @@ TEST(test_case_lt, operator_test) {
 
 
 TEST(test_case_noteq, operator_test) {
-    Scanner scanner;
+      Scanner scanner;
     vector<token> result = scanner.generate_tokens("<>", false);
     EXPECT_EQ(result.size(), 1);
     EXPECT_EQ(result[0].token_identifier_, "NOTEQ");

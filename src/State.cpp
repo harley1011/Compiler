@@ -8,21 +8,21 @@ int State::get_next_state(char lookup) {
     if (next_states_.count(lookup)) {
         return next_states_[lookup];
     } else {
-        if (isalpha(lookup)) {
-            if (next_states_.count('a')) // Check if it has state for alphanumerical char
-                return next_states_['a'];
-            else if (next_states_.count('l')) // Check if it has state for letter char
-                return next_states_['l'];
+        if (isalpha(lookup) || lookup == '_') {
+            if (alphanum_state != -1)
+                return alphanum_state;
+            else if (letter_state != -1)
+                return letter_state;
         } else if (isdigit(lookup)) {
-            if (next_states_.count('d')) // Check if it has state for digit char
-                return next_states_['d'];
-            else if (next_states_.count('a')) // Check if it has state for alphanumerical char
-                return next_states_['a'];
-            else if (next_states_.count('n') && int(lookup) > 0) // Not zero
-                return next_states_['n'];
+
+            if (digit_state != -1)
+                return digit_state;
+            else if (alphanum_state != -1)
+                return alphanum_state;
+            else if (non_zero_state != -1 && int(lookup) > 0)
+                return non_zero_state;
         }
-        if (next_states_.count('t')) {
-            return next_states_['t'];
-        }
+         if (any_match_state != -1)
+            return any_match_state;
     }
 }
