@@ -18,6 +18,9 @@ public:
     ifstream fs_;
     string program_string_;
     int program_count_;
+    int current_row_count;
+    int current_column_count;
+
     bool is_file_;
     State initial_state;
     State table[45];
@@ -34,5 +37,6 @@ public:
 
 private:
     bool check_if_reserved_word(string word);
+    void check_if_newline();
 };
 

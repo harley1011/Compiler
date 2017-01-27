@@ -26,7 +26,6 @@ TEST(test_case_keywords, keyword_test) {
         EXPECT_EQ(result[0]->lexeme_, res);
         EXPECT_EQ(result[0]->location_, 0);
     }
-
 }
 
 // IDENTIFIER TESTS
@@ -337,7 +336,20 @@ TEST(test_case_string_neg_float_convert, conversion_test) {
 }
 
 
+// COMBOS
 
+
+TEST(test_case_all_combo, combo_test) {
+    Scanner scanner;
+    string program = "identifier_Test 102020 10.30 ()[]{}/* test comment */ // single line comment\n / = == < <> <= > >= + - * ; , .";
+    vector<Token*> result = scanner.generate_tokens(program, false);
+    string expected_tokens[] = {"ID", "INUM", "FNUM", "OPENPARA", "CLOSEPARA", "OPENBRA", "CLOSEBRA", "OPENCURL", "CLOSECURL", "CMT", "CMT", "DASH", "EQUAL", "EQUIV", "LT", "NOTEQ", "LTEQ", "GT", "GTEQ", "ADD", "SUB"
+            "MULT", "DELI", "COM", "DOT"};
+    for(int i = 0; i < expected_tokens->size(); i++) {
+        EXPECT_EQ(result[i]->token_identifier_, expected_tokens[i]);
+        EXPECT_EQ(result[i]->lexeme_, program.substr(result[i]->location_, result[i]->lexeme_.size()));
+    }
+}
 
 
 

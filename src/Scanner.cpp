@@ -23,6 +23,8 @@ const string Scanner::reserved_words[] = {"and", "not", "or", "if", "then", "els
 
 Scanner::Scanner() {
     use_backup_ = false;
+    current_row_count = 0;
+    current_column_count = 0;
     initial_state = State();
     initial_state.next_states_[' '] = 0;
     initial_state.next_states_['\n'] = 0;
@@ -199,9 +201,6 @@ Scanner::Scanner() {
 
     table[41] = State("END", false, true);
 
-
-
-
 }
 
 vector<Token*> Scanner::generate_tokens(string path, bool is_file) {
@@ -227,19 +226,21 @@ vector<Token*> Scanner::generate_tokens(string path, bool is_file) {
 char Scanner::next_char() {
     if (use_backup_){
         use_backup_ = false;
+        check_if_newline();
         return backup_buffer_;
-
     }
 
     if (is_file_) {
-        char * buffer = new char [1];
+        char * buffer = new char[1];
         fs_.read(buffer,1);
         program_count_++;
         backup_buffer_ = buffer[0];
+        check_if_newline();
         return buffer[0];
     }
     else {
         backup_buffer_ = program_string_[program_count_];
+        check_if_newline();
         return program_string_[program_count_++];
     }
 
@@ -285,8 +286,8 @@ Token* Scanner::next_token() {
 
             return new Token(current_state.token_, lexeme, location);
         }
-
-        lexeme += lookup;
+        if (next_state != 0)
+            lexeme += lookup;
     }
     return new Token(current_state.token_, lexeme, program_count_);
 
@@ -301,5 +302,12 @@ bool Scanner::check_if_reserved_word(string word) {
             return true;
     }
     return false;
+}
+
+void Scanner::check_if_newline() {
+    if (backup_buffer_ == '\n'){
+        current_row_count++;
+        current_column_count++;
+    }
 }
 
