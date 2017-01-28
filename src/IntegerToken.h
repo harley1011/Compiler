@@ -10,7 +10,7 @@ class IntegerToken : public Token {
 public:
     int converted_lexeme_;
 
-    IntegerToken(const string &lexeme, int location);
+    IntegerToken(const string &lexeme, int location, int row_location, int column_location);
     void convert_lexeme(string lexeme);
 };
 

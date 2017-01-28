@@ -5,7 +5,7 @@
 #include "IntegerToken.h"
 #include <stdlib.h>
 
-IntegerToken::IntegerToken(const string &lexeme, int location) : Token("INUM", lexeme, location) {
+IntegerToken::IntegerToken(const string &lexeme, int location, int row_location, int column_location) : Token("INUM", lexeme, location, row_location, column_location) {
     convert_lexeme(lexeme);
 }
 

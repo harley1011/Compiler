@@ -15,18 +15,23 @@ using namespace std;
 
 class Scanner {
 public:
-    ifstream fs_;
+    Scanner(string token_output_path, string error_output_path);
+
+    ifstream program_file_;
+    ofstream token_outpath_file_;
+    ofstream error_output_path_;
+
     string program_string_;
     int program_count_;
-    int current_row_count;
-    int current_column_count;
+    int current_row_count_;
+    int current_column_count_;
 
     bool is_file_;
     State initial_state;
     State table[45];
     bool use_backup_;
     char backup_buffer_;
-    static const string reserved_words[];
+    vector<string> reserved_words;
     static const int brackets_size = 6;
     pair<char, string> brackets[brackets_size];
 

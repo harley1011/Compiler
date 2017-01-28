@@ -15,8 +15,8 @@ int main(int argc, char **argv) {
 
 TEST(test_case_keywords, keyword_test) {
     Scanner scanner;
-
-    for (int i = 0; i < scanner.reserved_words->size(); i++) {
+    EXPECT_EQ(scanner.reserved_words.size(), 14);
+    for (int i = 0; i < scanner.reserved_words.size(); i++) {
         string res = scanner.reserved_words[i];
         string copy_res = res;
         transform(copy_res.begin(), copy_res.end(),copy_res.begin(), ::tolower);
@@ -26,6 +26,7 @@ TEST(test_case_keywords, keyword_test) {
         EXPECT_EQ(result[0]->lexeme_, res);
         EXPECT_EQ(result[0]->location_, 0);
     }
+
 }
 
 // IDENTIFIER TESTS
@@ -312,25 +313,25 @@ TEST(test_case_dot, punctuation_test) {
 
 // TEST INT AND FLOAT CONVERTERS
 TEST(test_case_string_int_convert, conversion_test) {
-    IntegerToken token("23929083", 0);
+    IntegerToken token("23929083", 0, 0, 0);
     EXPECT_EQ(token.converted_lexeme_, 23929083);
 
 }
 
 TEST(test_case_string_neg_int_convert, conversion_test) {
-    IntegerToken token("-23929083", 0);
+    IntegerToken token("-23929083", 0, 0, 0);
     EXPECT_EQ(token.converted_lexeme_, -23929083);
 
 }
 
 TEST(test_case_string_float_convert, conversion_test) {
-    FloatToken token("239.2035", 0);
+    FloatToken token("239.2035", 0, 0, 0);
     EXPECT_EQ(token.converted_lexeme_, (float)239.2035);
 
 }
 
 TEST(test_case_string_neg_float_convert, conversion_test) {
-    FloatToken token("-239.2035", 0);
+    FloatToken token("-239.2035", 0, 0, 0);
     EXPECT_EQ(token.converted_lexeme_, (float)-239.2035);
 
 }
@@ -341,21 +342,47 @@ TEST(test_case_string_neg_float_convert, conversion_test) {
 
 TEST(test_case_all_combo, combo_test) {
     Scanner scanner;
-    string program = "identifier_Test 102020 10.30 ()[]{}/* test comment */ // single line comment\n / = == < <> <= > >= + - * ; , .";
+    string program = "identifier_Test 102020 10.3 ()[]{}/* test comment */ // single line comment\n / = == < <> <= > >= + - * ; , .";
     vector<Token*> result = scanner.generate_tokens(program, false);
-    string expected_tokens[] = {"ID", "INUM", "FNUM", "OPENPARA", "CLOSEPARA", "OPENBRA", "CLOSEBRA", "OPENCURL", "CLOSECURL", "CMT", "CMT", "DASH", "EQUAL", "EQUIV", "LT", "NOTEQ", "LTEQ", "GT", "GTEQ", "ADD", "SUB"
-            "MULT", "DELI", "COM", "DOT"};
-    for(int i = 0; i < expected_tokens->size(); i++) {
+    string expected_tokens[] = {"ID", "INUM", "FNUM", "OPENPARA", "CLOSEPARA", "OPENBRA", "CLOSEBRA", "OPENCURL", "CLOSECURL", "CMT", "CMT", "DASH", "EQUAL", "EQUIV", "LT", "NOTEQ", "LTEQ", "GT", "GTEQ", "ADD", "SUB", "MULT", "DELI", "COM", "DOT"};
+    int size = sizeof(expected_tokens)/ sizeof(expected_tokens[0]);
+    EXPECT_EQ(result.size(), size);
+    EXPECT_EQ(result[0]->token_identifier_, expected_tokens[0]);
+    for(int i = 0; i < size; i++) {
         EXPECT_EQ(result[i]->token_identifier_, expected_tokens[i]);
         EXPECT_EQ(result[i]->lexeme_, program.substr(result[i]->location_, result[i]->lexeme_.size()));
     }
 }
 
 
+TEST(test_case_all_multi_line_combo, combo_test) {
+    Scanner scanner;
+    string program = "identifier_Test 102020 10.3 ()[]{}/* test comment */ // single line comment\n / = == < <> <= > >= + - * ; , .\n";
+    program += program;
+    vector<Token*> result = scanner.generate_tokens(program, false);
+    string expected_tokens[] = {"ID", "INUM", "FNUM", "OPENPARA", "CLOSEPARA", "OPENBRA", "CLOSEBRA", "OPENCURL", "CLOSECURL", "CMT", "CMT", "DASH", "EQUAL", "EQUIV", "LT", "NOTEQ", "LTEQ", "GT", "GTEQ", "ADD", "SUB", "MULT", "DELI", "COM", "DOT"};
+    int size = sizeof(expected_tokens)/ sizeof(expected_tokens[0]);
+    EXPECT_EQ(result.size(), size * 2);
+    EXPECT_EQ(result[0]->token_identifier_, expected_tokens[0]);
+    for(int i = 0; i < size * 2; i++) {
+        EXPECT_EQ(result[i]->token_identifier_, expected_tokens[i % size]);
+        EXPECT_EQ(result[i]->lexeme_, program.substr(result[i]->location_, result[i]->lexeme_.size()));
+    }
+}
 
 
 
+// TEST ERRORS
 
+TEST(test_case_start_unknown, error_test) {
+    Scanner scanner;
+    vector<Token*> result = scanner.generate_tokens("? identi_fier", false);
+    EXPECT_EQ(result[0]->token_identifier_, "ERROR");
+    EXPECT_EQ(result[1]->token_identifier_, "ID");
+    EXPECT_EQ(result[1]->lexeme_, "identi_fier");
+    EXPECT_EQ(result[1]->location_, 2);
+
+}
 
 
 

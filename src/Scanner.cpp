@@ -17,19 +17,25 @@ using namespace std;
 // t means anything that's not specified
 // n means 1-9
 
-const string Scanner::reserved_words[] = {"and", "not", "or", "if", "then", "else", "for", "class", "int", "float", "get", "put", "return", "program"};
 
 
+Scanner::Scanner(string token_output_path, string error_output_path) {
+
+    Scanner();
+}
 
 Scanner::Scanner() {
+    string temp[]   = {"and", "not", "or", "if", "then", "else", "for", "class", "int", "float", "get", "put", "return", "program"};
+    vector<string> vec (temp, temp + sizeof(temp) / sizeof(temp[0]));
+    reserved_words = vec;
     use_backup_ = false;
-    current_row_count = 0;
-    current_column_count = 0;
+    current_row_count_ = 0;
+    current_column_count_ = 0;
     initial_state = State();
     initial_state.next_states_[' '] = 0;
     initial_state.next_states_['\n'] = 0;
-    initial_state.letter_state = 1;
-    initial_state.non_zero_state = 5;
+    initial_state.letter_state_ = 1;
+    initial_state.non_zero_state_ = 5;
     initial_state.next_states_['0'] = 3;
     initial_state.next_states_['/'] = 18;
     initial_state.next_states_['='] = 24;
@@ -44,12 +50,12 @@ Scanner::Scanner() {
     initial_state.next_states_['\000'] = 41;
 
     //State 0
-    table[0] = initial_state;
+
 
     // State 1
     table[1] = State();
-    table[1].alphanum_state = 1;
-    table[1].any_match_state = 2;
+    table[1].alphanum_state_ = 1;
+    table[1].any_match_state_ = 2;
 
     // State 2 ID TOKEN
     table[2] = State("ID", true, true);
@@ -57,38 +63,38 @@ Scanner::Scanner() {
     //State 3
     table[3] = State();
     table[3].next_states_['.'] = 6;
-    table[3].any_match_state = 4;
+    table[3].any_match_state_ = 4;
 
     //State 4 INUM TOKEN
     table[4] = State("INUM", true, true);
 
     //State 5
     table[5] = State();
-    table[5].digit_state = 5;
+    table[5].digit_state_ = 5;
     table[5].next_states_['.'] = 6;
-    table[5].any_match_state = 4;
+    table[5].any_match_state_ = 4;
 
     //State 6
     table[6] = State();
-    table[6].non_zero_state = 7;
+    table[6].non_zero_state_ = 7;
     table[6].next_states_['0'] = 8;
 
     //State 7
     table[7] = State();
-    table[7].non_zero_state = 7;
+    table[7].non_zero_state_ = 7;
     table[7].next_states_['0'] = 9;
-    table[7].any_match_state = 10;
+    table[7].any_match_state_ = 10;
 
     // State 8
     table[8] = State();
-    table[8].non_zero_state = 7;
+    table[8].non_zero_state_ = 7;
     table[8].next_states_['0'] = 9;
-    table[8].any_match_state = 10;
+    table[8].any_match_state_ = 10;
 
     // State 9
     table[9] = State();
     table[9].next_states_['0'] = 9;
-    table[9].non_zero_state = 7;
+    table[9].non_zero_state_ = 7;
 
     // State 10 FNUM TOKEN
     table[10] = State("FNUM", true, true);
@@ -115,22 +121,22 @@ Scanner::Scanner() {
     table[18] = State();
     table[18].next_states_['*'] = 19;
     table[18].next_states_['/'] = 21;
-    table[18].any_match_state = 23;
+    table[18].any_match_state_ = 23;
 
     //State 19
     table[19] = State();
     table[19].next_states_['*'] = 20;
-    table[19].any_match_state = 19;
+    table[19].any_match_state_ = 19;
 
     //State 20
     table[20] = State();
     table[20].next_states_['/'] = 22;
-    table[20].any_match_state = 19;
+    table[20].any_match_state_ = 19;
     table[20].next_states_['\000'] = 17;
 
     //State 21
     table[21] = State();
-    table[21].any_match_state = 21;
+    table[21].any_match_state_ = 21;
     table[21].next_states_['\n'] = 22;
 
     //State 22
@@ -141,7 +147,7 @@ Scanner::Scanner() {
 
     //State 24
     table[24] = State();
-    table[24].any_match_state = 25;
+    table[24].any_match_state_ = 25;
     table[24].next_states_['='] = 26;
 
     //State 25
@@ -153,7 +159,7 @@ Scanner::Scanner() {
 
     //State 27
     table[27] = State();
-    table[27].any_match_state = 28;
+    table[27].any_match_state_ = 28;
     table[27].next_states_['>'] = 29;
     table[27].next_states_['='] = 31;
 
@@ -162,7 +168,7 @@ Scanner::Scanner() {
 
     //State 29
     table[29] = State();
-    table[29].any_match_state = 30;
+    table[29].any_match_state_ = 30;
 
     //State 30
     table[30] = State("NOTEQ", true, true);
@@ -172,7 +178,7 @@ Scanner::Scanner() {
 
     //State 32
     table[32] = State();
-    table[32].any_match_state = 33;
+    table[32].any_match_state_ = 33;
     table[32].next_states_['='] = 34;
 
     //State 33
@@ -201,12 +207,13 @@ Scanner::Scanner() {
 
     table[41] = State("END", false, true);
 
+    table[0] = initial_state;
 }
 
 vector<Token*> Scanner::generate_tokens(string path, bool is_file) {
     is_file_ = is_file;
     if (is_file)
-        fs_.open(path.c_str());
+        program_file_.open(path.c_str());
     else {
         program_count_ = 0;
         program_string_ = path;
@@ -227,12 +234,13 @@ char Scanner::next_char() {
     if (use_backup_){
         use_backup_ = false;
         check_if_newline();
+        program_count_++;
         return backup_buffer_;
     }
 
     if (is_file_) {
         char * buffer = new char[1];
-        fs_.read(buffer,1);
+        program_file_.read(buffer,1);
         program_count_++;
         backup_buffer_ = buffer[0];
         check_if_newline();
@@ -256,9 +264,12 @@ Token* Scanner::next_token() {
 
         if (next_state == -1) {
             // If we reach an invalid character than everything before the current character and previous Token will be considered apart of the error
-            use_backup_ = true;
-            program_count_--;
-            return new Token(current_state.token_, lexeme, program_count_ - lexeme.size());
+            if (lexeme.size() > 1) {
+                use_backup_ = true;
+                program_count_--;
+            }
+
+            return new Token("ERROR", lexeme, program_count_ - lexeme.size(), current_row_count_, current_column_count_);
 
         }
         current_state = table[next_state];
@@ -277,25 +288,25 @@ Token* Scanner::next_token() {
             {
                 string copy = lexeme;
                 transform(copy.begin(), copy.end(),copy.begin(), ::tolower);
-                return new Token(lexeme, lexeme, location);
+                return new Token(lexeme, lexeme, location, current_row_count_, current_column_count_);
             }
             else if (current_state.token_ == "INUM")
-                return new IntegerToken(lexeme, location);
+                return new IntegerToken(lexeme, location, current_row_count_, current_column_count_);
             else if (current_state.token_ == "FNUM")
-                return new FloatToken(lexeme, location);
+                return new FloatToken(lexeme, location, current_row_count_, current_column_count_);
 
-            return new Token(current_state.token_, lexeme, location);
+            return new Token(current_state.token_, lexeme, location, current_row_count_, current_column_count_);
         }
         if (next_state != 0)
             lexeme += lookup;
     }
-    return new Token(current_state.token_, lexeme, program_count_);
+    return new Token(current_state.token_, lexeme, program_count_, current_row_count_, current_column_count_);
 
 }
 
 
 bool Scanner::check_if_reserved_word(string word) {
-    for (int i = 0; i < reserved_words->size(); i++){
+    for (int i = 0; i < reserved_words.size(); i++){
         string res = reserved_words[i];
         transform(res.begin(), res.end(),res.begin(), ::tolower);
         if (res == word)
@@ -306,8 +317,8 @@ bool Scanner::check_if_reserved_word(string word) {
 
 void Scanner::check_if_newline() {
     if (backup_buffer_ == '\n'){
-        current_row_count++;
-        current_column_count++;
+        current_row_count_++;
+        current_column_count_++;
     }
 }
 

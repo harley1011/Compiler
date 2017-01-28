@@ -7,7 +7,7 @@
 
 using namespace std;
 
-FloatToken::FloatToken(const string &lexeme, int location) : Token("FNUM", lexeme, location) {
+FloatToken::FloatToken(const string &lexeme, int location, int row_location, int column_location) : Token("FNUM", lexeme, location, row_location, column_location) {
     convert_lexeme(lexeme);
 
 }

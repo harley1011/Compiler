@@ -9,21 +9,21 @@ int State::get_next_state(char lookup) {
         return next_states_[lookup];
     } else {
         if (isalpha(lookup) || lookup == '_') {
-            if (alphanum_state != -1)
-                return alphanum_state;
-            else if (letter_state != -1)
-                return letter_state;
+            if (alphanum_state_ != -1)
+                return alphanum_state_;
+            else if (letter_state_ != -1)
+                return letter_state_;
         } else if (isdigit(lookup)) {
 
-            if (digit_state != -1)
-                return digit_state;
-            else if (alphanum_state != -1)
-                return alphanum_state;
-            else if (non_zero_state != -1 && int(lookup) > 0)
-                return non_zero_state;
+            if (digit_state_ != -1)
+                return digit_state_;
+            else if (alphanum_state_ != -1)
+                return alphanum_state_;
+            else if (non_zero_state_ != -1 && int(lookup) > 0)
+                return non_zero_state_;
         }
-         if (any_match_state != -1)
-            return any_match_state;
+         if (any_match_state_ != -1)
+            return any_match_state_;
     }
     return -1;
 }
