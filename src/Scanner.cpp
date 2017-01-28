@@ -12,13 +12,6 @@
 
 using namespace std;
 
-// a means a-z or A-Z, or 0-9
-// d means 0-9
-// t means anything that's not specified
-// n means 1-9
-
-
-
 Scanner::Scanner(string token_output_path, string error_output_path) {
 
     Scanner();
