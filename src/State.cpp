@@ -8,7 +8,7 @@ int State::get_next_state(char lookup) {
     if (next_states_.count(lookup)) {
         return next_states_[lookup];
     } else {
-        if (isalpha(lookup) || lookup == '_') {
+       if (isalpha(lookup) || lookup == '_') {
             if (alphanum_state_ != -1)
                 return alphanum_state_;
             else if (letter_state_ != -1)

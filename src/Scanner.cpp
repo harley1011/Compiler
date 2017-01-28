@@ -9,6 +9,7 @@
 #include "IntegerToken.h"
 #include "FloatToken.h"
 #include <algorithm>
+#include "ErrorToken.h"
 
 using namespace std;
 
@@ -41,6 +42,7 @@ Scanner::Scanner() {
     initial_state.next_states_[','] = 39;
     initial_state.next_states_['.'] = 40;
     initial_state.next_states_['\000'] = 41;
+    initial_state.error_message_ = "Invalid initial character";
 
     //State 0
 
@@ -71,6 +73,7 @@ Scanner::Scanner() {
     table[6] = State();
     table[6].non_zero_state_ = 7;
     table[6].next_states_['0'] = 8;
+    table[6].error_message_ = "Invalid character proceeding numerical decimal";
 
     //State 7
     table[7] = State();
@@ -88,6 +91,7 @@ Scanner::Scanner() {
     table[9] = State();
     table[9].next_states_['0'] = 9;
     table[9].non_zero_state_ = 7;
+    table[9].error_message_ = "Float can not end with a zero unless it's after the fraction and then only digit after the fraction";
 
     // State 10 FNUM TOKEN
     table[10] = State("FNUM", true, true);
@@ -216,6 +220,11 @@ vector<Token*> Scanner::generate_tokens(string path, bool is_file) {
 
     while(true) {
         Token* result = next_token();
+
+        if(result->token_identifier_ == "ERROR"){
+            error_tokens_.push_back(static_cast<ErrorToken&>(*result));
+        }
+
         if (result->token_identifier_ == "END")
             break;
         tokens.push_back(result);
@@ -235,13 +244,15 @@ char Scanner::next_char() {
         char * buffer = new char[1];
         program_file_.read(buffer,1);
         program_count_++;
-        backup_buffer_ = buffer[0];
         check_if_newline();
+        backup_buffer_ = buffer[0];
+
         return buffer[0];
     }
     else {
-        backup_buffer_ = program_string_[program_count_];
         check_if_newline();
+        backup_buffer_ = program_string_[program_count_];
+
         return program_string_[program_count_++];
     }
 
@@ -250,7 +261,7 @@ char Scanner::next_char() {
 Token* Scanner::next_token() {
     State current_state = initial_state;
     string lexeme = "";
-    while(current_state.token_.length() == 0) {
+    while(true) {
         char lookup = next_char();
 
         int next_state = current_state.get_next_state(lookup);
@@ -260,9 +271,10 @@ Token* Scanner::next_token() {
             if (lexeme.size() > 1) {
                 use_backup_ = true;
                 program_count_--;
+                current_column_count_--;
             }
 
-            return new Token("ERROR", lexeme, program_count_ - lexeme.size(), current_row_count_, current_column_count_);
+            return new ErrorToken("ERROR", lexeme, program_count_ - lexeme.size(), current_row_count_, current_column_count_, current_state.error_message_);
 
         }
         current_state = table[next_state];
@@ -271,30 +283,33 @@ Token* Scanner::next_token() {
             if (current_state.backup_) {
                 use_backup_ = true;
                 program_count_--;
+                check_if_backup_row();
             }
             else {
                 lexeme += lookup;
             }
             int location = program_count_ - lexeme.size();
-
+            int column_location = current_column_count_ - lexeme.size();
+            if (lexeme.size() == 1 && use_backup_) {
+                location++;
+                column_location++;
+            }
             if(check_if_reserved_word(lexeme))
             {
                 string copy = lexeme;
                 transform(copy.begin(), copy.end(),copy.begin(), ::tolower);
-                return new Token(lexeme, lexeme, location, current_row_count_, current_column_count_);
+                return new Token(lexeme, lexeme, location, current_row_count_, column_location);
             }
             else if (current_state.token_ == "INUM")
-                return new IntegerToken(lexeme, location, current_row_count_, current_column_count_);
+                return new IntegerToken(lexeme, location, current_row_count_, column_location);
             else if (current_state.token_ == "FNUM")
-                return new FloatToken(lexeme, location, current_row_count_, current_column_count_);
+                return new FloatToken(lexeme, location, current_row_count_, column_location);
 
-            return new Token(current_state.token_, lexeme, location, current_row_count_, current_column_count_);
+            return new Token(current_state.token_, lexeme, location, current_row_count_, column_location);
         }
         if (next_state != 0)
             lexeme += lookup;
     }
-    return new Token(current_state.token_, lexeme, program_count_, current_row_count_, current_column_count_);
-
 }
 
 
@@ -308,9 +323,22 @@ bool Scanner::check_if_reserved_word(string word) {
     return false;
 }
 
+void Scanner::check_if_backup_row() {
+    if (backup_buffer_ == '\n') {
+        current_row_count_--;
+        current_column_count_ = previous_column_count_;
+    }
+    else  {
+        current_column_count_--;
+    }
+}
+
 void Scanner::check_if_newline() {
     if (backup_buffer_ == '\n'){
         current_row_count_++;
+        previous_column_count_ = current_column_count_;
+        current_column_count_ = 0;
+    } else {
         current_column_count_++;
     }
 }

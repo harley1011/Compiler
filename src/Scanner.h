@@ -4,6 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include "ErrorToken.h"
 
 using namespace std;
 
@@ -25,6 +26,7 @@ public:
     int program_count_;
     int current_row_count_;
     int current_column_count_;
+    int previous_column_count_;
 
     bool is_file_;
     State initial_state;
@@ -34,14 +36,17 @@ public:
     vector<string> reserved_words;
     static const int brackets_size = 6;
     pair<char, string> brackets[brackets_size];
+    vector<ErrorToken> error_tokens_;
 
     Token* next_token();
     char next_char();
     vector<Token*> generate_tokens(string path, bool is_file);
+
     Scanner();
 
 private:
     bool check_if_reserved_word(string word);
     void check_if_newline();
+    void check_if_backup_row();
 };
 

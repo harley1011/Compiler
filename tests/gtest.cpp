@@ -12,6 +12,7 @@ int main(int argc, char **argv) {
 }
 
 // TEST KEYWORDS
+bool check_location(string program, string search_string, int row, int column);
 
 TEST(test_case_keywords, keyword_test) {
     Scanner scanner;
@@ -364,7 +365,13 @@ TEST(test_case_all_multi_line_combo, combo_test) {
     int size = sizeof(expected_tokens)/ sizeof(expected_tokens[0]);
     EXPECT_EQ(result.size(), size * 2);
     EXPECT_EQ(result[0]->token_identifier_, expected_tokens[0]);
+    int row_count = 0;
+    int column_count = 0;
+
     for(int i = 0; i < size * 2; i++) {
+       // EXPECT_EQ(result[i]->row_location_, row_count);
+      //  EXPECT_EQ(result[i]->column_location_, column_count);
+        EXPECT_TRUE(check_location(program, result[i]->lexeme_, result[i]->row_location_, result[i]->column_location_));
         EXPECT_EQ(result[i]->token_identifier_, expected_tokens[i % size]);
         EXPECT_EQ(result[i]->lexeme_, program.substr(result[i]->location_, result[i]->lexeme_.size()));
     }
@@ -381,11 +388,22 @@ TEST(test_case_start_unknown, error_test) {
     EXPECT_EQ(result[1]->token_identifier_, "ID");
     EXPECT_EQ(result[1]->lexeme_, "identi_fier");
     EXPECT_EQ(result[1]->location_, 2);
+    EXPECT_EQ(scanner.error_tokens_[0].error_message_, scanner.table[0].error_message_);
 
 }
 
 
-
+bool check_location(string program, string search_string, int row, int column) {
+    for(int i = 0; program.size(); i++) {
+        if (row == 0) {
+            string result = program.substr(i + column, search_string.size());
+            return result == search_string;
+        }
+        if (program[i] == '\n')
+            row--;
+    }
+    return false;
+}
 
 
 

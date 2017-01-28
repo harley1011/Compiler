@@ -19,6 +19,7 @@ public:
     int alphanum_state_;
     int digit_state_;
     int any_match_state_;
+    string error_message_;
 
     int get_next_state(char lookup);
 
