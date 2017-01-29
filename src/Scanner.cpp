@@ -127,12 +127,15 @@ void Scanner::init() {
     table[19] = State();
     table[19].next_states_['*'] = 20;
     table[19].any_match_state_ = 19;
+    table[19].next_states_['\000'] = -1;
+    table[19].error_message_ = "Multi line comment doesn't have */ to close comment";
 
     //State 20
     table[20] = State();
     table[20].next_states_['/'] = 22;
     table[20].any_match_state_ = 19;
-    table[20].next_states_['\000'] = 17;
+    table[20].next_states_['\000'] = -1;
+    table[20].error_message_ = "Multi line comment doesn't have */ to close comment";
 
     //State 21
     table[21] = State();
@@ -266,13 +269,17 @@ char Scanner::next_char() {
     }
 
     if (is_file_) {
-        char * buffer = new char[1];
-        program_file_.read(buffer,1);
+        char c;
+        if (program_file_.eof()) {
+            backup_buffer_ = '\000';
+            return backup_buffer_;
+        }
+        program_file_.get(c);
         program_count_++;
         check_if_newline();
-        backup_buffer_ = buffer[0];
+        backup_buffer_ = c;
 
-        return buffer[0];
+        return c;
     }
     else {
         check_if_newline();
@@ -298,7 +305,7 @@ Token* Scanner::next_token() {
                 program_count_--;
                 current_column_count_--;
             }
-
+            cout << (int)lookup;
             return new ErrorToken("ERROR", lexeme, program_count_ - lexeme.size(), current_row_count_, current_column_count_, current_state.error_message_);
 
         }
@@ -319,8 +326,8 @@ Token* Scanner::next_token() {
             if(check_if_reserved_word(lexeme))
             {
                 string copy = lexeme;
-                transform(copy.begin(), copy.end(),copy.begin(), ::tolower);
-                return new Token(lexeme, lexeme, location, current_row_count_, column_location);
+                transform(copy.begin(), copy.end(),copy.begin(), ::toupper);
+                return new Token(copy, lexeme, location, current_row_count_, column_location);
             }
             else if (current_state.token_ == "INUM")
                 return new IntegerToken(lexeme, location, current_row_count_, column_location);

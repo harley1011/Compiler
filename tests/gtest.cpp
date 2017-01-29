@@ -11,9 +11,9 @@ int main(int argc, char **argv) {
     //cin >> c;
     return 0 ;
 }
-
-// TEST KEYWORDS
 bool check_location(string program, string search_string, int row, int column);
+bool compare_files(string first_path, string second_path);
+// TEST KEYWORDS
 
 TEST(test_case_keywords, keyword_test) {
     Scanner scanner;
@@ -388,6 +388,17 @@ TEST(test_case_start_unknown, error_test) {
     EXPECT_EQ(scanner.error_tokens_[0].error_message_, scanner.table[0].error_message_);
 }
 
+TEST(test_case_start_dot, error_test) {
+    Scanner scanner;
+    vector<Token*> result = scanner.generate_tokens(".10 identi_fier", false);
+    EXPECT_EQ(result[0]->token_identifier_, "DOT");
+    EXPECT_EQ(result[1]->token_identifier_, "INUM");
+    EXPECT_EQ(result[1]->lexeme_, "10");
+    EXPECT_EQ(result[1]->location_, 1);
+    EXPECT_EQ(result[2]->token_identifier_, "ID");
+    EXPECT_EQ(result[2]->lexeme_, "identi_fier");
+}
+
 TEST(test_case_float_end_non_digit, error_test) {
     Scanner scanner("test.txt", "error.txt");
     vector<Token*> result = scanner.generate_tokens("101. identi_fier 101.i identi_fier", false);
@@ -405,10 +416,15 @@ TEST(test_case_float_end_non_digit, error_test) {
 
 
 TEST(test_case_read_input_file, full_program_test) {
-    Scanner scanner("test_out.txt", "error_out.txt");
+    Scanner scanner("simple_program_out.txt", "error_out.txt");
     vector<Token*> result = scanner.generate_tokens("..//..//tests//simple_program.txt", true);
+    EXPECT_TRUE(compare_files("simple_program_out.txt", "..//..//tests/simple_program_out.txt"));
+}
 
-
+TEST(test_case_read_input_file_with_errors, full_program_test) {
+    Scanner scanner("simple_program_with_errors_out.txt", "simple_program_with_errors_out.txt");
+    vector<Token*> result = scanner.generate_tokens("..//..//tests//simple_program_with_errors.txt", true);
+    EXPECT_TRUE(compare_files("simple_program_with_errors_out.txt", "..//..//tests/simple_program_with_errors_out.txt"));
 }
 
 bool check_location(string program, string search_string, int row, int column) {
@@ -424,6 +440,37 @@ bool check_location(string program, string search_string, int row, int column) {
 }
 
 
+bool compare_files(string first_path, string second_path) {
+    ifstream f_file;
+    ifstream s_file;
+    f_file.open(first_path);
+    s_file.open(second_path);
+
+    while(true) {
+        char f;
+        char s;
+
+        if (f_file.eof() && s_file.eof()) {
+            f_file.close();
+            s_file.close();
+            return true;
+        }
+        else if (f_file.eof() || s_file.eof()) {
+            f_file.close();
+            s_file.close();
+            return false;
+        }
+        f = f_file.get();
+        s = s_file.get();
+
+        if (f != s) {
+            f_file.close();
+            s_file.get();
+            return false;
+        }
+
+    }
+}
 
 
 

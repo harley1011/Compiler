@@ -4,6 +4,9 @@
 
 #include "IntegerToken.h"
 #include <stdlib.h>
+#include <limits>
+#include <iostream>
+#include <string>
 
 IntegerToken::IntegerToken(const string &lexeme, int location, int row_location, int column_location) : Token("INUM", lexeme, location, row_location, column_location) {
     convert_lexeme(lexeme);

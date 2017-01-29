@@ -1,0 +1,25 @@
+int main() {
+	int x = 0;
+	int y=10000;
+	
+	for(int i = 0; i < 10; i++) {
+		int random_variable_name = 1000;
+		float random_variable_float = 1000.101;
+		
+	}
+
+		/* COMMENT IN HEREEEEEEEEE
+    	MORE COMMENT STUFF
+
+    	SYES S
+    	*/
+	
+	if (x == 0) {
+		int okay = 0;
+	}
+	
+	// comment here this should be gone
+	
+	int a[5] = {1,2,3,4,5};
+
+}
