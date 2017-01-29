@@ -439,11 +439,7 @@ TEST(test_case_read_input_file, full_program_test) {
 
 TEST(test_case_read_input_file_with_errors, full_program_test) {
     Scanner scanner("simple_program_with_errors_token_out.txt", "simple_program_with_errors_out.txt");
-    try {
-        vector<Token*> result = scanner.generate_tokens("..//..//tests//simple_program_errors.txt", true);
-    } catch (int e) {
-        cout << "shit";
-    }
+    vector<Token*> result = scanner.generate_tokens("..//..//tests//simple_program_errors.txt", true);
 
     //EXPECT_TRUE(compare_files("simple_program_with_errors_token_out.txt", "..//..//tests/simple_program_with_errors_token_out.txt"));
 }
