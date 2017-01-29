@@ -33,6 +33,7 @@ void Scanner::init() {
     initial_state = State();
     initial_state.next_states_[' '] = 0;
     initial_state.next_states_['\n'] = 0;
+    initial_state.next_states_['\t'] = 0;
     initial_state.letter_state_ = 1;
     initial_state.non_zero_state_ = 5;
     initial_state.next_states_['0'] = 3;

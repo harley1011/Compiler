@@ -401,10 +401,15 @@ TEST(test_case_float_end_non_digit, error_test) {
     EXPECT_EQ(result[3]->lexeme_, "i");
     EXPECT_EQ(result[4]->token_identifier_, "ID");
     EXPECT_EQ(result[4]->lexeme_, "identi_fier");
+}
+
+
+TEST(test_case_read_input_file, full_program_test) {
+    Scanner scanner("test_out.txt", "error_out.txt");
+    vector<Token*> result = scanner.generate_tokens("..//..//tests//simple_program.txt", true);
 
 
 }
-
 
 bool check_location(string program, string search_string, int row, int column) {
     for(int i = 0; program.size(); i++) {
