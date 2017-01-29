@@ -34,6 +34,7 @@ public:
         alphanum_state_ = -1;
         digit_state_ = -1;
         any_match_state_ = -1;
+        error_message_ = "Invalid character";
     }
 
     State(string token, bool backup, bool is_final_state) {
@@ -46,6 +47,7 @@ public:
         alphanum_state_ = -1;
         digit_state_ = -1;
         any_match_state_ = -1;
+        error_message_ = "Invalid character";
     }
 
     State() {
@@ -57,6 +59,7 @@ public:
         alphanum_state_ = -1;
         digit_state_ = -1;
         any_match_state_ = -1;
+        error_message_ = "Invalid character";
     }
 
 };

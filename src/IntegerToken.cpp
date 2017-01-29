@@ -13,5 +13,7 @@ IntegerToken::IntegerToken(const string &lexeme, int location, int row_location,
 }
 
 void IntegerToken::convert_lexeme(string lexeme) {
+    //string str1 = "45";
+//    int myint1 = stoi(str1);
     converted_lexeme_ = atoi(lexeme.c_str());
 }

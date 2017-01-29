@@ -1,0 +1,4 @@
+Error:Invalid initial character:4:2
+Error:Invalid initial character:5:2
+Error:Invalid character proceeding numerical decimal:24:13
+Error:Invalid float, it can not end with a zero unless it's after the fraction and then only digit after the fraction:26:21

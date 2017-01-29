@@ -2,21 +2,31 @@ int main() {
 	int x = 0;
 	int y=10000;
 
+	?
+	"
+
 	for(int i = 0; i < 10; i++) {
 		int random_variable_name = 1000;
 		float random_variable_float = 1000.101;
-
+		
 	}
-
-		/* COMMENT IN HEREEEEEEEEE
-    	MORE COMMENT STUFF
-
-    	SYES S
-    	*/
-
+	
 	if (x == 0) {
 		int okay = 0;
 	}
+
+	/* COMMENT IN HEREEEEEEEEE
+	MORE COMMENT STUFF
+
+	SYES S
+	*/
+
+	float t =0.0;
+	float r = 0.;
+	float k = .0;
+	float pjhkjh = 0.010;
+	float = 2300.02303
+
 
 	// comment here this should be gone
 	

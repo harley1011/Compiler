@@ -94,7 +94,7 @@ void Scanner::init() {
     table[9] = State();
     table[9].next_states_['0'] = 9;
     table[9].non_zero_state_ = 7;
-    table[9].error_message_ = "Float can not end with a zero unless it's after the fraction and then only digit after the fraction";
+    table[9].error_message_ = "Invalid float, it can not end with a zero unless it's after the fraction and then only digit after the fraction";
 
     // State 10 FNUM TOKEN
     table[10] = State("FNUM", true, true);
