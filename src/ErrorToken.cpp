@@ -3,7 +3,6 @@
 //
 
 #include "ErrorToken.h"
-#include <string>
 #include <sstream>
 
 ErrorToken::ErrorToken(const string &token_identifier, const string &lexeme, int location, int row_location,

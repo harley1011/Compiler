@@ -10,7 +10,7 @@ using namespace std;
 
 class State {
 public:
-    string token_;
+    string token_;l
     bool backup_;
     bool is_final_state_;
     map<char, int> next_states_;

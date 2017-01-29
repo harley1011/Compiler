@@ -1,5 +1,4 @@
 #include <iostream>
-#include <string>
 #include <vector>
 #include <map>
 #include "State.h"
@@ -9,17 +8,23 @@
 #include "IntegerToken.h"
 #include "FloatToken.h"
 #include <algorithm>
-#include "ErrorToken.h"
 
 using namespace std;
 
 Scanner::Scanner(string token_output_path, string error_output_path) {
-
-    Scanner();
+    init();
+    output_to_file_ = true;
+    token_output_path_ = token_output_path;
+    error_output_path_ = error_output_path;
+}
+Scanner::Scanner() {
+    init();
 }
 
-Scanner::Scanner() {
+void Scanner::init() {
     string temp[]   = {"and", "not", "or", "if", "then", "else", "for", "class", "int", "float", "get", "put", "return", "program"};
+    token_output_path_ = "token_output.txt";
+    error_output_path_ = "error_output.txt";
     vector<string> vec (temp, temp + sizeof(temp) / sizeof(temp[0]));
     reserved_words = vec;
     use_backup_ = false;
@@ -43,9 +48,6 @@ Scanner::Scanner() {
     initial_state.next_states_['.'] = 40;
     initial_state.next_states_['\000'] = 41;
     initial_state.error_message_ = "Invalid initial character";
-
-    //State 0
-
 
     // State 1
     table[1] = State();
@@ -208,6 +210,7 @@ Scanner::Scanner() {
 }
 
 vector<Token*> Scanner::generate_tokens(string path, bool is_file) {
+
     is_file_ = is_file;
     if (is_file)
         program_file_.open(path.c_str());
@@ -217,18 +220,39 @@ vector<Token*> Scanner::generate_tokens(string path, bool is_file) {
     }
 
     vector<Token*> tokens;
-
-    while(true) {
-        Token* result = next_token();
-
-        if(result->token_identifier_ == "ERROR"){
-            error_tokens_.push_back(static_cast<ErrorToken&>(*result));
-        }
-
-        if (result->token_identifier_ == "END")
-            break;
-        tokens.push_back(result);
+    ofstream error_output_file;
+    ofstream token_output_file;
+    if (output_to_file_) {
+        error_output_file.open(error_output_path_);
+        token_output_file.open(token_output_path_);
     }
+    while(true) {
+        try {
+            Token *result = next_token();
+
+            if (result->token_identifier_ == "ERROR") {
+                ErrorToken error_token = static_cast<ErrorToken &>(*result);
+                error_tokens_.push_back(error_token);
+
+                if (output_to_file_) {
+                    error_output_file << error_token.generate_error_message() + "\n";
+                }
+            }
+
+            if (result->token_identifier_ == "END")
+                break;
+            if (output_to_file_) {
+                token_output_file << result->token_identifier_ + " ";
+            }
+            tokens.push_back(result);
+        }
+        catch(int e) {
+            cout << "An exception occurred. Exception Nr. " << e << '\n';
+
+        }
+    }
+    error_output_file.close();
+    token_output_file.close();
     return tokens;
 }
 
@@ -290,10 +314,7 @@ Token* Scanner::next_token() {
             }
             int location = program_count_ - lexeme.size();
             int column_location = current_column_count_ - lexeme.size();
-            if (lexeme.size() == 1 && use_backup_) {
-                location++;
-                column_location++;
-            }
+
             if(check_if_reserved_word(lexeme))
             {
                 string copy = lexeme;
@@ -337,7 +358,7 @@ void Scanner::check_if_newline() {
     if (backup_buffer_ == '\n'){
         current_row_count_++;
         previous_column_count_ = current_column_count_;
-        current_column_count_ = 0;
+        current_column_count_ = 1;
     } else {
         current_column_count_++;
     }

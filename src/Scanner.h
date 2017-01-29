@@ -19,8 +19,9 @@ public:
     Scanner(string token_output_path, string error_output_path);
 
     ifstream program_file_;
-    ofstream token_outpath_file_;
-    ofstream error_output_path_;
+    string token_output_path_;
+    string error_output_path_;
+    bool output_to_file_;
 
     string program_string_;
     int program_count_;
@@ -30,7 +31,7 @@ public:
 
     bool is_file_;
     State initial_state;
-    State table[45];
+    State table[42];
     bool use_backup_;
     char backup_buffer_;
     vector<string> reserved_words;
@@ -48,5 +49,7 @@ private:
     bool check_if_reserved_word(string word);
     void check_if_newline();
     void check_if_backup_row();
+
+    void init();
 };
 

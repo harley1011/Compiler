@@ -3,6 +3,7 @@
 #include "../src/IntegerToken.h"
 #include "../src/FloatToken.h"
 #include <vector>
+
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     cout << RUN_ALL_TESTS();
@@ -365,12 +366,8 @@ TEST(test_case_all_multi_line_combo, combo_test) {
     int size = sizeof(expected_tokens)/ sizeof(expected_tokens[0]);
     EXPECT_EQ(result.size(), size * 2);
     EXPECT_EQ(result[0]->token_identifier_, expected_tokens[0]);
-    int row_count = 0;
-    int column_count = 0;
 
     for(int i = 0; i < size * 2; i++) {
-       // EXPECT_EQ(result[i]->row_location_, row_count);
-      //  EXPECT_EQ(result[i]->column_location_, column_count);
         EXPECT_TRUE(check_location(program, result[i]->lexeme_, result[i]->row_location_, result[i]->column_location_));
         EXPECT_EQ(result[i]->token_identifier_, expected_tokens[i % size]);
         EXPECT_EQ(result[i]->lexeme_, program.substr(result[i]->location_, result[i]->lexeme_.size()));
@@ -389,6 +386,22 @@ TEST(test_case_start_unknown, error_test) {
     EXPECT_EQ(result[1]->lexeme_, "identi_fier");
     EXPECT_EQ(result[1]->location_, 2);
     EXPECT_EQ(scanner.error_tokens_[0].error_message_, scanner.table[0].error_message_);
+}
+
+TEST(test_case_float_end_non_digit, error_test) {
+    Scanner scanner("test.txt", "error.txt");
+    vector<Token*> result = scanner.generate_tokens("101. identi_fier 101.i identi_fier", false);
+    EXPECT_EQ(result[0]->token_identifier_, "ERROR");
+    EXPECT_EQ(result[1]->token_identifier_, "ID");
+    EXPECT_EQ(result[1]->lexeme_, "identi_fier");
+    EXPECT_EQ(result[1]->location_, 5);
+    EXPECT_EQ(scanner.error_tokens_[0].error_message_, scanner.table[6].error_message_);
+    EXPECT_EQ(result[2]->token_identifier_, "ERROR");
+    EXPECT_EQ(result[3]->token_identifier_, "ID");
+    EXPECT_EQ(result[3]->lexeme_, "i");
+    EXPECT_EQ(result[4]->token_identifier_, "ID");
+    EXPECT_EQ(result[4]->lexeme_, "identi_fier");
+
 
 }
 
