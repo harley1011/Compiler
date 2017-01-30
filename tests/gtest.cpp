@@ -432,29 +432,29 @@ TEST(test_case_float_end_non_digit, error_test) {
 
 
 TEST(test_case_read_input_file, full_program_test) {
-    Scanner scanner("simple_program_out.txt", "error_out.txt");
-    vector<Token*> result = scanner.generate_tokens("..//..//tests//simple_program.txt", true);
-    EXPECT_TRUE(compare_files("simple_program_out.txt", "..//..//tests/simple_program_out.txt"));
+    Scanner scanner("built_simple_program_out.txt", "error_out.txt");
+    vector<Token*> result = scanner.generate_tokens("simple_program.txt", true);
+    EXPECT_TRUE(compare_files("simple_program_out.txt", "built_simple_program_out.txt"));
 }
 
 TEST(test_case_large_file, full_program_test) {
-    Scanner scanner("large_program_out.txt", "large_error_out.txt");
-    vector<Token*> result = scanner.generate_tokens("..//..//tests//large_program.txt", true);
-    EXPECT_TRUE(compare_files("large_program_out.txt", "..//..//tests/large_program_out.txt"));
+    Scanner scanner("built_large_program_out.txt", "large_error_out.txt");
+    vector<Token*> result = scanner.generate_tokens("large_program.txt", true);
+    EXPECT_TRUE(compare_files("large_program_out.txt", "built_large_program_out.txt"));
 }
 
 TEST(test_case_read_input_file_with_errors, full_program_test) {
-    Scanner scanner("simple_program_with_errors_token_out.txt", "simple_program_with_errors_out.txt");
-    vector<Token*> result = scanner.generate_tokens("..//..//tests//simple_program_errors.txt", true);
-    EXPECT_TRUE(compare_files("simple_program_with_errors_token_out.txt", "..//..//tests/simple_program_with_errors_token_out.txt"));
-    EXPECT_TRUE(compare_files("simple_program_with_errors_out.txt", "..//..//tests/simple_program_with_errors_out.txt"));
+    Scanner scanner("built_simple_program_with_errors_token_out.txt", "built_simple_program_with_errors_out.txt");
+    vector<Token*> result = scanner.generate_tokens("simple_program_errors.txt", true);
+    EXPECT_TRUE(compare_files("simple_program_with_errors_token_out.txt", "built_simple_program_with_errors_token_out.txt"));
+    EXPECT_TRUE(compare_files("simple_program_with_errors_out.txt", "built_simple_program_with_errors_out.txt"));
 }
 
 TEST(test_case_large_file_2, full_program_test) {
-    Scanner scanner("large_program_out_2.txt", "large_error_out_2.txt");
-    vector<Token*> result = scanner.generate_tokens("..//..//tests//large_program_2.txt", true);
-    EXPECT_TRUE(compare_files("large_program_out_2.txt", "..//..//tests/large_program_out_2.txt"));
-    EXPECT_TRUE(compare_files("large_error_out_2.txt", "..//..//tests/large_error_out_2.txt"));
+    Scanner scanner("built_large_program_out_2.txt", "built_large_error_out_2.txt");
+    vector<Token*> result = scanner.generate_tokens("large_program_2.txt", true);
+    EXPECT_TRUE(compare_files("large_program_out_2.txt", "built_large_program_out_2.txt"));
+    EXPECT_TRUE(compare_files("large_error_out_2.txt", "built_large_error_out_2.txt"));
 }
 
 bool check_location(string program, string search_string, int row, int column) {
