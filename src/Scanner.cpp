@@ -305,7 +305,6 @@ Token* Scanner::next_token() {
                 program_count_--;
                 current_column_count_--;
             }
-            cout << (int)lookup;
             return new ErrorToken("ERROR", lexeme, program_count_ - lexeme.size(), current_row_count_, current_column_count_, current_state.error_message_);
 
         }
