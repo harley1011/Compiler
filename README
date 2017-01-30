@@ -2,5 +2,11 @@ COMPILATION AND EXECUTION INSTRUCTIONS
 
 FOR MAC
 1. Install CMAKE https://cmake.org/download/
+
 2. Install GCC compiler
-3.
+
+3. cd to the root of Compiler
+
+4. Run the command "cmake CMakeLists.txt"
+
+5.

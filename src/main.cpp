@@ -5,30 +5,38 @@
 using namespace std;
 
 
-int main() {
+int main(int argc, char *argv[] ) {
     string input;
     string output;
     string error_output;
-    struct stat info;
 
-    while (true) {
-        std::cout << "Enter path location:";
-        getline(cin, input);
+    if (argc < 3) {
+        struct stat info;
 
-        if (stat(input.c_str(), &info) != 0)
-            printf("Cannot access %s\n", input.c_str());
-        else if (info.st_mode & S_IFDIR)  // S_ISDIR() doesn't exist on my windows
-            printf("%s is a directory\n", input.c_str());
-        else
-            break;
+        while (true) {
+            std::cout << "Enter path location:";
+            getline(cin, input);
 
+            if (stat(input.c_str(), &info) != 0)
+                printf("Cannot access %s\n", input.c_str());
+            else if (info.st_mode & S_IFDIR)  // S_ISDIR() doesn't exist on my windows
+                printf("%s is a directory\n", input.c_str());
+            else
+                break;
+
+        }
+
+        cout << "Enter output location: ";
+        getline(cin, output);
+
+        cout << "Enter error output location: ";
+        getline(cin, error_output);
     }
-
-    cout << "Enter output location: ";
-    getline(cin, output);
-
-    cout << "Enter error output location: ";
-    getline(cin, error_output);
+    else {
+        input = argv[1];
+        output = argv[2];
+        error_output = argv[3];
+    }
 
     Scanner scanner(output, error_output);
     scanner.generate_tokens(input, true);
