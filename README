@@ -1,12 +1,28 @@
 COMPILATION AND EXECUTION INSTRUCTIONS
 
 FOR MAC
-1. Install CMAKE https://cmake.org/download/
+1. Install make
 
-2. Install GCC compiler
+2. cd to the root of Compiler
 
-3. cd to the root of Compiler
+3. Run the command "make"
 
-4. Run the command "cmake CMakeLists.txt"
+4. src contains the executable exe which launches the program
 
-5.
+5. cd to src
+
+6. enter "./exe"
+
+7. Follow the programs instructions
+
+You can optionally pass three arguments to ./exe, the first argument being the program file, the second being the output file and lastly the error output
+
+An example below is, the program file has to be in the same folder as exe or you have to give the full program path
+./exe simple_program_with_errors.txt output_program.txt error_out_program.txt
+
+
+The tests can also be ran by:
+
+1. cd to tests
+
+2. enter "./runUnitTes"
