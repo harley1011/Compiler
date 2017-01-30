@@ -1,3 +1,5 @@
+Test cases can be found in the gtest.cpp file.
+
 Input files can be found in the tests folder. 
 The program files and there associated outputs are:
 - simple_program.txt -> simple_program_out.txt, simple_program_errors.txt
