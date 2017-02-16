@@ -489,6 +489,11 @@ bool compare_files(string first_path, string second_path) {
         f = f_file.get();
         s = s_file.get();
 
+        if (f == '\r')
+            f = f_file.get();
+        if (s == '\r')
+            s = f_file.get();
+
         if (f != s) {
             f_file.close();
             s_file.get();
