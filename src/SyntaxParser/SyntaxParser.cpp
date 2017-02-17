@@ -19,6 +19,7 @@ bool SyntaxParser::parse(vector<Token*> tokens) {
 
 
 bool SyntaxParser::prog() {
+    _current_rhs_derivation = "<classDeclLst> <progBody>";
     if ( _lookahead == "CLASS" ) {
         if (classDeclLst() && progBody()) {
             return true;
@@ -27,20 +28,24 @@ bool SyntaxParser::prog() {
     } else if ( _lookahead == "PROGRAM" ) {
 
     }
+    return false;
 }
 
 bool SyntaxParser::classDeclLst() {
     if (_lookahead == "CLASS") {
+        form_derivation_string("<classDeclLst>", "<classDecl> <classDeclLst>");
         if (classDecl() && classDeclLst()) {
             return true;
         }
     } else if (_lookahead == "PROGRAM") { // FOLLOW SET
         return true;
     }
+    return false;
 }
 
 bool SyntaxParser::classDecl() {
     if(_lookahead == "CLASS") {
+        form_derivation_string("<classDecl>", "class id { <classBody> } ;");
         if (match("CLASS") && match("ID") && match("OPENCURL") && classBody() && match("CLOSECURL") && match("DELI") ) {
             return true;
         }
@@ -49,11 +54,22 @@ bool SyntaxParser::classDecl() {
 }
 
 bool SyntaxParser::classBody() {
+    if (_lookahead == "INT" || _lookahead == "FLOAT" || _lookahead == "ID" ) {
+        form_derivation_string("<classBody>", "<classInDecl> <classBody>");
+        if (classInDecl() && classBody()) {
+            return true;
+        }
+    }
     return true;
 }
 
 bool SyntaxParser::classInDecl() {
+    if (_lookahead == "INT" || _lookahead == "FLOAT" || _lookahead == "ID" ) {
+        if ( type() && match("ID") && postTypeId()) {
+            return true;
+        }
 
+    }
 }
 bool SyntaxParser::postTypeId() {
 
@@ -163,6 +179,18 @@ bool SyntaxParser::arraySize() {
 
 bool SyntaxParser::type() {
 
+    if ( match("INT")) {
+        form_derivation_string("<type>", "int");
+        return true;
+    } else if ( match("FLOAT")) {
+        form_derivation_string("<type>", "float");
+        return true;
+    }
+    else if ( match("ID")) {
+        form_derivation_string("<type>", "id");
+        return true;
+    }
+    return false;
 }
 
 bool SyntaxParser::numType() {
@@ -213,6 +241,14 @@ bool SyntaxParser::match(string token) {
 
 bool check_if_list_has_string(vector<string> tokens, string token) {
 
+}
+
+bool SyntaxParser::form_derivation_string(string non_terminal, string rhs) {
+    int begin_index = _current_rhs_derivation.find(non_terminal);
+    if (begin_index == string::npos)
+        return false;
+    _current_rhs_derivation.replace(begin_index, non_terminal.size(), rhs);
+    return true;
 }
 
 string SyntaxParser::next_token() {

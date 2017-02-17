@@ -13,6 +13,7 @@ class SyntaxParser {
 public:
     SyntaxParser();
 
+    string _current_rhs_derivation;
     string _lookahead;
     vector<Token*> _tokens;
     int _current_token_position;
@@ -20,6 +21,7 @@ public:
     map<string, vector<string>> _first_sets;
 
     string next_token();
+    bool form_derivation_string(string non_terminal, string rhs);
     bool parse(vector<Token*> tokens);
     bool match(string token);
 
