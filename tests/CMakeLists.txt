@@ -1,7 +1,7 @@
 
 set(gtest_disable_pthreads on) #needed in MinGW
 set(test_SRCS gtest.cpp)
-add_executable(runUnitTests gtest.cpp ScannerTests.cpp ScannerTests.h ParserTests.cpp ParserTests.h)
+add_executable(runUnitTests gtest.cpp ScannerTests.cpp ScannerTests.h ParserTests.cpp ParserTests.h ../src/SyntaxParser/SyntaxParser.cpp ../src/SyntaxParser/SyntaxParser.h)
 
 
 target_link_libraries(runUnitTests gtest scanner)
