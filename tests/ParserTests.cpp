@@ -6,9 +6,15 @@
 #include "gtest/gtest.h"
 #include "../src/SyntaxParser/SyntaxParser.h"
 
-TEST(SubtractTest, SubtractTwoNumbers)
+
+TEST(SimpleClassTest, ParserTests)
 {
     vector<Token*> tokens;
-    int test[5 + 5 + 10];
-    EXPECT_EQ(5, 5);
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class id { };", false);
+
+    SyntaxParser syntaxParser;
+
+    EXPECT_EQ(syntaxParser.parse(tokens), true);
 }
+

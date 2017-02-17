@@ -10,6 +10,7 @@
 
 class SyntaxParser {
 
+public:
     SyntaxParser();
 
     string _lookahead;

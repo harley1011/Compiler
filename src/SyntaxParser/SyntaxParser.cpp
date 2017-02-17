@@ -12,29 +12,44 @@ SyntaxParser::SyntaxParser() {
 bool SyntaxParser::parse(vector<Token*> tokens) {
     _current_token_position = 0;
     _tokens = tokens;
+    next_token();
 
     return prog();
 }
 
 
 bool SyntaxParser::prog() {
-    if ( _lookahead == "class" ) {
+    if ( _lookahead == "CLASS" ) {
+        if (classDeclLst() && progBody()) {
+            return true;
+        }
 
-
-    } else if ( _lookahead == "program" ) {
+    } else if ( _lookahead == "PROGRAM" ) {
 
     }
 }
 
 bool SyntaxParser::classDeclLst() {
-
+    if (_lookahead == "CLASS") {
+        if (classDecl() && classDeclLst()) {
+            return true;
+        }
+    } else if (_lookahead == "PROGRAM") { // FOLLOW SET
+        return true;
+    }
 }
 
 bool SyntaxParser::classDecl() {
-
+    if(_lookahead == "CLASS") {
+        if (match("CLASS") && match("ID") && match("OPENCURL") && classBody() && match("CLOSECURL") && match("DELI") ) {
+            return true;
+        }
+    }
+    return false;
 }
-bool SyntaxParser::classBody() {
 
+bool SyntaxParser::classBody() {
+    return true;
 }
 
 bool SyntaxParser::classInDecl() {
@@ -201,6 +216,11 @@ bool check_if_list_has_string(vector<string> tokens, string token) {
 }
 
 string SyntaxParser::next_token() {
-    _lookahead = _tokens[_current_token_position]->token_identifier_;
+    if (_current_token_position < _tokens.size()) {
+        _lookahead = _tokens[_current_token_position++]->token_identifier_;
+    } else {
+        _lookahead = "END";
+    }
+    return _lookahead;
 }
 
