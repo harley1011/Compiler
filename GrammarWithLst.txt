@@ -1,0 +1,55 @@
+<prog>-> <classDeclLst> <progBody>
+<classDeclLst>-> <classDecl> <classDeclLst> | EPSILON
+<classDecl>-> class id { <classBody> } ;
+<classBody>-> <classInDecl> <classBody> | EPSILON
+<classInDecl> -> <type> id <postTypeId>
+<postTypeId> -> <arraySize> ;  | ( <fParams> ) <funcBody>
+<progBody>-> program <funcBody> ; <funcDefLst>
+<funcHead>-> <type> id ( <fParams> )
+<funcDefLst> -> <funcDef> <funcDefLst> | EPSILON
+<funcDef> -> <funcHead> <funcBody> ; 
+
+<funcBody> -> { <funcInBodyLst> }
+
+<funcInBodyLst> -> <funcInBody> <funcInBodyLst> | EPSILON
+<funcInBody> -> id <varOrStat> | <statementRes> | <numType> id <arraySize> ; 
+
+
+<varOrStat> -> id <arraySize> ; | <indiceLst> <idnest> <assignOp>
+<statementLst> -> <statement> <statementLst> | EPSILON
+<statement> -> <assignStat> ; | <statementRes>
+<statementRes> -> if ( <expr> ) then <statBlock> else <statBlock> ; | for ( <type> id <assignOp> <expr> ; <relExpr> ; <assignStat> ) <statBlock> ; | get ( <variable> ) ; | put ( <expr> ) ; | return ( <expr> ) ;
+<assignStat> -> <variable> <assignOp> <expr>
+<statBlock> ->{ <statementLst> } | <statement> | EPSILON
+<expr> -> <term> <relOrAri>
+<relOrAri> -> <relOp> <arithExpr> | <arithExpr’>
+<relExpr> -> <arithExpr> <relOp> <arithExpr>
+<arithExpr> -> <term> <arithExpr’>
+<arithExpr’> -> <addOp> <term> <arithExpr’> | EPSILON
+<sign> -> + | -
+<term> -> <factor> <term’>
+<term’> -> <multOp> <factor> <term’> | EPSILON
+<factor> -> id <factorVarOrFunc> | <num> | ( <arithExpr> ) | not <factor> | <sign> <factor>
+<factorVarOrFunc> -> <indice> <factorVarOrFunc> | . id <varOrFuncIdNest> | EPSILON
+<varOrFuncIdNest> ->  ( <aParams> ) | <factorVarOrFunc>
+<variable> -> id <variableIndice>
+<variableIndice> -> <indiceLst> <idnest>
+<idnest> -> . id <indiceLst> <idnest> | EPSILON
+<indice> -> [ <arithExpr> ] 
+<indiceLst> -> <indice> <indiceLst> | EPSILON
+<arraySize> -> [ integer ] <arraySize> | EPSILON
+<type> -> <numType> | id
+<numType> -> int | float
+<fParams> -> <type> id <arraySize> <fParamsTail> | EPSILON
+<aParams> -> <expr> <aParamsTail> | EPSILON
+<fParamsTail> -> , <type> id <arraySize> <fParamsTail> | EPSILON
+<aParamsTail> -> , <expr> <aParamsTail> | EPSILON
+<assignOp> -> =
+<relOp> -> == | <> | < | > | <= | >=
+<addOp> -> + | - | or
+<multOp> -> * | / | and
+<num> -> integer | float
+
+
+
+
