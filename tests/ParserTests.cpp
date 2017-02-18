@@ -6,7 +6,7 @@
 #include "gtest/gtest.h"
 #include "../src/SyntaxParser/SyntaxParser.h"
 
-
+string find_min_func_string = "int findMin(int array[100]) { int minValue; int idx; minValue = array[100]; for( int idx = 1; idx <= 99; idx = ( idx ) + 1) { if(array[idx] < maxValue) then { maxValue = array[idx]; }else{}; }; return (minValue); }; ";
 TEST(SimpleClassTest, ParserTests)
 {
     vector<Token*> tokens;
@@ -45,7 +45,7 @@ TEST(FuncDeclareClassTest, ParserTests)
 {
     vector<Token*> tokens;
     Scanner scanner;
-    tokens = scanner.generate_tokens("class nameHere { int findMin(int testVar) { } }; program { };", false);
+    tokens = scanner.generate_tokens("class nameHere { " + find_min_func_string + "}; program { };", false);
 
     SyntaxParser syntaxParser;
 

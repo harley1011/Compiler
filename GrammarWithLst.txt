@@ -15,7 +15,7 @@
 <funcInBody> -> id <varOrStat> | <statementRes> | <numType> id <arraySize> ; 
 
 
-<varOrStat> -> id <arraySize> ; | <indiceLst> <idnest> <assignOp>
+<varOrStat> -> id <arraySize> ; | <indiceLst> <idnest> <assignOp> <expr> ;
 <statementLst> -> <statement> <statementLst> | EPSILON
 <statement> -> <assignStat> ; | <statementRes>
 <statementRes> -> if ( <expr> ) then <statBlock> else <statBlock> ; | for ( <type> id <assignOp> <expr> ; <relExpr> ; <assignStat> ) <statBlock> ; | get ( <variable> ) ; | put ( <expr> ) ; | return ( <expr> ) ;
@@ -49,6 +49,8 @@
 <addOp> -> + | - | or
 <multOp> -> * | / | and
 <num> -> integer | float
+
+
 
 
 
