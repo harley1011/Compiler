@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include "../Scanner.h"
+#include <set>
 
 class SyntaxParser {
 
@@ -15,6 +16,9 @@ public:
 
     string _current_rhs_derivation;
     string _lookahead;
+    vector<string> _errors;
+    vector<string> _derivations;
+    Token*   _current_token;
     vector<Token*> _tokens;
     int _current_token_position;
 
@@ -22,6 +26,7 @@ public:
 
     string next_token();
     bool form_derivation_string(string non_terminal, string rhs);
+    bool skip_errors(set<string> first_set, set<string> follow_set, bool epsilon);
     bool parse(vector<Token*> tokens);
     bool match(string token);
 
@@ -71,6 +76,10 @@ public:
     bool addOp();
     bool multOp();
     bool num();
+
+    bool is_lookahead_a_type();
+
+    bool is_lookahead_a_statement();
 };
 
 
