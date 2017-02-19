@@ -5,8 +5,11 @@
 
 
 SyntaxParser::SyntaxParser() {
+    _enable_derivation_output = false;
+}
 
-    _first_sets["prog"] = {"class", "program"};
+SyntaxParser::SyntaxParser(bool enable_derivation_output) {
+    _enable_derivation_output == enable_derivation_output;
 }
 
 bool SyntaxParser::parse(vector<Token *> tokens) {
@@ -34,13 +37,13 @@ bool SyntaxParser::prog() {
             return true;
         }
 
-    } else if (_lookahead == "PROGRAM") {
-
     }
     return false;
 }
 
 bool SyntaxParser::classDeclLst() {
+    if (!skip_errors({"CLASS"}, {"PROGRAM"}, true))
+        return false;
     if (_lookahead == "CLASS") {
         form_derivation_string("<classDeclLst>", "<classDecl> <classDeclLst>");
         if (classDecl() && classDeclLst()) {
@@ -54,6 +57,8 @@ bool SyntaxParser::classDeclLst() {
 }
 
 bool SyntaxParser::classDecl() {
+    if (!skip_errors({"CLASS"}, {"PROGRAM"}, false))
+        return false;
     if (_lookahead == "CLASS") {
         form_derivation_string("<classDecl>", "class id { <classBody> } ;");
         if (match("CLASS") && match("ID") && match("OPENCURL") && classBody() && match("CLOSECURL") && match("DELI")) {
@@ -64,6 +69,8 @@ bool SyntaxParser::classDecl() {
 }
 
 bool SyntaxParser::classBody() {
+    if (!skip_errors({"INT", "ID", "FLOAT"}, {"CLOSECURL"}, true))
+        return false;
     if (is_lookahead_a_type()) {
         form_derivation_string("<classBody>", "<classInDecl> <classBody>");
         if (classInDecl() && classBody()) {
@@ -77,6 +84,8 @@ bool SyntaxParser::classBody() {
 }
 
 bool SyntaxParser::classInDecl() {
+    if (!skip_errors({"INT", "ID", "FLOAT"}, {"INT", "ID", "FLOAT", "CLOSECURL"}, false))
+        return false;
     if (is_lookahead_a_type()) {
         form_derivation_string("<classInDecl>", "<type> id <postTypeId> ;");
         if (type() && match("ID") && postTypeId() && match("DELI")) {
@@ -87,6 +96,8 @@ bool SyntaxParser::classInDecl() {
 }
 
 bool SyntaxParser::postTypeId() {
+    if (!skip_errors({"OPENBRA", "DELI", "CLOSEPARA"}, { "CLOSECURL", "INT", "ID", "FLOAT"}, false))
+        return false;
     if (_lookahead == "OPENBRA" || _lookahead == "DELI") {
         form_derivation_string("<postTypeId>", "<arraySize>");
         if (arraySize()){
@@ -102,6 +113,8 @@ bool SyntaxParser::postTypeId() {
 }
 
 bool SyntaxParser::progBody() {
+    if (!skip_errors({"PROGRAM"}, {"END"}, false))
+        return false;
     if (_lookahead == "PROGRAM") {
         form_derivation_string("<progBody>", "program <funcBody> ; <funcDefLst>");
         if (match("PROGRAM") && funcBody() && match("DELI") && funcDefLst())
@@ -111,6 +124,8 @@ bool SyntaxParser::progBody() {
 }
 
 bool SyntaxParser::funcHead() {
+    if (!skip_errors({"INT", "ID", "FLOAT"}, {"OPENCURL"}, false))
+        return false;
     if (is_lookahead_a_type()) {
         form_derivation_string("<funcHead>", "<type> id ( <fParams> )");
         if (type() && match("ID") && match("OPENPARA") && fParams() && match("CLOSEPARA"))
@@ -120,6 +135,8 @@ bool SyntaxParser::funcHead() {
 }
 
 bool SyntaxParser::funcDefLst() {
+    if (!skip_errors({"INT", "ID", "FLOAT"}, {"END"}, true))
+        return false;
     if (is_lookahead_a_type()) {
         form_derivation_string("<funcDefLst>", "<funcDef> <funcDefLst>");
         if (funcDef() && funcDefLst())
@@ -132,6 +149,8 @@ bool SyntaxParser::funcDefLst() {
 }
 
 bool SyntaxParser::funcDef() {
+    if (!skip_errors({"INT", "ID", "FLOAT"}, {"INT", "ID", "FLOAT", "END"}, false))
+        return false;
     if (is_lookahead_a_type()) {
         form_derivation_string("<funcDef>", "<funcHead> <funcBody> ;");
         if (funcHead() && funcBody() && match("DELI"))
@@ -141,6 +160,8 @@ bool SyntaxParser::funcDef() {
 }
 
 bool SyntaxParser::funcBody() {
+    if (!skip_errors({"OPENCURL"}, {"INT", "ID", "FLOAT", "DELI", "CLOSECURL"}, false))
+        return false;
     if (_lookahead == "OPENCURL") {
         form_derivation_string("<funcBody>", "{ <funcInBodyLst> }");
         if (match("OPENCURL") && funcInBodyLst() && match("CLOSECURL")) {
@@ -152,6 +173,8 @@ bool SyntaxParser::funcBody() {
 
 
 bool SyntaxParser::funcInBodyLst() {
+    if (!skip_errors({"INT", "ID", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN"}, {"CLOSECURL"}, true))
+        return false;
     if (is_lookahead_a_type() || is_lookahead_a_statement()) {
         form_derivation_string("<funcInBodyLst>", "<funcInBody> <funcInBodyLst>");
         if (funcInBody() && funcInBodyLst()) {
@@ -165,6 +188,8 @@ bool SyntaxParser::funcInBodyLst() {
 }
 
 bool SyntaxParser::funcInBody() {
+    if (!skip_errors({"INT", "ID", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN"}, {"INT", "ID", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN", "CLOSECURL"}, false))
+        return false;
     if (_lookahead == "ID") {
         form_derivation_string("<funcInBody>", "id <varOrStat>");
         if (match("ID") && varOrStat()) {
@@ -185,6 +210,8 @@ bool SyntaxParser::funcInBody() {
 }
 
 bool SyntaxParser::varOrStat() {
+    if (!skip_errors({"ID", "OPENBRA", "EQUAL", "DOT"}, {"INT", "ID", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN", "CLOSECURL"}, false))
+        return false;
     if (_lookahead == "ID") {
         form_derivation_string("<varOrStat>", "id <arraySize> ;");
         if (match("ID") && arraySize() && match("DELI")) {
@@ -200,6 +227,8 @@ bool SyntaxParser::varOrStat() {
 }
 
 bool SyntaxParser::statementLst() {
+    if (!skip_errors({"INT", "ID", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN"}, {"CLOSECURL"}, true))
+        return false;
     if (_lookahead == "ID" || is_lookahead_a_statement()) {
         form_derivation_string("<statementLst>", "<statement> <statementLst>");
         if (statement() && statementLst())
@@ -211,6 +240,8 @@ bool SyntaxParser::statementLst() {
 }
 
 bool SyntaxParser::statement() {
+    if (!skip_errors({"ID", "IF", "FOR", "GET", "PUT", "RETURN"}, {"ID", "IF", "FOR", "GET", "PUT", "RETURN", "ELSE", "DELI", "CLOSECURL"}, false))
+        return false;
     if (_lookahead == "ID") {
         form_derivation_string("<statement>", "<assignStat> ;");
         if (assignStat() && match("DELI"))
@@ -224,6 +255,8 @@ bool SyntaxParser::statement() {
 }
 
 bool SyntaxParser::statementRes() {
+    if (!skip_errors({"IF", "FOR", "GET", "PUT", "RETURN"}, {"ID", "INT", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN", "ELSE", "DELI", "CLOSECURL", }, false))
+        return false;
     if (_lookahead == "IF") {
         form_derivation_string("<statementRes>", "if ( <expr> ) then <statBlock> else <statBlock> ;");
         if (match("IF") && match("OPENPARA") && expr() && match("CLOSEPARA") && match("THEN") && statBlock() && match("ELSE") && statBlock() && match("DELI")) {
@@ -507,11 +540,13 @@ bool SyntaxParser::is_lookahead_a_statement() {
 }
 
 bool SyntaxParser::skip_errors(set<string> first_set, set<string> follow_set, bool epsilon) {
-    if (first_set.find(_lookahead) == first_set.end() || (epsilon && follow_set.find(_lookahead) == follow_set.end())) {
+    if (first_set.find(_lookahead) == first_set.end() && (epsilon && follow_set.find(_lookahead) == follow_set.end())) {
 
         _errors.push_back("Syntax Error at " + to_string(_current_token->row_location_) + " : " + to_string(_current_token->column_location_));
         do {
             next_token();
+            if (_lookahead == "END")
+                return false;
 //            if (!epsilon && follow_set.find(_lookahead) == follow_set.end())
 //                return false;
         } while (first_set.find(_lookahead) == first_set.end() || (epsilon && follow_set.find(_lookahead) == follow_set.end()));

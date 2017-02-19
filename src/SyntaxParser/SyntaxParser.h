@@ -14,6 +14,8 @@ class SyntaxParser {
 public:
     SyntaxParser();
 
+    SyntaxParser(bool enable_derivation_output);
+
     string _current_rhs_derivation;
     string _lookahead;
     vector<string> _errors;
@@ -22,7 +24,7 @@ public:
     vector<Token*> _tokens;
     int _current_token_position;
 
-    map<string, vector<string>> _first_sets;
+    bool _enable_derivation_output;
 
     string next_token();
     bool form_derivation_string(string non_terminal, string rhs);
