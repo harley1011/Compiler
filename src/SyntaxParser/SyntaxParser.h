@@ -88,6 +88,9 @@ public:
     bool is_lookahead_a_value();
     bool check_if_lookahead_is_in_set(set<string> values);
 
+    bool factorVarArray();
+
+    bool factorVarArrayNestId();
 };
 
 

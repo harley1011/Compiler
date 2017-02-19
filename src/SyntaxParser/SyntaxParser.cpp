@@ -456,16 +456,12 @@ bool SyntaxParser::factorVarOrFunc() {
     if (!skip_errors({"OPENPARA", "OPENBRA", "DOT"}, {"MULT", "DASH", "AND", "ADD", "SUB", "OR", "CLOSEBRA", "CLOSEPARA", "EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ", "DELI", "COM"}, true))
         return false;
     if (_lookahead == "OPENBRA") {
-        form_derivation_string("<factorVarOrFunc>", "<indice> <factorVarOrFunc>");
-        if (indice() && factorVarOrFunc())
+        form_derivation_string("<factorVarOrFunc>", "<factorVarArray>");
+        if (factorVarArray())
             return true;
-    } else if (_lookahead == "DOT") {
-        form_derivation_string("<factorVarOrFunc>", ". id <varOrFuncIdNest>");
-        if (match("DOT") && match("ID") && varOrFuncIdNest())
-            return true;
-    } else if (_lookahead == "OPENPARA") {
-        form_derivation_string("<factorVarOrFunc>", "( <aParams> )");
-        if (match("OPENPARA") && aParams() && match("CLOSEPARA"))
+    } else if (_lookahead == "DOT" || _lookahead == "OPENPARA") {
+        form_derivation_string("<factorVarOrFunc>", "<varOrFuncIdNest>");
+        if (varOrFuncIdNest())
             return true;
     } else if (check_if_lookahead_is_in_set({"MULT", "DASH", "AND", "ADD", "SUB", "OR", "EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ", "CLOSEBRA", "CLOSEPARA", "DELI", "COM" ,"DOT"})) { // follow set
         form_derivation_string("<factorVarOrFunc>", "");
@@ -474,25 +470,48 @@ bool SyntaxParser::factorVarOrFunc() {
     return false;
 }
 
-bool SyntaxParser::varOrFuncIdNest() {
-    if (!skip_errors({"OPENPARA", "OPENBRA", "DOT"}, {"MULT", "DASH", "AND", "ADD", "SUB", "OR", "CLOSEBRA", "CLOSEPARA", "EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ", "DELI", "COM"}, true))
+bool SyntaxParser::factorVarArray() {
+    if (!skip_errors({"OPENBRA"}, {"MULT", "DASH", "AND", "ADD", "SUB", "OR", "CLOSEBRA", "CLOSEPARA", "EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ", "DELI", "COM"}, false))
         return false;
-    if (_lookahead == "OPENPARA") {
-        form_derivation_string("<varOrFuncIdNest>", "( <aParams> )");
-        if (match("OPENPARA") && aParams() && match("CLOSEPARA"))
+    if (_lookahead == "OPENBRA") {
+        form_derivation_string("<factorVarArray>", "<indice> <indiceLst> <factorVarArrayNestId>");
+        if (indice() && indiceLst() && factorVarArrayNestId())
             return true;
-    } else if (_lookahead == "DOT" || _lookahead == "OPENBRA") {
-        form_derivation_string("<varOrFuncIdNest>", "<factorVarOrFunc>");
-        if (factorVarOrFunc())
+    }
+}
+
+bool SyntaxParser::factorVarArrayNestId() {
+    if (!skip_errors({"DOT"}, {"MULT", "DASH", "AND", "ADD", "SUB", "OR", "CLOSEBRA", "CLOSEPARA", "EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ", "DELI", "COM"}, true))
+        return false;
+    if (_lookahead == "DOT") {
+        form_derivation_string("<factorVarArrayNestId>", ". id <factorVarOrFunc>");
+        if (match("DOT") && match("ID") && factorVarOrFunc())
             return true;
     } else if (check_if_lookahead_is_in_set({"MULT", "DASH", "AND", "ADD", "SUB", "OR", "EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ", "CLOSEBRA", "CLOSEPARA", "DELI", "COM" ,"DOT"})) { // follow set
-        form_derivation_string("<varOrFuncIdNest>", "");
+        form_derivation_string("<factorVarArrayNestId>", "");
         return true;
     }
     return false;
 }
 
+bool SyntaxParser::varOrFuncIdNest() {
+    if (!skip_errors({"OPENPARA", "DOT"}, {"MULT", "DASH", "AND", "ADD", "SUB", "OR", "CLOSEBRA", "CLOSEPARA", "EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ", "DELI", "COM"}, true))
+        return false;
+    if (_lookahead == "OPENPARA") {
+        form_derivation_string("<varOrFuncIdNest>", "( <aParams> )");
+        if (match("OPENPARA") && aParams() && match("CLOSEPARA"))
+            return true;
+    } else if (_lookahead == "DOT") {
+        form_derivation_string("<varOrFuncIdNest>", ". id <factorVarOrFunc>");
+        if (match("DOT") && match("ID") && factorVarOrFunc())
+            return true;
+    }
+    return false;
+}
+
 bool SyntaxParser::variable() {
+    if (!skip_errors({"ID"}, {"EQUAL", "CLOSEPARA"}, false))
+        return false;
     if (_lookahead == "ID") {
         form_derivation_string("<variable>", "id <variableIndice>");
         if (match("ID") && variableIndice())
@@ -502,6 +521,8 @@ bool SyntaxParser::variable() {
 }
 
 bool SyntaxParser::variableIndice() {
+    if (!skip_errors({"OPENBRA", "DOT"}, {"EQUAL", "CLOSEPARA"}, true))
+        return false;
     if (_lookahead == "OPENBRA" || _lookahead == "DOT") {
         form_derivation_string("<variableIndice>", "<indiceLst> <idnest>");
         if (indiceLst() && idnest())
@@ -518,6 +539,8 @@ bool SyntaxParser::check_if_lookahead_is_in_set(set<string> values) {
 }
 
 bool SyntaxParser::idnest() {
+    if (!skip_errors({"DOT"}, {"EQUAL", "CLOSEPARA"}, true))
+        return false;
     if (_lookahead == "DOT") {
         form_derivation_string("<idnest>", ". id <indiceLst> <idnest>");
         if (match("DOT") && match("ID") && indiceLst() && idnest()) {
@@ -531,6 +554,8 @@ bool SyntaxParser::idnest() {
 }
 
 bool SyntaxParser::indice() {
+    if (!skip_errors({"OPENBRA"}, {"OPENBRA", "DOT", "EQUAL", "MULT", "DASH", "AND", "ADD", "SUB", "OR", "CLOSEBRA", "CLOSEPARA", "EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ", "DELI", "COM"}, false))
+        return false;
     if (_lookahead == "OPENBRA") {
         form_derivation_string("<indice>", "[ <arithExpr> ]");
         if (match("OPENBRA") && arithExpr() && match("CLOSEBRA")) {
@@ -541,12 +566,18 @@ bool SyntaxParser::indice() {
 }
 
 bool SyntaxParser::indiceLst() {
+    if (!skip_errors({"OPENBRA"}, {"OPENBRA", "DOT", "EQUAL", "MULT", "DASH", "AND", "ADD", "SUB", "OR", "CLOSEBRA", "CLOSEPARA", "EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ", "DELI", "COM"}, true))
+        return false;
     if (_lookahead == "OPENBRA") {
         form_derivation_string("<indiceLst>", "<indice> <indiceLst>");
         if (indice() && indiceLst()) {
             return true;
         }
     } else if (_lookahead == "DOT" || _lookahead == "EQUAL" || _lookahead == "CLOSEPARA" ) { // Follow set
+        form_derivation_string("<indiceLst>", "");
+        return true;
+    }
+    else if (check_if_lookahead_is_in_set({"DOT", "EQUAL", "MULT", "DASH", "AND", "ADD", "SUB", "OR", "EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ", "CLOSEBRA", "CLOSEPARA", "DELI", "COM" ,"DOT"})) { // follow set
         form_derivation_string("<indiceLst>", "");
         return true;
     }
@@ -582,6 +613,8 @@ bool SyntaxParser::skip_errors(set<string> first_set, set<string> follow_set, bo
 }
 
 bool SyntaxParser::arraySize() {
+    if (!skip_errors({"OPENBRA"}, {"COM", "DELI", "CLOSEPARA"}, true))
+        return false;
     if ( _lookahead == "OPENBRA") {
         form_derivation_string("<arraySize>", "[ integer ] <arraySize>");
         if (match("OPENBRA") && match("INUM") && match("CLOSEBRA") && arraySize()) {
@@ -595,7 +628,8 @@ bool SyntaxParser::arraySize() {
 }
 
 bool SyntaxParser::type() {
-
+    if (!skip_errors({"INT", "FLOAT", "ID"}, {"ID"}, false))
+        return false;
     if (_lookahead == "INT" && match("INT")) {
         form_derivation_string("<type>", "int");
         return true;
@@ -610,6 +644,8 @@ bool SyntaxParser::type() {
 }
 
 bool SyntaxParser::numType() {
+    if (!skip_errors({"INT", "FLOAT"}, {"ID"}, false))
+        return false;
     if (_lookahead == "INT") {
         form_derivation_string("<numType>", "int");
         if (match("INT"))
@@ -622,6 +658,8 @@ bool SyntaxParser::numType() {
 }
 
 bool SyntaxParser::fParams() {
+    if (!skip_errors({"INT", "FLOAT", "ID"}, {"CLOSEPARA"}, true))
+        return false;
     if (is_lookahead_a_type()) {
         form_derivation_string("<fParams>", "<type> id <arraySize> <fParamsTail>");
         if (type() && match("ID") && arraySize() && fParamsTail())
@@ -634,6 +672,8 @@ bool SyntaxParser::fParams() {
 }
 
 bool SyntaxParser::aParams() {
+    if (!skip_errors({"ID", "INUM", "FNUM", "OPENPARA", "NOT", "ADD", "SUB"}, {"CLOSEPARA"}, true))
+        return false;
     if (is_lookahead_a_value() || _lookahead == "OPENPARA" || _lookahead == "NOT" || _lookahead == "ADD" || _lookahead == "SUB") {
         form_derivation_string("<aParams>", "<expr> <aParamsTail>");
         if (expr() && aParamsTail())
@@ -646,6 +686,8 @@ bool SyntaxParser::aParams() {
 }
 
 bool SyntaxParser::fParamsTail() {
+    if (!skip_errors({"COM"}, {"CLOSEPARA"}, true))
+        return false;
     if (_lookahead == "COM") {
         form_derivation_string("<fParamsTail>", ", <type> id <arraySize> <fParamsTail>");
         if (match("COM") && type() && match("ID") && arraySize() && fParamsTail() )
@@ -658,6 +700,8 @@ bool SyntaxParser::fParamsTail() {
 }
 
 bool SyntaxParser::aParamsTail() {
+    if (!skip_errors({"COM"}, {"CLOSEPARA"}, true))
+        return false;
     if (_lookahead == "COM") {
         form_derivation_string("<aParamsTail>", ", <expr> <aParamsTail>");
         if (match("COM") && expr() && aParamsTail() )
@@ -670,6 +714,8 @@ bool SyntaxParser::aParamsTail() {
 }
 
 bool SyntaxParser::assignOp() {
+    if (!skip_errors({"EQUAL"}, {"ID", "OPENPARA", "NOT", "INUM", "FNUM", "ADD", "SUB", "IF", "FOR", "GET", "PUT", "RETURN", "INT", "CLOSECURL"}, false))
+        return false;
     if (_lookahead == "EQUAL" && match("EQUAL")) {
         form_derivation_string("<assignOp>", "=");
         return true;
@@ -678,6 +724,8 @@ bool SyntaxParser::assignOp() {
 }
 
 bool SyntaxParser::relOp() {
+    if (!skip_errors({"EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ"}, {"ID", "OPENPARA", "NOT", "INUM", "FNUM", "ADD", "SUB"}, false))
+        return false;
     if (_lookahead == "EQUIV") {
         form_derivation_string("<relOp>", "==");
         if (match("EQUIV"))
@@ -707,6 +755,8 @@ bool SyntaxParser::relOp() {
 }
 
 bool SyntaxParser::addOp() {
+    if (!skip_errors({"ADD", "SUB", "OR"}, {"ID", "OPENPARA", "NOT", "INUM", "FNUM", "ADD", "SUB"}, false))
+        return false;
     if (_lookahead == "ADD") {
         form_derivation_string("<addOp>", "+");
         if (match("ADD"))
@@ -724,6 +774,8 @@ bool SyntaxParser::addOp() {
 }
 
 bool SyntaxParser::multOp() {
+    if (!skip_errors({"MULT", "DASH", "AND"}, {"ID", "OPENPARA", "NOT", "INUM", "FNUM", "ADD", "SUB"}, false))
+        return false;
     if (_lookahead == "MULT") {
         form_derivation_string("<multOp>", "*");
         if (match("MULT"))
@@ -742,6 +794,8 @@ bool SyntaxParser::multOp() {
 
 
 bool SyntaxParser::num() {
+    if (!skip_errors({"INUM", "FNUM"}, {"MULT", "DASH", "AND", "ADD", "SUB", "OR", "EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ", "CLOSEBRA", "CLOSEPARA", "DELI"}, false))
+        return false;
     if (_lookahead == "INUM") {
         form_derivation_string("<num>", "integer");
         if (match("INUM"))

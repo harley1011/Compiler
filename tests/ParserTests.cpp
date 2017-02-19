@@ -18,6 +18,18 @@ TEST(SimpleClassTest, ParserTests)
     EXPECT_EQ(syntaxParser.parse(tokens), true);
     EXPECT_EQ(syntaxParser._errors.size(), 0);
 }
+
+TEST(MultiRelClassTest, ParserTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class nameHere { int value; int testFunc() { value = 5 < 5 < 5;  } }; program { };", false);
+
+    SyntaxParser syntaxParser;
+
+    EXPECT_EQ(syntaxParser.parse(tokens), true);
+    EXPECT_EQ(syntaxParser._errors.size(), 0);
+}
 TEST(SimpleClassTestError, ParserTests)
 {
     vector<Token*> tokens;

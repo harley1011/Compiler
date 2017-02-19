@@ -29,9 +29,15 @@
 <sign> -> + | -
 <term> -> <factor> <term’>
 <term’> -> <multOp> <factor> <term’> | EPSILON
+
 <factor> -> id <factorVarOrFunc> | <num> | ( <arithExpr> ) | not <factor> | <sign> <factor>
-<factorVarOrFunc> -> <indice> <factorVarOrFunc> | . id <varOrFuncIdNest> | ( <aParams> ) | EPSILON
-<varOrFuncIdNest> ->  ( <aParams> ) | <factorVarOrFunc>
+
+<factorVarOrFunc> -> <factorVarArray> | <varOrFuncIdNest> | EPSILON
+<factorVarArray> -> <indice> <indiceLst> <factorVarArrayNestId>
+<factorVarArrayNestId> -> . id <factorVarOrFunc> | EPSILON 
+
+<varOrFuncIdNest> ->  ( <aParams> ) | . id <factorVarOrFunc>
+
 <variable> -> id <variableIndice>
 <variableIndice> -> <indiceLst> <idnest>
 <idnest> -> . id <indiceLst> <idnest> | EPSILON
