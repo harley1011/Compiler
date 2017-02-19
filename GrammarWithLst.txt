@@ -2,8 +2,8 @@
 <classDeclLst>-> <classDecl> <classDeclLst> | EPSILON
 <classDecl>-> class id { <classBody> } ;
 <classBody>-> <classInDecl> <classBody> | EPSILON
-<classInDecl> -> <type> id <postTypeId>
-<postTypeId> -> <arraySize> ;  | ( <fParams> ) <funcBody>
+<classInDecl> -> <type> id <postTypeId> ;
+<postTypeId> -> <arraySize> | ( <fParams> ) <funcBody>
 <progBody>-> program <funcBody> ; <funcDefLst>
 <funcHead>-> <type> id ( <fParams> )
 <funcDefLst> -> <funcDef> <funcDefLst> | EPSILON
@@ -30,7 +30,7 @@
 <term> -> <factor> <term’>
 <term’> -> <multOp> <factor> <term’> | EPSILON
 <factor> -> id <factorVarOrFunc> | <num> | ( <arithExpr> ) | not <factor> | <sign> <factor>
-<factorVarOrFunc> -> <indice> <factorVarOrFunc> | . id <varOrFuncIdNest> | EPSILON
+<factorVarOrFunc> -> <indice> <factorVarOrFunc> | . id <varOrFuncIdNest> | ( <aParams> ) | EPSILON
 <varOrFuncIdNest> ->  ( <aParams> ) | <factorVarOrFunc>
 <variable> -> id <variableIndice>
 <variableIndice> -> <indiceLst> <idnest>
