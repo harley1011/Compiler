@@ -718,12 +718,14 @@ bool SyntaxParser::form_derivation_string(string non_terminal, string rhs) {
 }
 
 string SyntaxParser::next_token() {
-    if (_current_token_position < _tokens.size()) {
-        _current_token = _tokens[_current_token_position++];
-        _lookahead = _current_token->token_identifier_;
-    } else {
-        _lookahead = "END";
-    }
+    do {
+        if (_current_token_position < _tokens.size()) {
+            _current_token = _tokens[_current_token_position++];
+            _lookahead = _current_token->token_identifier_;
+        } else {
+            _lookahead = "END";
+        }
+    } while (_lookahead == "CMT");
     return _lookahead;
 }
 
