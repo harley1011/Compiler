@@ -16,6 +16,8 @@ public:
 
     SyntaxParser(bool enable_derivation_output);
 
+    SyntaxParser(vector<Token *> tokens);
+
     string _current_rhs_derivation;
     string _lookahead;
     vector<string> _errors;

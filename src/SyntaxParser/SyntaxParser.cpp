@@ -5,31 +5,35 @@
 
 
 SyntaxParser::SyntaxParser() {
+    _current_rhs_derivation = "<classDeclLst> <progBody>";
+    _derivations.push_back(_current_rhs_derivation);
     _enable_derivation_output = false;
 }
 
 SyntaxParser::SyntaxParser(bool enable_derivation_output) {
+    SyntaxParser();
     _enable_derivation_output == enable_derivation_output;
 }
 
-bool SyntaxParser::parse(vector<Token *> tokens) {
+SyntaxParser::SyntaxParser(vector<Token *> tokens) {
+    SyntaxParser();
+    _tokens = tokens;
+    _current_token_position = 0;
+    next_token();
+}
 
+bool SyntaxParser::parse(vector<Token *> tokens) {
+    if (_enable_derivation_output) {
+        cout << _current_rhs_derivation << endl;
+    }
     _current_token_position = 0;
     _tokens = tokens;
     next_token();
-
-    for (int i = 0; i < _errors.size(); i++) {
-        cout << _errors[i] << endl;
-    }
-
     return prog();
 }
 
 
 bool SyntaxParser::prog() {
-    _current_rhs_derivation = "<classDeclLst> <progBody>";
-    _derivations.push_back(_current_rhs_derivation);
-    cout << _current_rhs_derivation << endl;
     if (!skip_errors({"CLASS"}, {}, false))
         return false;
     if (_lookahead == "CLASS") {
@@ -319,8 +323,8 @@ bool SyntaxParser::expr() {
     if (!skip_errors({"ID", "INUM", "FNUM", "OPENPARA", "NOT", "ADD", "SUB"}, { "COM", "CLOSEPARA", "DELI"}, false))
         return false;
     if (is_lookahead_a_value() || _lookahead == "OPENPARA" || _lookahead == "NOT" || _lookahead == "ADD" || _lookahead == "SUB") {
-        form_derivation_string("<expr>", "<term> <relOrAri>");
-        if (term() && relOrAri()) {
+        form_derivation_string("<expr>", "<arithExpr> <relOrAri>");
+        if (arithExpr() && relOrAri()) {
             return true;
         }
     }
@@ -377,7 +381,7 @@ bool SyntaxParser::arithExprD() {
         form_derivation_string("<arithExprD>", "<addOp> <term> <arithExprD>");
         if (addOp() && term() && arithExprD())
             return true;
-    } else if (check_if_lookahead_is_in_set( {"EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ", "CLOSEBRA", "CLOSEPARA", "DELI", "C OM"})) { // follow set
+    } else if (check_if_lookahead_is_in_set( {"EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ", "CLOSEBRA", "CLOSEPARA", "DELI", "COM"})) { // follow set
         form_derivation_string("<arithExprD>", "");
         return true;
     }
@@ -598,14 +602,13 @@ bool SyntaxParser::is_lookahead_a_statement() {
 
 bool SyntaxParser::skip_errors(set<string> first_set, set<string> follow_set, bool epsilon) {
     if (first_set.find(_lookahead) == first_set.end() && (!epsilon || follow_set.find(_lookahead) == follow_set.end())) {
-
-        _errors.push_back("Syntax Error at " + to_string(_current_token->row_location_) + " : " + to_string(_current_token->column_location_));
         do {
+            _errors.push_back("Syntax Error at " + to_string(_current_token->row_location_) + " : " + to_string(_current_token->column_location_));
             next_token();
             if (_lookahead == "END")
                 return false;
-//            if (!epsilon && follow_set.find(_lookahead) == follow_set.end())
-//                return false;
+            if (!epsilon && follow_set.find(_lookahead) != follow_set.end())
+                return false;
         } while (first_set.find(_lookahead) == first_set.end() && (!epsilon || follow_set.find(_lookahead) == follow_set.end()));
         return true;
     }
@@ -813,6 +816,7 @@ bool SyntaxParser::match(string token) {
         _lookahead = next_token();
         return (true);
     } else {
+        int count = 0;
         _errors.push_back("Syntax Error at " + to_string(_current_token->row_location_) + " : " + to_string(_current_token->column_location_));
         _lookahead = next_token();
     }
@@ -823,11 +827,16 @@ bool SyntaxParser::form_derivation_string(string non_terminal, string rhs) {
     int begin_index = _current_rhs_derivation.find(non_terminal);
     if (begin_index == string::npos)
         return false;
-    if (rhs.size() == 0)
-        _current_rhs_derivation.erase(begin_index - 1, non_terminal.size() + 1);
+    if (rhs.size() == 0) {
+        if (begin_index > 0)
+            _current_rhs_derivation.erase(begin_index - 1, non_terminal.size() + 1);
+        else
+            _current_rhs_derivation.erase(begin_index, non_terminal.size());
+    }
     else
         _current_rhs_derivation.replace(begin_index, non_terminal.size(), rhs);
-    cout << _current_rhs_derivation << endl;
+    if (_enable_derivation_output)
+        cout << _current_rhs_derivation << endl;
     _derivations.push_back(_current_rhs_derivation);
     return true;
 }
