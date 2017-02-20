@@ -564,9 +564,9 @@ TEST(exprGtEqTest, ParserTests) {
 }
 
 TEST(statBlockIfTest, ParserTests) {
-    SyntaxParser syntaxParser = common_setup("{ if ( 10 < 20 ) then var7 = 10; else var9 = var6(10, 10); }", "<statBlock>");
-    EXPECT_TRUE(syntaxParser.statBlock());
-    EXPECT_EQ(syntaxParser._current_rhs_derivation, "integer * ( integer + id ( integer , integer ) ) - integer >= ( id [ integer ] . id - integer ) * integer");
+    SyntaxParser syntaxParser = common_setup("{ if ( 10 < 20 ) then var7 = 10; else var9 = var6(10, 10); };", "<statBlock>");
+        EXPECT_TRUE(syntaxParser.statBlock());
+    EXPECT_EQ(syntaxParser._current_rhs_derivation, "{ if ( integer < integer ) then id = integer ; else id = id ( integer , integer ) ; } ;");
 }
 
 

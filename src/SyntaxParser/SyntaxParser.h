@@ -93,6 +93,8 @@ public:
     bool factorVarArray();
 
     bool factorVarArrayNestId();
+
+    bool statThenBlock();
 };
 
 

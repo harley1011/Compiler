@@ -248,7 +248,7 @@ bool SyntaxParser::statement() {
         return false;
     if (_lookahead == "ID") {
         form_derivation_string("<statement>", "<assignStat> ;");
-        if (assignStat() && match("DELI"))
+        if (assignStat() &&  match("DELI"))
             return true;
     } else if (is_lookahead_a_statement()) {
             form_derivation_string("<statement>", "<statementRes>");
@@ -262,13 +262,13 @@ bool SyntaxParser::statementRes() {
     if (!skip_errors({"IF", "FOR", "GET", "PUT", "RETURN"}, {"ID", "INT", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN", "ELSE", "DELI", "CLOSECURL", }, false))
         return false;
     if (_lookahead == "IF") {
-        form_derivation_string("<statementRes>", "if ( <expr> ) then <statBlock> else <statBlock> ;");
-        if (match("IF") && match("OPENPARA") && expr() && match("CLOSEPARA") && match("THEN") && statBlock() && match("ELSE") && statBlock() && match("DELI")) {
+        form_derivation_string("<statementRes>", "if ( <expr> ) then <statThenBlock> else <statBlock>");
+        if (match("IF") && match("OPENPARA") && expr() && match("CLOSEPARA") && match("THEN") && statThenBlock() && match("ELSE") && statBlock()) {
             return true;
         }
     } else if (_lookahead == "FOR") {
-        form_derivation_string("<statementRes>", "for ( <type> id <assignOp> <expr> ; <relExpr> ; <assignStat> ) <statBlock> ;");
-        if (match("FOR") && match("OPENPARA") && type() && match("ID") && assignOp() && expr() && match("DELI") && relExpr() && match("DELI") && assignStat() && match("CLOSEPARA") && statBlock() && match("DELI")) {
+        form_derivation_string("<statementRes>", "for ( <type> id <assignOp> <expr> ; <relExpr> ; <assignStat> ) <statBlock>");
+        if (match("FOR") && match("OPENPARA") && type() && match("ID") && assignOp() && expr() && match("DELI") && relExpr() && match("DELI") && assignStat() && match("CLOSEPARA") && statBlock()) {
             return true;
         }
     } else if (_lookahead == "GET") {
@@ -305,8 +305,8 @@ bool SyntaxParser::statBlock() {
     if (!skip_errors({"OPENCURL", "ID", "IF", "FOR", "GET", "PUT", "RETURN"}, { "ELSE", "DELI"}, true))
         return false;
     if (_lookahead == "OPENCURL") {
-        form_derivation_string("<statBlock>", "{ <statementLst> }");
-        if (match("OPENCURL") && statementLst() && match("CLOSECURL"))
+        form_derivation_string("<statBlock>", "{ <statementLst> } ;");
+        if (match("OPENCURL") && statementLst() && match("CLOSECURL") && match("DELI"))
             return true;
     } else if (_lookahead == "ID" || is_lookahead_a_statement()) {
         form_derivation_string("<statBlock>", "<statement>");
@@ -315,6 +315,21 @@ bool SyntaxParser::statBlock() {
     } else if (_lookahead == "ELSE" || _lookahead == "DELI") { // Follow set
         form_derivation_string("<statBlock>", "");
         return true;
+    }
+    return false;
+}
+
+bool SyntaxParser::statThenBlock() {
+    if (!skip_errors({"OPENCURL", "ID", "IF", "FOR", "GET", "PUT", "RETURN"}, { "ELSE", "DELI"}, true))
+        return false;
+    if (_lookahead == "OPENCURL") {
+        form_derivation_string("<statThenBlock>", "{ <statementLst> }");
+        if (match("OPENCURL") && statementLst() && match("CLOSECURL"))
+            return true;
+    } else if (_lookahead == "ID" || is_lookahead_a_statement()) {
+        form_derivation_string("<statThenBlock>", "<statement>");
+        if (statement())
+            return true;
     }
     return false;
 }
