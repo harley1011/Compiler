@@ -563,12 +563,24 @@ TEST(exprGtEqTest, ParserTests) {
     EXPECT_EQ(syntaxParser._current_rhs_derivation, "integer * ( integer + id ( integer , integer ) ) - integer >= ( id [ integer ] . id - integer ) * integer");
 }
 
-TEST(statBlockIfTest, ParserTests) {
+TEST(statBlockSingleLineIfTest, ParserTests) {
     SyntaxParser syntaxParser = common_setup("{ if ( 10 < 20 ) then var7 = 10; else var9 = var6(10, 10); };", "<statBlock>");
         EXPECT_TRUE(syntaxParser.statBlock());
     EXPECT_EQ(syntaxParser._current_rhs_derivation, "{ if ( integer < integer ) then id = integer ; else id = id ( integer , integer ) ; } ;");
 }
 
+TEST(statBlockMultiLineIfTest, ParserTests) {
+    SyntaxParser syntaxParser = common_setup("{ if ( 10 <  var10(10, 10) ) then {var7 = 10; var10 = 10 * 20 / 20; }else { var9 = var6(10, 10); }; };", "<statBlock>");
+    EXPECT_TRUE(syntaxParser.statBlock());
+    EXPECT_EQ(syntaxParser._current_rhs_derivation, "{ if ( integer < id ( integer , integer ) ) then { id = integer ; id = integer * integer / integer ; } else { id = id ( integer , integer ) ; } ; } ;");
+}
+
+
+TEST(statBlockMultiLineAndSingleLineIfTest, ParserTests) {
+    SyntaxParser syntaxParser = common_setup("{ if ( 10 <  var10(10, 10) ) then var2 = var3; else { var9 = var6(10, 10); }; };", "<statBlock>");
+    EXPECT_TRUE(syntaxParser.statBlock());
+    EXPECT_EQ(syntaxParser._current_rhs_derivation, "{ if ( integer < id ( integer , integer ) ) then id = id ; else { id = id ( integer , integer ) ; } ; } ;");
+}
 
 SyntaxParser common_setup(string test_program, string derivation_string) {
     vector<Token*> tokens;
