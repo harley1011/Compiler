@@ -582,6 +582,39 @@ TEST(statBlockMultiLineAndSingleLineIfTest, ParserTests) {
     EXPECT_EQ(syntaxParser._current_rhs_derivation, "{ if ( integer < id ( integer , integer ) ) then id = id ; else { id = id ( integer , integer ) ; } ; } ;");
 }
 
+
+TEST(statBlockSingleLineForTest, ParserTests) {
+    SyntaxParser syntaxParser = common_setup("{ for(int i = 0; i < 12; i = i + 1 ) count = 18 * 19; };", "<statBlock>");
+    EXPECT_TRUE(syntaxParser.statBlock());
+    EXPECT_EQ(syntaxParser._current_rhs_derivation, "{ for ( int id = integer ; id < integer ; id = id + integer ) id = integer * integer ; } ;");
+}
+
+TEST(statBlockMultiLineForTest, ParserTests) {
+    SyntaxParser syntaxParser = common_setup("{ for(int i = 0; i < 12; i = i + 1 ) { count = 18 * 19; count1 = func(10, 20, 10); }; };", "<statBlock>");
+    EXPECT_TRUE(syntaxParser.statBlock());
+    EXPECT_EQ(syntaxParser._current_rhs_derivation, "{ for ( int id = integer ; id < integer ; id = id + integer ) { id = integer * integer ; id = id ( integer , integer , integer ) ; } ; } ;");
+}
+
+
+TEST(statBlockGetTest, ParserTests) {
+    SyntaxParser syntaxParser = common_setup("{ get ( var2); };", "<statBlock>");
+    EXPECT_TRUE(syntaxParser.statBlock());
+    EXPECT_EQ(syntaxParser._current_rhs_derivation, "{ get ( id ) ; } ;");
+}
+
+TEST(statBlockPutTest, ParserTests) {
+    SyntaxParser syntaxParser = common_setup("{ put(var2  + 10); };", "<statBlock>");
+    EXPECT_TRUE(syntaxParser.statBlock());
+    EXPECT_EQ(syntaxParser._current_rhs_derivation, "{ put ( id + integer ) ; } ;");
+}
+
+
+TEST(statBlockReturnTest, ParserTests) {
+    SyntaxParser syntaxParser = common_setup("{ return(var2  + 10); };", "<statBlock>");
+    EXPECT_TRUE(syntaxParser.statBlock());
+    EXPECT_EQ(syntaxParser._current_rhs_derivation, "{ return ( id + integer ) ; } ;");
+}
+
 SyntaxParser common_setup(string test_program, string derivation_string) {
     vector<Token*> tokens;
     Scanner scanner;
