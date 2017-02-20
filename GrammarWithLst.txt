@@ -8,20 +8,20 @@
 <funcHead>-> <type> id ( <fParams> )
 <funcDefLst> -> <funcDef> <funcDefLst> | EPSILON
 <funcDef> -> <funcHead> <funcBody> ; 
-
 <funcBody> -> { <funcInBodyLst> }
-
 <funcInBodyLst> -> <funcInBody> <funcInBodyLst> | EPSILON
-<funcInBody> -> id <varOrStat> | <statementRes> | <numType> id <arraySize> ; 
-
-
+<funcInBody> -> id <varOrStat> | <statementRes> ; | <numType> id <arraySize> ; 
 <varOrStat> -> id <arraySize> ; | <indiceLst> <idnest> <assignOp> <expr> ;
+
 <statementLst> -> <statement> <statementLst> | EPSILON
-<statement> -> <assignStat> ; | <statementRes>
-<statementRes> -> if ( <expr> ) then <statBlock> else <statBlock> ; | for ( <type> id <assignOp> <expr> ; <relExpr> ; <assignStat> ) <statBlock> ; | get ( <variable> ) ; | put ( <expr> ) ; | return ( <expr> ) ;
+<statement> -> <assignStat> ; | <statementRes> 
+<statementRes> -> if ( <expr> ) then <statThenBlock> else <statBlock> | for ( <type> id <assignOp> <expr> ; <relExpr> ; <assignStat> ) <statBlock>  | get ( <variable> ) ; | put ( <expr> ) ; | return ( <expr> ) ;
 <assignStat> -> <variable> <assignOp> <expr>
-<statBlock> ->{ <statementLst> } | <statement> | EPSILON
-<expr> -> <term> <relOrAri>
+<statBlock> -> { <statementLst> } ; | <statement> | EPSILON
+
+<statThenBlock> -> { <statementLst> } | <statement>
+
+<expr> -> <arithExpr> <relOrAri>
 <relOrAri> -> <relOp> <arithExpr> | <arithExpr’>
 <relExpr> -> <arithExpr> <relOp> <arithExpr>
 <arithExpr> -> <term> <arithExpr’>
@@ -29,15 +29,11 @@
 <sign> -> + | -
 <term> -> <factor> <term’>
 <term’> -> <multOp> <factor> <term’> | EPSILON
-
 <factor> -> id <factorVarOrFunc> | <num> | ( <arithExpr> ) | not <factor> | <sign> <factor>
-
 <factorVarOrFunc> -> <factorVarArray> | <varOrFuncIdNest> | EPSILON
 <factorVarArray> -> <indice> <indiceLst> <factorVarArrayNestId>
 <factorVarArrayNestId> -> . id <factorVarOrFunc> | EPSILON 
-
 <varOrFuncIdNest> ->  ( <aParams> ) | . id <factorVarOrFunc>
-
 <variable> -> id <variableIndice>
 <variableIndice> -> <indiceLst> <idnest>
 <idnest> -> . id <indiceLst> <idnest> | EPSILON
