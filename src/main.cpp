@@ -1,9 +1,10 @@
 #include <iostream>
 #include "Scanner.h"
+#include "./SyntaxParser/SyntaxParser.h"
 #include <sys/stat.h>
 
 using namespace std;
-
+void show_derivations();
 
 int main(int argc, char *argv[] ) {
     string input;
@@ -26,7 +27,7 @@ int main(int argc, char *argv[] ) {
 
         }
 
-        cout << "Enter output location: ";
+        cout << "Enter token output location: ";
         getline(cin, output);
 
         cout << "Enter error output location: ";
@@ -39,9 +40,39 @@ int main(int argc, char *argv[] ) {
     }
 
     Scanner scanner(output, error_output);
-    scanner.generate_tokens(input, true);
+    vector<Token*> tokens = scanner.generate_tokens(input, true);
 
-    cout << "Lexical analyzer has converted the program to tokens, see output file";
+    cout << "Lexical analyzer has converted the program to tokens, see output file" << endl;
+
+    string answer;
+    cout << "Do you want to run the syntax parser? y/n:";
+    getline(cin, answer);
+
+    if (answer == "Y" || answer == "y") {
+
+        cout << "Do you want to output the sequence of derivations from the syntax parser? y/n" << endl;
+        getline(cin, answer);
+
+        if (answer == "Y" || answer == "y") {
+            string output;
+            std::cout << "Enter derivation output location:";
+            getline(cin, output);
+
+        }
+
+        SyntaxParser syntaxParser;
+        bool parse_result = syntaxParser.parse(tokens);
+
+        if (!parse_result) {
+            cout << "Program is syntactically invalid, errors are below:" << endl;
+            for (int i = 0; i < syntaxParser._errors.size(); i++) {
+                cout << syntaxParser._errors[i] << endl;
+            }
+        } else {
+            cout << "Program is syntactically valid" << endl;
+        }
+    }
+
+
     return 0;
 }
-
