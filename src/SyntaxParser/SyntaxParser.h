@@ -17,16 +17,22 @@ public:
     SyntaxParser(bool enable_derivation_output);
 
     SyntaxParser(vector<Token *> tokens);
+    SyntaxParser(string derivation_output_path, string error_output_path);
 
-    string _current_rhs_derivation;
-    string _lookahead;
-    vector<string> _errors;
-    vector<string> _derivations;
-    Token*   _current_token;
-    vector<Token*> _tokens;
-    int _current_token_position;
-
-    bool _enable_derivation_output;
+    string current_rhs_derivation_;
+    string lookahead_;
+    vector<string> errors_;
+    vector<string> derivations_;
+    Token*   current_token_;
+    vector<Token*> tokens_;
+    int current_token_position_;
+    bool output_to_file_;
+    string derivation_output_path_;
+    string error_output_path_;
+    ofstream error_output_file_;
+    ofstream derivation_output_file_;
+    bool enable_derivation_output_;
+    string previous_token_;
 
     string next_token();
     bool form_derivation_string(string non_terminal, string rhs);
@@ -95,6 +101,10 @@ public:
     bool factorVarArrayNestId();
 
     bool statThenBlock();
+
+    void report_error(string expected_token, string actual_token);
+
+    bool skip_to_next_deli(int max_search);
 };
 
 
