@@ -1,10 +1,8 @@
 #include <iostream>
-#include "Scanner.h"
 #include "./SyntaxParser/SyntaxParser.h"
 #include <sys/stat.h>
 
 using namespace std;
-void show_derivations();
 
 int main(int argc, char *argv[] ) {
     string input;
@@ -50,17 +48,15 @@ int main(int argc, char *argv[] ) {
 
     if (answer == "Y" || answer == "y") {
 
-        cout << "Do you want to output the sequence of derivations from the syntax parser? y/n" << endl;
-        getline(cin, answer);
+        std::cout << "Enter derivation output location:";
+        getline(cin, output);
 
-        if (answer == "Y" || answer == "y") {
-            string output;
-            std::cout << "Enter derivation output location:";
-            getline(cin, output);
+        cout << "Enter error output location: ";
+        getline(cin, error_output);
 
-        }
+        SyntaxParser syntaxParser(output, error_output);
 
-        SyntaxParser syntaxParser;
+
         bool parse_result = syntaxParser.parse(tokens);
 
         if (!parse_result) {

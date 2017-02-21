@@ -931,7 +931,6 @@ bool SyntaxParser::match(string token) {
 //
 //        }
     }
-    return true;
 }
 
 bool SyntaxParser::form_derivation_string(string non_terminal, string rhs) {

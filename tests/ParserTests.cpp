@@ -60,13 +60,13 @@ TEST(errorTwoTest, ParserTests) {
     EXPECT_EQ(syntaxParser.current_rhs_derivation_, "class id { int id ( int id , int id ) { } ; } ; program { } ;");
 }
 
-
 TEST(errorThreeTest, ParserTests) {
     SyntaxParser syntaxParser = common_setup("class nameHere { int vardecl }; program { };", "<classDeclLst> <progBody>");
     EXPECT_TRUE(!syntaxParser.prog());
     EXPECT_EQ(syntaxParser.errors_.size(), 4);
     EXPECT_EQ(syntaxParser.current_rhs_derivation_, "class id { int id ; } ; <classDeclLst> <progBody>");
 }
+
 TEST(VarDeclareClassTest, ParserTests)
 {
     vector<Token*> tokens;

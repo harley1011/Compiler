@@ -1,4 +1,4 @@
-Test cases can be found in the gtest.cpp file.
+Test cases can be found in the ParserTests.cpp and ScannerTest.cpp file.
 
 The example program files and their associated outputs are:
 - simple_program.txt -> simple_program_out.txt, simple_program_errors.txt
