@@ -33,7 +33,8 @@ public:
     ofstream derivation_output_file_;
     bool enable_derivation_output_;
     string previous_token_;
-
+    vector<string> token_error_buffer_;
+    vector<string> skipped_token_error_buffer_;
     string next_token();
     bool form_derivation_string(string non_terminal, string rhs);
     bool skip_errors(set<string> first_set, set<string> follow_set, bool epsilon);
@@ -105,6 +106,10 @@ public:
     void report_error(string expected_token, string actual_token);
 
     bool skip_to_next_deli(int max_search);
+
+    bool statIfElseBlock();
+
+    bool statElseBlock();
 };
 
 

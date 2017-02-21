@@ -43,6 +43,7 @@ TEST(SimpleClassTestError, ParserTests)
     EXPECT_EQ(syntaxParser.parse(tokens), true);
     EXPECT_EQ(syntaxParser.current_rhs_derivation_, "class id { } ; program { } ;");
     EXPECT_EQ(syntaxParser.errors_.size(), 1);
+
 }
 
 
@@ -59,6 +60,13 @@ TEST(errorTwoTest, ParserTests) {
     EXPECT_EQ(syntaxParser.current_rhs_derivation_, "class id { int id ( int id , int id ) { } ; } ; program { } ;");
 }
 
+
+TEST(errorThreeTest, ParserTests) {
+    SyntaxParser syntaxParser = common_setup("class nameHere { int vardecl }; program { };", "<classDeclLst> <progBody>");
+    EXPECT_TRUE(!syntaxParser.prog());
+    EXPECT_EQ(syntaxParser.errors_.size(), 4);
+    EXPECT_EQ(syntaxParser.current_rhs_derivation_, "class id { int id ; } ; <classDeclLst> <progBody>");
+}
 TEST(VarDeclareClassTest, ParserTests)
 {
     vector<Token*> tokens;
@@ -625,6 +633,7 @@ TEST(statBlockMultiLineForTest, ParserTests) {
     SyntaxParser syntaxParser = common_setup("{ for(int i = 0; i < 12; i = i + 1 ) { count = 18 * 19; count1 = func(10, 20, 10); }; };", "<statBlock>");
     EXPECT_TRUE(syntaxParser.statBlock());
     EXPECT_EQ(syntaxParser.current_rhs_derivation_, "{ for ( int id = integer ; id < integer ; id = id + integer ) { id = integer * integer ; id = id ( integer , integer , integer ) ; } ; } ;");
+
 }
 
 

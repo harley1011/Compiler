@@ -8,6 +8,7 @@ SyntaxParser::SyntaxParser() {
     current_rhs_derivation_ = "<classDeclLst> <progBody>";
     derivations_.push_back(current_rhs_derivation_);
     enable_derivation_output_ = false;
+
 }
 
 SyntaxParser::SyntaxParser(string derivation_output_path, string error_output_path) {
@@ -115,17 +116,15 @@ bool SyntaxParser::classInDecl() {
         form_derivation_string("<classInDecl>", "<type> id <postTypeId> ;");
         if (type() && match("ID") && postTypeId() && match("DELI")) {
             return true;
-        } else {
-            return skip_to_next_deli(5);
         }
     }
     return false;
 }
 
 bool SyntaxParser::postTypeId() {
-    if (!skip_errors({"OPENBRA", "DELI", "OPENPARA"}, { "CLOSECURL", "INT", "ID", "FLOAT"}, false))
+    if (!skip_errors({"OPENBRA", "DELI", "OPENPARA"}, { "DELI"}, true))
         return false;
-    if (lookahead_ == "OPENBRA" || lookahead_ == "DELI") {
+    if (lookahead_ == "OPENBRA") {
         form_derivation_string("<postTypeId>", "<arraySize>");
         if (arraySize()){
             return true;
@@ -135,6 +134,9 @@ bool SyntaxParser::postTypeId() {
         if (match("OPENPARA") && fParams() && match("CLOSEPARA") && funcBody()) {
             return true;
         }
+    } else if (lookahead_ == "DELI") {
+        form_derivation_string("<postTypeId>", "");
+        return true;
     }
     return false;
 }
@@ -187,7 +189,7 @@ bool SyntaxParser::funcDef() {
 }
 
 bool SyntaxParser::funcBody() {
-    if (!skip_errors({"OPENCURL"}, {"INT", "ID", "FLOAT", "DELI", "CLOSECURL"}, false))
+    if (!skip_errors({"OPENCURL"}, {"DELI"}, false))
         return false;
     if (lookahead_ == "OPENCURL") {
         form_derivation_string("<funcBody>", "{ <funcInBodyLst> }");
@@ -285,8 +287,8 @@ bool SyntaxParser::statementRes() {
     if (!skip_errors({"IF", "FOR", "GET", "PUT", "RETURN"}, {"ID", "INT", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN", "ELSE", "DELI", "CLOSECURL", }, false))
         return false;
     if (lookahead_ == "IF") {
-        form_derivation_string("<statementRes>", "if ( <expr> ) then <statThenBlock> else <statBlock>");
-        if (match("IF") && match("OPENPARA") && expr() && match("CLOSEPARA") && match("THEN") && statThenBlock() && match("ELSE") && statBlock()) {
+        form_derivation_string("<statementRes>", "if ( <expr> ) then <statThenBlock>");
+        if (match("IF") && match("OPENPARA") && expr() && match("CLOSEPARA") && match("THEN") && statThenBlock()) {
             return true;
         }
     } else if (lookahead_ == "FOR") {
@@ -311,6 +313,38 @@ bool SyntaxParser::statementRes() {
         }
     }
     return false;
+}
+
+bool SyntaxParser::statIfElseBlock() {
+    if (!skip_errors({"ELSE", "DELI"}, {"DELI", "ELSE", "ID", "IF", "FOR", "GET", "PUT", "RETURN"  }, false))
+        return false;
+    if (lookahead_ == "ELSE") {
+        form_derivation_string("<statIfElseBlock>", "else <statBlock>");
+        if (match("ELSE") && statBlock())
+            return true;
+    }
+    else if (lookahead_ == "DELI") {
+        form_derivation_string("<statIfElseBlock>", "");
+        if (match("DELI"))
+            return true;
+    }
+    return false;
+}
+
+bool SyntaxParser::statElseBlock() {
+    if (!skip_errors({"ELSE", "DELI"}, {"DELI", "ELSE", "ID", "IF", "FOR", "GET", "PUT", "RETURN"  }, false))
+        return false;
+    if (lookahead_ == "ELSE") {
+        form_derivation_string("<statElseBlock>", "else <statBlock>");
+        if (match("ELSE") && statBlock())
+            return true;
+    }
+    else if (lookahead_ == "DELI" || lookahead_ == "ELSE" || lookahead_ == "ID" || lookahead_ == "IF" || lookahead_ == "FOR" || lookahead_ == "GET" || lookahead_ == "PUT" || lookahead_ == "RETURN") {
+        form_derivation_string("<statElseBlock>", "");
+        if (match("DELI"))
+            return true;
+    }
+    return true;
 }
 
 bool SyntaxParser::assignStat() {
@@ -346,12 +380,12 @@ bool SyntaxParser::statThenBlock() {
     if (!skip_errors({"OPENCURL", "ID", "IF", "FOR", "GET", "PUT", "RETURN"}, { "ELSE", "DELI"}, true))
         return false;
     if (lookahead_ == "OPENCURL") {
-        form_derivation_string("<statThenBlock>", "{ <statementLst> }");
-        if (match("OPENCURL") && statementLst() && match("CLOSECURL"))
+        form_derivation_string("<statThenBlock>", "{ <statementLst> } <statIfElseBlock>");
+        if (match("OPENCURL") && statementLst() && match("CLOSECURL") && statIfElseBlock())
             return true;
-    } else if (lookahead_ == "ID" || is_lookahead_a_statement()) {
-        form_derivation_string("<statThenBlock>", "<statement>");
-        if (statement())
+    } else if (lookahead_ == "OPENCURL" || lookahead_ == "ID" || is_lookahead_a_statement()) {
+        form_derivation_string("<statThenBlock>", "<statement> <statElseBlock>");
+        if (statement() && statElseBlock())
             return true;
     }
     return false;
@@ -638,20 +672,6 @@ bool SyntaxParser::is_lookahead_a_statement() {
     return lookahead_ == "FOR" || lookahead_ == "GET" || lookahead_ == "PUT" || lookahead_ == "RETURN" || lookahead_ == "IF";
 }
 
-bool SyntaxParser::skip_errors(set<string> first_set, set<string> follow_set, bool epsilon) {
-    if (first_set.find(lookahead_) == first_set.end() && (!epsilon || follow_set.find(lookahead_) == follow_set.end())) {
-        do {
-            report_error(lookahead_, "");
-            next_token();
-            if (lookahead_ == "END")
-                return false;
-            if (!epsilon && follow_set.find(lookahead_) != follow_set.end())
-                return false;
-        } while (first_set.find(lookahead_) == first_set.end() && (!epsilon || follow_set.find(lookahead_) == follow_set.end()));
-        return true;
-    }
-    return true;
-}
 
 void SyntaxParser::report_error(string expected_token, string actual_token) {
     string error_message = "Syntax Error at " + to_string(current_token_->row_location_) + " : " + to_string(current_token_->column_location_);
@@ -679,7 +699,7 @@ bool SyntaxParser::arraySize() {
         if (match("OPENBRA") && match("INUM") && match("CLOSEBRA") && arraySize()) {
             return true;
         }
-    } else if (lookahead_ == "COM" || lookahead_ == "DELI" || lookahead_ == "CLOSEPARA") {
+    } else if (lookahead_ == "COM" || lookahead_ == "DELI" || lookahead_ == "CLOSEPARA") {// Follow set
         form_derivation_string("<arraySize>", "");
         return true;
     }
@@ -867,31 +887,51 @@ bool SyntaxParser::num() {
     return false;
 }
 
-bool SyntaxParser::skip_to_next_deli(int max_search) {
-    for (int i = 0; i < max_search; i++) {
-        if (match("DELI")) {
-            return true;
-        }
+bool SyntaxParser::skip_errors(set<string> first_set, set<string> follow_set, bool epsilon) {
+    if (first_set.find(lookahead_) == first_set.end() && (!epsilon || follow_set.find(lookahead_) == follow_set.end())) {
+        do {
+            report_error(lookahead_, "");
+            next_token();
+            if (lookahead_ == "END")
+                return false;
+            if (!epsilon && follow_set.find(lookahead_) != follow_set.end())
+                return false;
+        } while (first_set.find(lookahead_) == first_set.end() && (!epsilon || follow_set.find(lookahead_) == follow_set.end()));
+        return true;
     }
-    return false;
+    return true;
 }
 
 bool SyntaxParser::match(string token) {
+
+//    if (token_error_buffer_.size() > 1) {
+//        for (int i = 0; i < token_error_buffer_.size(); i++) {
+//            if (token_error_buffer_[i] == token) {
+//                token_error_buffer_.erase(token_error_buffer_.begin(), token_error_buffer_.begin() + i);
+//                return true;
+//            }
+//        }
+//    }
     if (lookahead_ == token) {
         lookahead_ = next_token();
         return (true);
     } else {
         report_error(token, lookahead_);
         lookahead_ = next_token();
-//        for (int i = 0; i < 2; i++) { // Only look for the next error after two tokens
+        return false;
+//        for (int i = 0; i < 4; i++) {
+//            report_error(token, lookahead_);
+//            token_error_buffer_.push_back(lookahead_);
+//            lookahead_ = next_token();
 //
 //            if (lookahead_ == token) {
+//                token_error_buffer_.clear();
 //                return true;
 //            }
+//
 //        }
-
     }
-    return false;
+    return true;
 }
 
 bool SyntaxParser::form_derivation_string(string non_terminal, string rhs) {
