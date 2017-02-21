@@ -574,6 +574,11 @@ TEST(statBlockMultiLineIfTest, ParserTests) {
     EXPECT_TRUE(syntaxParser.statBlock());
     EXPECT_EQ(syntaxParser._current_rhs_derivation, "{ if ( integer < id ( integer , integer ) ) then { id = integer ; id = integer * integer / integer ; } else { id = id ( integer , integer ) ; } ; } ;");
 }
+TEST(statBlockMultiLineEmptyElseIfTest, ParserTests) {
+    SyntaxParser syntaxParser = common_setup("{ if ( 10 <  var10(10, 10) ) then {var7 = 10; var10 = 10 * 20 / 20; }else { }; };", "<statBlock>");
+    EXPECT_TRUE(syntaxParser.statBlock());
+    EXPECT_EQ(syntaxParser._current_rhs_derivation, "{ if ( integer < id ( integer , integer ) ) then { id = integer ; id = integer * integer / integer ; } else { } ; } ;");
+}
 
 
 TEST(statBlockMultiLineAndSingleLineIfTest, ParserTests) {
@@ -614,6 +619,65 @@ TEST(statBlockReturnTest, ParserTests) {
     EXPECT_TRUE(syntaxParser.statBlock());
     EXPECT_EQ(syntaxParser._current_rhs_derivation, "{ return ( id + integer ) ; } ;");
 }
+
+TEST(funcBodyTest, ParserTests) {
+    SyntaxParser syntaxParser = common_setup(
+            "{ var1 = 10.21 * 10 / 10 - 12; for (int i = 0; i < 10; i = i + 1) { if ( var2 > 10 ) then var1 = var1 + 10; else var3 = var3 = + 10; }; return(var2  + 10); };",
+            "<funcBody>");
+    EXPECT_TRUE(syntaxParser.funcBody());
+    EXPECT_EQ(syntaxParser._current_rhs_derivation,
+              "{ id = float * integer / integer - integer ; for ( int id = integer ; id < integer ; id = id + integer ) { if ( id > integer ) then id = id + integer ; else id = id + integer ; } ; return ( id + integer ) ; }");
+}
+
+TEST(funcDefTest, ParserTests) {
+    SyntaxParser syntaxParser = common_setup("int varFunc(int a, int b[5], float c){{ var1 = 10.21 * 10 / 10 - 12; for (int i = 0; i < 10; i = i + 1) { if ( var2 > 10 ) then var1 = var1 + 10; else var3 = var3 = + 10; }; return(var2  + 10); }; };", "<funcDef>");
+    EXPECT_TRUE(syntaxParser.funcDef());
+    EXPECT_EQ(syntaxParser._current_rhs_derivation, "int id ( int id , int id [ integer ] , float id ) { id = float * integer / integer - integer ; for ( int id = integer ; id < integer ; id = id + integer ) { if ( id > integer ) then id = id + integer ; else id = id + integer ; } ; return ( id + integer ) ; } ;");
+}
+TEST(funcHeadTest, ParserTests) {
+    SyntaxParser syntaxParser = common_setup("int varFunc(int a, int b[5], float c)", "<funcHead>");
+    EXPECT_TRUE(syntaxParser.funcHead());
+    EXPECT_EQ(syntaxParser._current_rhs_derivation, "int id ( int id , int id [ integer ] , float id )");
+}
+
+TEST(funcHeadEmptyTest, ParserTests) {
+    SyntaxParser syntaxParser = common_setup("var varFunc()", "<funcHead>");
+    EXPECT_TRUE(syntaxParser.funcHead());
+    EXPECT_EQ(syntaxParser._current_rhs_derivation, "id id ( )");
+}
+
+TEST(classBodyTest, ParserTests) {
+    SyntaxParser syntaxParser = common_setup("var varFunc() { int var2; var2 = 2; }; int var4; int var7; int var5Func(int a) { }; }", "<classBody>");
+    EXPECT_TRUE(syntaxParser.classBody());
+    EXPECT_EQ(syntaxParser._current_rhs_derivation, "id id ( ) { int id ; id = integer ; } ; int id ; int id ; int id ( int id ) { } ;");
+}
+
+TEST(classBodyEmptyTest, ParserTests) {
+    SyntaxParser syntaxParser = common_setup("}", "<classBody>");
+    EXPECT_TRUE(syntaxParser.classBody());
+    EXPECT_EQ(syntaxParser._current_rhs_derivation, "");
+}
+
+
+TEST(classDeclTest, ParserTests) {
+    SyntaxParser syntaxParser = common_setup("class className { var varFunc() { int var2; var2 = 2; }; int var4; int var7; int var5Func(int a) { }; };", "<classDecl>");
+    EXPECT_TRUE(syntaxParser.classDecl());
+    EXPECT_EQ(syntaxParser._current_rhs_derivation, "class id { id id ( ) { int id ; id = integer ; } ; int id ; int id ; int id ( int id ) { } ; } ;");
+}
+
+TEST(classDeclLargeTest, ParserTests) {
+    SyntaxParser syntaxParser = common_setup("class className { int var1[4][5][7][8][9][1][0]; float var2; int findMax(int array[100]) { int maxValue; int idx; maxValue = array[100]; for( int idx = 99; idx > 0; idx = idx - 1 ) { if(array[idx] > maxValue) then { maxValue = array[idx]; }else{}; }; return (maxValue); }; int findMin(int array[100]) { int minValue; int idx; minValue = array[100]; for( int idx = 1; idx <= 99; idx = ( idx ) + 1) { if(array[idx] < maxValue) then { maxValue = array[idx]; }else{}; }; return (minValue); }; };", "<classDecl>");
+    EXPECT_TRUE(syntaxParser.classDecl());
+    EXPECT_EQ(syntaxParser._current_rhs_derivation, "class id { int id [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] ; float id ; int id ( int id [ integer ] ) { int id ; int id ; id = id [ integer ] ; for ( int id = integer ; id > integer ; id = id - integer ) { if ( id [ id ] > id ) then { id = id [ id ] ; } else { } ; } ; return ( id ) ; } ; int id ( int id [ integer ] ) { int id ; int id ; id = id [ integer ] ; for ( int id = integer ; id <= integer ; id = ( id ) + integer ) { if ( id [ id ] < id ) then { id = id [ id ] ; } else { } ; } ; return ( id ) ; } ; } ;");
+}
+
+
+TEST(progTest, ParserTests) {
+    SyntaxParser syntaxParser = common_setup("program {int sample[100]; int idx; int maxValue; int minValue; Utility utility; Utility arrayUtility[2][3][6][7]; for(int t = 0; t<=100 ; t = t + 1) { get(sample[t]); sample[t] = (sample[t] * randomize()); }; maxValue = utility.findMax(sample); minValue = utility.findMin(sample); utility. var1[4][1][0][0][0][0][0] = 10; arrayUtility[1][1][1][1].var1[4][1][0][0][0][0][0] = 2; put(maxValue); put(minValue); };", "<progBody>");
+    EXPECT_TRUE(syntaxParser.progBody());
+    EXPECT_EQ(syntaxParser._current_rhs_derivation, "program { int id [ integer ] ; int id ; int id ; int id ; id id ; id id [ integer ] [ integer ] [ integer ] [ integer ] ; for ( int id = integer ; id <= integer ; id = id + integer ) { get ( id [ id ] ) ; id [ id ] = ( id [ id ] * id ( ) ) ; } ; id = id . id ( id ) ; id = id . id ( id ) ; id . id [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] = integer ; id [ integer ] [ integer ] [ integer ] [ integer ] . id [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] = integer ; put ( id ) ; put ( id ) ; } ;");
+}
+
 
 SyntaxParser common_setup(string test_program, string derivation_string) {
     vector<Token*> tokens;
