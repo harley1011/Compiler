@@ -666,7 +666,7 @@ TEST(funcBodyTest, ParserTests) {
 }
 
 TEST(funcDefTest, ParserTests) {
-    SyntaxParser syntaxParser = common_setup("int varFunc(int a, int b[5], float c){{ var1 = 10.21 * 10 / 10 - 12; for (int i = 0; i < 10; i = i + 1) { if ( var2 > 10 ) then var1 = var1 + 10; else var3 = var3 = + 10; }; return(var2  + 10); }; };", "<funcDef>");
+    SyntaxParser syntaxParser = common_setup("int varFunc(int a, int b[5], float c){ var1 = 10.21 * 10 / 10 - 12; for (int i = 0; i < 10; i = i + 1) { if ( var2 > 10 ) then var1 = var1 + 10; else var3 = var3 = + 10; }; return(var2  + 10); };", "<funcDef>");
     EXPECT_TRUE(syntaxParser.funcDef());
     EXPECT_EQ(syntaxParser.current_rhs_derivation_, "int id ( int id , int id [ integer ] , float id ) { id = float * integer / integer - integer ; for ( int id = integer ; id < integer ; id = id + integer ) { if ( id > integer ) then id = id + integer ; else id = id + integer ; } ; return ( id + integer ) ; } ;");
 }

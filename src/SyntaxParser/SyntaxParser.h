@@ -110,6 +110,8 @@ public:
     bool statIfElseBlock();
 
     bool statElseBlock();
+
+    bool match(string token, set<string> expected_post_tokens);
 };
 
 
