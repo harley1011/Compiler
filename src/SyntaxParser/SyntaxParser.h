@@ -112,6 +112,8 @@ public:
     bool statElseBlock();
 
     bool match(string token, set<string> expected_post_tokens);
+
+    bool match(string token, set<string> expected_post_tokens, string message_to_replace, string replace_message);
 };
 
 

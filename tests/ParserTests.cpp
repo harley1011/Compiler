@@ -29,7 +29,7 @@ TEST(MultiRelClassErrorTest, ParserTests)
     SyntaxParser syntaxParser;
 
     EXPECT_EQ(syntaxParser.parse(tokens), false);
-    EXPECT_EQ(syntaxParser.errors_.size(), 1);
+    EXPECT_EQ(syntaxParser.errors_.size(), 3);
 }
 
 TEST(SimpleClassTestError, ParserTests)
@@ -48,23 +48,30 @@ TEST(SimpleClassTestError, ParserTests)
 
 
 TEST(errorOneTest, ParserTests) {
-    SyntaxParser syntaxParser = common_setup("class nameHere { int int i = 10; }; program { };", "<classDeclLst> <progBody>");
-    EXPECT_TRUE(!syntaxParser.prog());
+    SyntaxParser syntaxParser = common_setup("class nameHere { int int i; }; program { };", "<classDeclLst> <progBody>");
+    EXPECT_TRUE(syntaxParser.prog());
     EXPECT_EQ(syntaxParser.errors_.size(), 1);
-    EXPECT_EQ(syntaxParser.current_rhs_derivation_, "class id { int id <postTypeId> ; <classBody> } ; <classDeclLst> <progBody>");
+    EXPECT_EQ(syntaxParser.current_rhs_derivation_, "class id { int id ; } ; program { } ;");
 }
-TEST(errorTwoTest, ParserTests) {
+TEST(errorTwoComInFuncTest, ParserTests) {
     SyntaxParser syntaxParser = common_setup("class nameHere { int vardecl( int var1,, int var2 ) { }; }; program { };", "<classDeclLst> <progBody>");
     EXPECT_TRUE(syntaxParser.prog());
     EXPECT_EQ(syntaxParser.errors_.size(), 1);
     EXPECT_EQ(syntaxParser.current_rhs_derivation_, "class id { int id ( int id , int id ) { } ; } ; program { } ;");
 }
 
-TEST(errorThreeTest, ParserTests) {
-    SyntaxParser syntaxParser = common_setup("class nameHere { int vardecl }; program { };", "<classDeclLst> <progBody>");
-    EXPECT_TRUE(!syntaxParser.prog());
-    EXPECT_EQ(syntaxParser.errors_.size(), 4);
-    EXPECT_EQ(syntaxParser.current_rhs_derivation_, "class id { int id ; } ; <classDeclLst> <progBody>");
+TEST(errorMissingSemiTest, ParserTests) {
+    SyntaxParser syntaxParser = common_setup("class nameHere { int vardecl 0 int var2 }; program { };", "<classDeclLst> <progBody>");
+    EXPECT_TRUE(syntaxParser.prog());
+    EXPECT_EQ(syntaxParser.errors_.size(), 2);
+    EXPECT_EQ(syntaxParser.current_rhs_derivation_, "class id { int id <errorMissingSemiColon> int id <errorMissingSemiColon> } ; program { } ;");
+}
+
+TEST(errorProgramMissingSemiColonTest, ParserTests) {
+    SyntaxParser syntaxParser = common_setup("class nameHere { int vardecl; }; program { int var1 var3 = var2(1, 2); };", "<classDeclLst> <progBody>");
+    EXPECT_TRUE(syntaxParser.prog());
+    EXPECT_EQ(syntaxParser.errors_.size(), 1);
+    EXPECT_EQ(syntaxParser.current_rhs_derivation_, "class id { int id ; } ; program { int id ; id = id ( integer , integer ) ; } ;");
 }
 
 TEST(VarDeclareClassTest, ParserTests)
@@ -463,7 +470,7 @@ TEST(factorNestedFuncTest, ParserTests) {
 TEST(factorNestedInvalidFuncTest, ParserTests) {
     SyntaxParser syntaxParser = common_setup("var1[5](10) <", "<factor>");
     EXPECT_TRUE(syntaxParser.factor());
-    EXPECT_EQ(syntaxParser.errors_.size(), 2);
+    EXPECT_EQ(syntaxParser.errors_.size(), 1);
     EXPECT_EQ(syntaxParser.current_rhs_derivation_, "id [ integer ]");
 }
 TEST(factorIntegerTest, ParserTests) {
@@ -658,15 +665,14 @@ TEST(statBlockReturnTest, ParserTests) {
 
 TEST(funcBodyTest, ParserTests) {
     SyntaxParser syntaxParser = common_setup(
-            "{ var1 = 10.21 * 10 / 10 - 12; for (int i = 0; i < 10; i = i + 1) { if ( var2 > 10 ) then var1 = var1 + 10; else var3 = var3 = + 10; }; return(var2  + 10); };",
+            "{ var1 = 10.21 * 10 / 10 - 12; for (int i = 0; i < 10; i = i + 1) { if ( var2 > 10 ) then var1 = var1 + 10; else var3 = var3 + 10; }; return(var2  + 10); };",
             "<funcBody>");
     EXPECT_TRUE(syntaxParser.funcBody());
-    EXPECT_EQ(syntaxParser.current_rhs_derivation_,
-              "{ id = float * integer / integer - integer ; for ( int id = integer ; id < integer ; id = id + integer ) { if ( id > integer ) then id = id + integer ; else id = id + integer ; } ; return ( id + integer ) ; }");
+    EXPECT_EQ(syntaxParser.current_rhs_derivation_, "{ id = float * integer / integer - integer ; for ( int id = integer ; id < integer ; id = id + integer ) { if ( id > integer ) then id = id + integer ; else id = id + integer ; } ; return ( id + integer ) ; }");
 }
 
 TEST(funcDefTest, ParserTests) {
-    SyntaxParser syntaxParser = common_setup("int varFunc(int a, int b[5], float c){ var1 = 10.21 * 10 / 10 - 12; for (int i = 0; i < 10; i = i + 1) { if ( var2 > 10 ) then var1 = var1 + 10; else var3 = var3 = + 10; }; return(var2  + 10); };", "<funcDef>");
+    SyntaxParser syntaxParser = common_setup("int varFunc(int a, int b[5], float c){ var1 = 10.21 * 10 / 10 - 12; for (int i = 0; i < 10; i = i + 1) { if ( var2 > 10 ) then var1 = var1 + 10; else var3 = var3 + 10; }; return(var2  + 10); };", "<funcDef>");
     EXPECT_TRUE(syntaxParser.funcDef());
     EXPECT_EQ(syntaxParser.current_rhs_derivation_, "int id ( int id , int id [ integer ] , float id ) { id = float * integer / integer - integer ; for ( int id = integer ; id < integer ; id = id + integer ) { if ( id > integer ) then id = id + integer ; else id = id + integer ; } ; return ( id + integer ) ; } ;");
 }

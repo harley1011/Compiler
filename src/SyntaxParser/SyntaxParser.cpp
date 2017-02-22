@@ -114,7 +114,7 @@ bool SyntaxParser::classInDecl() {
         return false;
     if (is_lookahead_a_type()) {
         form_derivation_string("<classInDecl>", "<type> id <postTypeId>");
-        if (type() && match("ID") && postTypeId()) {
+        if (type() && match("ID", {"OPENBRA", "OPENPARA", "DELI", "CLOSECURL"}) && postTypeId()) {
             return true;
         }
     }
@@ -138,6 +138,10 @@ bool SyntaxParser::postTypeId() {
         form_derivation_string("<postTypeId>", ";");
         if (match("DELI"))
             return true;
+    } else {
+        // panic mode, missing semi colon
+        form_derivation_string("<postTypeId>", "<errorMissingSemiColon>");
+        return true;
     }
     return false;
 }
@@ -233,8 +237,10 @@ bool SyntaxParser::funcInBody() {
         }
     } else if (lookahead_ == "INT" || lookahead_ == "FLOAT") {
         form_derivation_string("<funcInBody>", "<numType> id <arraySize> ;");
-        if (numType() && match("ID") && arraySize() && match("DELI")) {
-            return true;
+        if (numType() && match("ID", {"OPENBRA", "DELI"})) {
+            arraySize();
+                if(match("DELI", {"INT", "ID", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN"}))
+                    return true;
         }
     }
     return false;
@@ -246,12 +252,12 @@ bool SyntaxParser::varOrStat() {
         return false;
     if (lookahead_ == "ID") {
         form_derivation_string("<varOrStat>", "id <arraySize> ;");
-        if (match("ID") && arraySize() && match("DELI")) {
+        if (match("ID") && arraySize() && match("DELI", {"INT", "ID", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN", "CLOSECURL"})) {
             return true;
         }
     } else if (lookahead_ == "OPENBRA" || lookahead_ == "EQUAL" || lookahead_ == "DOT") {
         form_derivation_string("<varOrStat>", "<indiceLst> <idnest> <assignOp> <expr> ;");
-        if (indiceLst() && idnest() && assignOp() && expr() && match("DELI")) {
+        if (indiceLst() && idnest() && assignOp() && expr() && match("DELI", {"INT", "ID", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN", "CLOSECURL"}, ";", "<missingSemiColon>")) {
             return true;
         }
     }
@@ -738,8 +744,8 @@ void SyntaxParser::report_error(string expected_token, string actual_token) {
 }
 
 bool SyntaxParser::arraySize() {
-    if (!skip_errors({"OPENBRA"}, {"COM", "DELI", "CLOSEPARA"}, true))
-        return false;
+//    if (!skip_errors({"OPENBRA"}, {"COM", "DELI", "CLOSEPARA"}, true))
+//        return false;
     if (lookahead_ == "OPENBRA") {
         form_derivation_string("<arraySize>", "[ integer ] <arraySize>");
         if (match("OPENBRA") && match("INUM") && match("CLOSEBRA") && arraySize()) {
@@ -749,6 +755,7 @@ bool SyntaxParser::arraySize() {
         form_derivation_string("<arraySize>", "");
         return true;
     }
+    form_derivation_string("<arraySize>", "");
     return false;
 }
 
@@ -945,13 +952,32 @@ bool SyntaxParser::skip_errors(set<string> first_set, set<string> follow_set, bo
     }
     report_error(lookahead_, "");
     while (first_set.find(lookahead_) == first_set.end() &&
-           follow_set.find(lookahead_) == follow_set.find(lookahead_)) {
+           follow_set.find(lookahead_) == follow_set.end()) {
         next_token();
         if (lookahead_ == "END")
             return false;
-        if (!epsilon && follow_set.find(lookahead_) != follow_set.end())
-            return false;
+//        if (!epsilon && follow_set.find(lookahead_) != follow_set.end())
+//            return false;
     }
+    return true;
+}
+
+bool SyntaxParser::match(string token, set<string> expected_post_tokens, string message_to_replace,  string replace_message) {
+    if (lookahead_ == token) {
+        lookahead_ = next_token();
+        return true;
+    }
+    do {
+        report_error(token, lookahead_);
+        if (expected_post_tokens.find(lookahead_) != expected_post_tokens.end()) {
+            // assume token is missing and the current read one is for the next match
+            form_derivation_string(message_to_replace, replace_message);
+            return true;
+        }
+        lookahead_ = next_token();
+    } while (lookahead_ != token);
+    form_derivation_string(message_to_replace, replace_message);
+    lookahead_ = next_token();
     return true;
 }
 
@@ -961,12 +987,14 @@ bool SyntaxParser::match(string token, set<string> expected_post_tokens) {
         return true;
     }
     do {
-        if (expected_post_tokens.find(token) != expected_post_tokens.end()) {
+        report_error(token, lookahead_);
+        if (expected_post_tokens.find(lookahead_) != expected_post_tokens.end()) {
             // assume token is missing and the current read one is for the next match
             return true;
         }
         lookahead_ = next_token();
-    } while (lookahead_ == next_token());
+    } while (lookahead_ != token);
+    lookahead_ = next_token();
     return true;
 
 
