@@ -12,14 +12,19 @@ SyntaxParser::SyntaxParser() {
 }
 
 SyntaxParser::SyntaxParser(string derivation_output_path, string error_output_path) {
+    current_rhs_derivation_ = "<classDeclLst> <progBody>";
+    derivations_.push_back(current_rhs_derivation_);
+    enable_derivation_output_ = false;
     derivation_output_path_ = derivation_output_path;
     error_output_path_ = error_output_path;
     output_to_file_ = true;
 }
 
 SyntaxParser::SyntaxParser(bool enable_derivation_output) {
-    SyntaxParser();
-    enable_derivation_output_ == enable_derivation_output;
+    current_rhs_derivation_ = "<classDeclLst> <progBody>";
+    derivations_.push_back(current_rhs_derivation_);
+    enable_derivation_output_ = false;
+    enable_derivation_output_ = enable_derivation_output;
 }
 
 SyntaxParser::SyntaxParser(vector<Token *> tokens) {
@@ -1001,15 +1006,6 @@ bool SyntaxParser::match(string token, set<string> expected_post_tokens) {
 }
 
 bool SyntaxParser::match(string token) {
-
-//    if (token_error_buffer_.size() > 1) {
-//        for (int i = 0; i < token_error_buffer_.size(); i++) {
-//            if (token_error_buffer_[i] == token) {
-//                token_error_buffer_.erase(token_error_buffer_.begin(), token_error_buffer_.begin() + i);
-//                return true;
-//            }
-//        }
-//    }
     if (lookahead_ == token) {
         lookahead_ = next_token();
         return (true);
@@ -1017,17 +1013,6 @@ bool SyntaxParser::match(string token) {
         report_error(token, lookahead_);
         lookahead_ = next_token();
         return false;
-//        for (int i = 0; i < 4; i++) {
-//            report_error(token, lookahead_);
-//            token_error_buffer_.push_back(lookahead_);
-//            lookahead_ = next_token();
-//
-//            if (lookahead_ == token) {
-//                token_error_buffer_.clear();
-//                return true;
-//            }
-//
-//        }
     }
 }
 

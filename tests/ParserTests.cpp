@@ -7,7 +7,17 @@
 #include "../src/SyntaxParser/SyntaxParser.h"
 
 SyntaxParser common_setup(string test_program, string derivation_string);
+bool compare_files(string first_path, string second_path);
 
+TEST(FileTest, ParserTests) {
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("given_program.txt", true);
+
+    SyntaxParser syntaxParser("built_given_program_parser_deriv_out.txt", "built_syntax_error_report_out.txt");
+    EXPECT_EQ(syntaxParser.parse(tokens), true);
+    EXPECT_TRUE(compare_files("given_program_parser_deriv_out.txt", "built_given_program_parser_deriv_out.txt"));
+}
 TEST(SimpleClassTest, ParserTests)
 {
     vector<Token*> tokens;
