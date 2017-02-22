@@ -143,12 +143,13 @@ bool SyntaxParser::postTypeId() {
         form_derivation_string("<postTypeId>", ";");
         if (match("DELI"))
             return true;
-    } else {
-        // panic mode, missing semi colon
-        form_derivation_string("<postTypeId>", "<errorMissingSemiColon>");
-        return true;
     }
-    return false;
+
+        // panic mode, missing semi colon
+    form_derivation_string("<postTypeId>", "<errorMissingSemiColon>");
+    return true;
+
+    //return false;
 }
 
 bool SyntaxParser::progBody() {
@@ -749,8 +750,8 @@ void SyntaxParser::report_error(string expected_token, string actual_token) {
 }
 
 bool SyntaxParser::arraySize() {
-//    if (!skip_errors({"OPENBRA"}, {"COM", "DELI", "CLOSEPARA"}, true))
-//        return false;
+    if (!skip_errors({"OPENBRA"}, {"COM", "DELI", "CLOSEPARA"}, true))
+        return false;
     if (lookahead_ == "OPENBRA") {
         form_derivation_string("<arraySize>", "[ integer ] <arraySize>");
         if (match("OPENBRA") && match("INUM") && match("CLOSEBRA") && arraySize()) {
