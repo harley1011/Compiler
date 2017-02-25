@@ -1,0 +1,5 @@
+Syntax Error: token INT received not in first or follow set of current production:0:0
+Syntax Error: token FLOAT received not in first or follow set of current production:3:4
+Syntax Error: expected token DELI but CLOSECURL was received instead:16:4
+Syntax Error: token DELI received not in first or follow set of current production:16:5
+Syntax Error: token INT received not in first or follow set of current production:20:8

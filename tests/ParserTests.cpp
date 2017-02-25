@@ -18,6 +18,15 @@ TEST(FileTest, ParserTests) {
     EXPECT_EQ(syntaxParser.parse(tokens), true);
     EXPECT_TRUE(compare_files("given_program_parser_deriv_out.txt", "built_given_program_parser_deriv_out.txt"));
 }
+TEST(LargeFileTest, ParserTests) {
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("large_program_syntax.txt", true);
+
+    SyntaxParser syntaxParser("built_large_program_parser_deriv_out.txt", "built_large_syntax_error_report_out.txt");
+    EXPECT_EQ(syntaxParser.parse(tokens), true);
+    EXPECT_TRUE(compare_files("large_program_parser_deriv_out.txt", "built_large_program_parser_deriv_out.txt"));
+}
 TEST(FileWithErrorsTest, ParserTests) {
     vector<Token*> tokens;
     Scanner scanner;
@@ -26,6 +35,7 @@ TEST(FileWithErrorsTest, ParserTests) {
     SyntaxParser syntaxParser("built_given_program_with_errors_parser_deriv_out.txt", "built_syntax_with_errors_error_report_out.txt");
     EXPECT_EQ(syntaxParser.parse(tokens), false);
     EXPECT_TRUE(compare_files("given_program_parser_deriv_out.txt", "built_given_program_parser_deriv_out.txt"));
+    EXPECT_TRUE(compare_files("syntax_with_errors_error_report_out.txt", "built_syntax_with_errors_error_report_out.txt"));
 }
 TEST(SimpleClassTest, ParserTests)
 {
