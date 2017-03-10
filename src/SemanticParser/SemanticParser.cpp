@@ -63,6 +63,7 @@ bool SemanticParser::parse(vector<Token *> tokens) {
 
 
 bool SemanticParser::prog() {
+    global_symbol_table_.second_pass_ = false;
     if (!skip_errors({"CLASS"}, {}, false))
         return false;
     if (lookahead_ == "CLASS") {
@@ -122,35 +123,31 @@ bool SemanticParser::classInDecl() {
         return false;
     if (is_lookahead_a_type()) {
         form_derivation_string("<classInDecl>", "<type> id <postTypeId>");
-        SymbolRecord record;
-        if (type(record) && match("ID", {"OPENBRA", "OPENPARA", "DELI", "CLOSECURL"}) && record.set_name(get_last_token().lexeme_) && postTypeId(record)) {
-            global_symbol_table_.current_symbol_record_.symbol_table_->symbol_records_.push_back(record);
+        SymbolRecord* record;
+        if (type(record) && match("ID", {"OPENBRA", "OPENPARA", "DELI", "CLOSECURL"}) && record->set_name(get_last_token().lexeme_) && postTypeId(record)) {
             return true;
         }
     }
     return false;
 }
 
-bool SemanticParser::postTypeId(SymbolRecord record) {
+bool SemanticParser::postTypeId(SymbolRecord* record) {
     if (!skip_errors({"OPENBRA", "OPENPARA", "DELI"}, {"INT", "ID", "FLOAT", "CLOSECURL"}, false))
         return false;
     if (lookahead_ == "OPENBRA") {
         form_derivation_string("<postTypeId>", "<arraySize> ;");
-        record.kind_ = "variable";
-        if (arraySize(record) && match("DELI")) {
+        if (arraySize(record) && match("DELI") && global_symbol_table_.create_variable_entry(record)) {
             return true;
         }
     } else if (lookahead_ == "OPENPARA") {
-        record.kind_ = "function";
-        record.append_to_type(" : ");
+        record->append_to_type(" : ");
         form_derivation_string("<postTypeId>", "( <fParams> ) <funcBody> ;");
-        if (match("OPENPARA") && fParams(record) && match("CLOSEPARA") && funcBody(record) && match("DELI")) {
+        if (match("OPENPARA") && fParams(record) && match("CLOSEPARA") && funcBody(record) && match("DELI") && global_symbol_table_.create_function_class_entry(record)) {
             return true;
         }
     } else if (lookahead_ == "DELI") {
         form_derivation_string("<postTypeId>", ";");
-        record.kind_ = "variable";
-        if (match("DELI"))
+        if (match("DELI") && global_symbol_table_.create_variable_entry(record))
             return true;
     }
 
@@ -166,19 +163,18 @@ bool SemanticParser::progBody() {
         return false;
     if (lookahead_ == "PROGRAM") {
         form_derivation_string("<progBody>", "program <funcBody> ; <funcDefLst>");
-        if (match("PROGRAM") && funcBody() && match("DELI") && funcDefLst())
+        if (match("PROGRAM") && global_symbol_table_.create_program_entry_and_table() && funcBody(global_symbol_table_.current_symbol_record_) && match("DELI") && funcDefLst())
             return true;
     }
     return false;
 }
 
-bool SemanticParser::funcHead() {
+bool SemanticParser::funcHead(SymbolRecord* record) {
     if (!skip_errors({"INT", "ID", "FLOAT"}, {"OPENCURL"}, false))
         return false;
     if (is_lookahead_a_type()) {
         form_derivation_string("<funcHead>", "<type> id ( <fParams> )");
-        SymbolRecord record;
-        if (type(record) && match("ID") && match("OPENPARA") && fParams() && match("CLOSEPARA"))
+        if (type(record) && match("ID") && match("OPENPARA") && fParams(record) && match("CLOSEPARA"))
             return true;
     }
     return false;
@@ -189,7 +185,7 @@ bool SemanticParser::funcDefLst() {
         return false;
     if (is_lookahead_a_type()) {
         form_derivation_string("<funcDefLst>", "<funcDef> <funcDefLst>");
-        if (funcDef() && funcDefLst())
+        if (global_symbol_table_.create_function_entry_and_table() && funcDef(global_symbol_table_.current_symbol_record_) && funcDefLst())
             return true;
     } else if (lookahead_ == "END") {
         form_derivation_string("<funcDefLst>", "");
@@ -198,18 +194,18 @@ bool SemanticParser::funcDefLst() {
     return false;
 }
 
-bool SemanticParser::funcDef() {
+bool SemanticParser::funcDef(SymbolRecord* record) {
     if (!skip_errors({"INT", "ID", "FLOAT"}, {"INT", "ID", "FLOAT", "END"}, false))
         return false;
     if (is_lookahead_a_type()) {
         form_derivation_string("<funcDef>", "<funcHead> <funcBody> ;");
-        if (funcHead() && funcBody() && match("DELI"))
+        if (funcHead(record) && funcBody(record) && match("DELI"))
             return true;
     }
     return false;
 }
 
-bool SemanticParser::funcBody(SymbolRecord record) {
+bool SemanticParser::funcBody(SymbolRecord* record) {
     if (!skip_errors({"OPENCURL"}, {"DELI"}, false))
         return false;
     if (lookahead_ == "OPENCURL") {
@@ -222,7 +218,7 @@ bool SemanticParser::funcBody(SymbolRecord record) {
 }
 
 
-bool SemanticParser::funcInBodyLst(SymbolRecord record) {
+bool SemanticParser::funcInBodyLst(SymbolRecord* record) {
     if (!skip_errors({"INT", "ID", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN"}, {"CLOSECURL"}, true))
         return false;
     if (is_lookahead_a_type() || is_lookahead_a_statement()) {
@@ -237,23 +233,23 @@ bool SemanticParser::funcInBodyLst(SymbolRecord record) {
     return false;
 }
 
-bool SemanticParser::funcInBody(SymbolRecord record) {
+bool SemanticParser::funcInBody(SymbolRecord* record) {
     if (!skip_errors({"INT", "ID", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN"},
                      {"INT", "ID", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN", "CLOSECURL"}, false))
         return false;
     if (lookahead_ == "ID") {
         form_derivation_string("<funcInBody>", "id <varOrStat>");
-        if (match("ID") && record.set_type(get_last_token().lexeme_) && varOrStat(record)) {
+        if (match("ID") && record->set_type(get_last_token().lexeme_) && varOrStat(record)) {
             return true;
         }
     } else if (is_lookahead_a_statement()) {
         form_derivation_string("<funcInBody>", "<statementRes>");
-        if (statementRes()) {
+        if (statementRes(record)) {
             return true;
         }
     } else if (lookahead_ == "INT" || lookahead_ == "FLOAT") {
         form_derivation_string("<funcInBody>", "<numType> id <arraySize> ;");
-        if (numType(record) && match("ID", {"OPENBRA", "DELI"}) && record.set_name(get_last_token().lexeme_)) {
+        if (numType(record) && match("ID", {"OPENBRA", "DELI"}) && record->set_name(get_last_token().lexeme_)) {
             arraySize(record);
                 if(match("DELI", {"INT", "ID", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN"}))
                     return true;
@@ -262,13 +258,13 @@ bool SemanticParser::funcInBody(SymbolRecord record) {
     return false;
 }
 
-bool SemanticParser::varOrStat(SymbolRecord record) {
+bool SemanticParser::varOrStat(SymbolRecord* record) {
     if (!skip_errors({"ID", "OPENBRA", "EQUAL", "DOT"},
                      {"INT", "ID", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN", "CLOSECURL"}, false))
         return false;
     if (lookahead_ == "ID") {
         form_derivation_string("<varOrStat>", "id <arraySize> ;");
-        if (match("ID") && record.set_name(get_last_token().lexeme_) && arraySize(record) && match("DELI", {"INT", "ID", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN", "CLOSECURL"})) {
+        if (match("ID") && record->set_name(get_last_token().lexeme_) && arraySize(record) && match("DELI", {"INT", "ID", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN", "CLOSECURL"})) {
             return true;
         }
     } else if (lookahead_ == "OPENBRA" || lookahead_ == "EQUAL" || lookahead_ == "DOT") {
@@ -303,13 +299,14 @@ bool SemanticParser::statement() {
             return true;
     } else if (is_lookahead_a_statement()) {
         form_derivation_string("<statement>", "<statementRes>");
-        if (statementRes())
+        SymbolRecord* record;
+        if (statementRes(record))
             return true;
     }
     return false;
 }
 
-bool SemanticParser::statementRes() {
+bool SemanticParser::statementRes(SymbolRecord* record) {
     if (!skip_errors({"IF", "FOR", "GET", "PUT", "RETURN"},
                      {"ID", "INT", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN", "ELSE", "DELI", "CLOSECURL",}, false))
         return false;
@@ -321,7 +318,7 @@ bool SemanticParser::statementRes() {
     } else if (lookahead_ == "FOR") {
         form_derivation_string("<statementRes>",
                                "for ( <type> id <assignOp> <expr> ; <relExpr> ; <assignStat> ) <statBlock>");
-        if (match("FOR") && match("OPENPARA") && type() && match("ID") && assignOp() && expr() && match("DELI") &&
+        if (match("FOR") && match("OPENPARA") && type(record) && match("ID") && record->set_name(get_last_token().lexeme_) && assignOp() && expr() && match("DELI") &&
             relExpr() && match("DELI") && assignStat() && match("CLOSEPARA") && statBlock()) {
             return true;
         }
@@ -759,12 +756,12 @@ void SemanticParser::report_error(string expected_token, string actual_token) {
     }
 }
 
-bool SemanticParser::arraySize(SymbolRecord symbol_record) {
+bool SemanticParser::arraySize(SymbolRecord* record) {
     if (!skip_errors({"OPENBRA"}, {"COM", "DELI", "CLOSEPARA"}, true))
         return false;
     if (lookahead_ == "OPENBRA") {
         form_derivation_string("<arraySize>", "[ integer ] <arraySize>");
-        if (match("OPENBRA") && match("INUM") && symbol_record.append_to_type("[" + get_last_token().lexeme_) && match("CLOSEBRA") && symbol_record.append_to_type("]") && arraySize(symbol_record)) {
+        if (match("OPENBRA") && match("INUM") && record->append_to_type("[" + get_last_token().lexeme_) && match("CLOSEBRA") && record->append_to_type("]") && arraySize(record)) {
             return true;
         }
     } else if (lookahead_ == "COM" || lookahead_ == "DELI" || lookahead_ == "CLOSEPARA") {// Follow set
@@ -775,49 +772,51 @@ bool SemanticParser::arraySize(SymbolRecord symbol_record) {
     return false;
 }
 
-bool SemanticParser::type(SymbolRecord symbol_record) {
+bool SemanticParser::type(SymbolRecord* record) {
     if (!skip_errors({"INT", "FLOAT", "ID"}, {"ID"}, false))
         return false;
     if (lookahead_ == "INT" && match("INT")) {
         form_derivation_string("<type>", "int");
-        symbol_record.type_ = "int";
+        record->type_ = "int";
         return true;
     } else if (lookahead_ == "FLOAT" && match("FLOAT")) {
         form_derivation_string("<type>", "float");
-        symbol_record.type_ = "float";
+        record->type_ = "float";
         return true;
     } else if (lookahead_ == "ID" && match("ID")) {
         form_derivation_string("<type>", "id");
-        symbol_record.type_ = "id";
+        record->type_ = "id";
         return true;
     }
     return false;
 }
 
-bool SemanticParser::numType(SymbolRecord record) {
+bool SemanticParser::numType(SymbolRecord* record) {
     if (!skip_errors({"INT", "FLOAT"}, {"ID"}, false))
         return false;
     if (lookahead_ == "INT") {
         form_derivation_string("<numType>", "int");
         if (match("INT")) {
-            record.type_ = "int";
+            record->type_ = "int";
             return true;
         }
     } else if (lookahead_ == "FLOAT") {
         form_derivation_string("<numType>", "float");
         if (match("FLOAT")) {
-            record.type_ = "float";
+            record->type_ = "float";
             return true;
         }
     }
 }
 
-bool SemanticParser::fParams(SymbolRecord symbol_record) {
+bool SemanticParser::fParams(SymbolRecord* record) {
     if (!skip_errors({"INT", "FLOAT", "ID"}, {"CLOSEPARA"}, true))
         return false;
     if (is_lookahead_a_type()) {
         form_derivation_string("<fParams>", "<type> id <arraySize> <fParamsTail>");
-        if (type(symbol_record) && match("ID") && symbol_record.set_name(get_last_token().lexeme_) && arraySize(symbol_record) && fParamsTail(symbol_record))
+        SymbolRecord* fParam_record;
+        if (type(fParam_record) && match("ID") && fParam_record->set_name(get_last_token().lexeme_) && arraySize(fParam_record) && record->symbol_table_->create_parameter_entry(fParam_record) && fParamsTail(record))
+            record->generate_function_type();
             return true;
     } else if (lookahead_ == "CLOSEPARA") {
         form_derivation_string("<fParams>", "");
@@ -841,12 +840,13 @@ bool SemanticParser::aParams() {
     return false;
 }
 
-bool SemanticParser::fParamsTail(SymbolRecord record) {
+bool SemanticParser::fParamsTail(SymbolRecord* record) {
     if (!skip_errors({"COM"}, {"CLOSEPARA"}, true))
         return false;
     if (lookahead_ == "COM") {
         form_derivation_string("<fParamsTail>", ", <type> id <arraySize> <fParamsTail>");
-        if (match("COM") && type(record) && match("ID", record)  && arraySize(record) && fParamsTail(record))
+        SymbolRecord* fParam_record;
+        if (match("COM") && type(record) && match("ID") && fParam_record->set_name(get_last_token().lexeme_) && arraySize(record) && record->symbol_table_->create_parameter_entry(record) && fParamsTail(record))
             return true;
     } else if (lookahead_ == "CLOSEPARA") { // Follow set
         form_derivation_string("<fParamsTail>", "");
@@ -1034,19 +1034,6 @@ bool SemanticParser::match(string token) {
     }
 }
 
-
-bool SemanticParser::match(string token, SymbolRecord record) {
-    if (lookahead_ == token) {
-        record.name_ == current_token_->lexeme_;
-        lookahead_ = next_token();
-        return (true);
-    } else {
-        report_error(token, lookahead_);
-        lookahead_ = next_token();
-        return false;
-    }
-}
-
 bool SemanticParser::form_derivation_string(string non_terminal, string rhs) {
     int begin_index = current_rhs_derivation_.find(non_terminal);
     if (begin_index == string::npos)
@@ -1080,5 +1067,6 @@ string SemanticParser::next_token() {
 
 
 Token SemanticParser::get_last_token() {
-    return *(tokens_[current_token_position_ - 1]);
+    Token* token = tokens_[current_token_position_ - 2];
+    return *(token);
 }

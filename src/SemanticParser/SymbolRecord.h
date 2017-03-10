@@ -28,6 +28,8 @@ public:
     bool set_name(string name);
 
     bool append_to_type(string type);
+
+    bool generate_function_type();
 };
 
 

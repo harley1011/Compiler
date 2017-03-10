@@ -8,10 +8,11 @@
 SemanticParser common_setup_semantic(string test_program, string derivation_string);
 
 TEST(arraySizeTest, SemanticTests) {
-    SymbolRecord record;
+    SymbolRecord* record = new SymbolRecord();
     SemanticParser syntaxParser = common_setup_semantic("[ 5 ] [ 10 ];", "<arraySize>");
     EXPECT_TRUE(syntaxParser.arraySize(record));
-  //  EXPECT_EQ(syntaxParser.current_rhs_derivation_, "[ integer ] [ integer ]");
+    EXPECT_EQ(syntaxParser.current_rhs_derivation_, "[ integer ] [ integer ]");
+    EXPECT_EQ(record->type_, "[5][10]");
 }
 
 SemanticParser common_setup_semantic(string test_program, string derivation_string) {
