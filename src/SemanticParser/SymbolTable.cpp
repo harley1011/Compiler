@@ -76,20 +76,35 @@ bool SymbolTable::create_parameter_entry(SymbolRecord* record) {
 void print_table(SymbolTable* table, string table_name) {
     if (table->symbol_records_.size() == 0)
         return;
-    cout << "Symbol table name: " + table_name << endl;
-    cout << string(64, '-') << endl;
-    cout << "|" << setw(20) << "Name" << std::right << std::setfill(' ') << "|";
-    cout << setw(20) << "Kind" << std::right << std::setfill(' ') << "|";
-    cout << setw(20) << "Type" << std::right << std::setfill(' ') << "|" << endl;
-    cout << string(64, '-') << endl;
+
+    int name_width_out = 20;
+    int type_width_out = 20;
+    int kind_width_out = 20;
+
     for(SymbolRecord record: table->symbol_records_) {
-        cout << "|" << setw(20) << record.name_ << std::right << std::setfill(' ') << "|";
-        cout << setw(20) << record.kind_ << std::right << std::setfill(' ') << "|";
-        cout << setw(20) << record.type_ << std::right << std::setfill(' ') << "|" << endl;
-        //<< record.kind_ << setw(20) << std::left <<  "|" << record.type_ << setw(20) << std::left << "|" << endl;
+        if (record.kind_.size() > kind_width_out)
+            kind_width_out = record.kind_.size();
+        if (record.name_.size() > name_width_out)
+            name_width_out = record.name_.size();
+        if (record.type_.size() > type_width_out)
+            type_width_out = record.type_.size();
     }
 
-    cout << string(64, '-') << endl << endl;
+    int horizontal_width_out = name_width_out + type_width_out + kind_width_out + 4;
+
+    cout << "Symbol table name: " + table_name << endl;
+    cout << string(horizontal_width_out, '-') << endl;
+    cout << "|" << setw(name_width_out) << "Name" << std::right << std::setfill(' ') << "|";
+    cout << setw(kind_width_out) << "Kind" << std::right << std::setfill(' ') << "|";
+    cout << setw(type_width_out) << "Type" << std::right << std::setfill(' ') << "|" << endl;
+    cout << string(horizontal_width_out, '-') << endl;
+    for(SymbolRecord record: table->symbol_records_) {
+        cout << "|" << setw(name_width_out) << record.name_ << std::right << std::setfill(' ') << "|";
+        cout << setw(kind_width_out) << record.kind_ << std::right << std::setfill(' ') << "|";
+        cout << setw(type_width_out) << record.type_ << std::right << std::setfill(' ') << "|" << endl;
+    }
+
+    cout << string(horizontal_width_out, '-') << endl << endl;
 
     for(SymbolRecord record: table->symbol_records_) {
         print_table(record.symbol_table_, record.name_);
