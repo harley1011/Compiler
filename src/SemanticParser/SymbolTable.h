@@ -7,6 +7,8 @@
 
 class SymbolTable {
 public:
+    SymbolTable();
+
     bool second_pass_;
     vector<SymbolRecord> symbol_records_;
 

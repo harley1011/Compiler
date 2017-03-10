@@ -123,7 +123,7 @@ bool SemanticParser::classInDecl() {
         return false;
     if (is_lookahead_a_type()) {
         form_derivation_string("<classInDecl>", "<type> id <postTypeId>");
-        SymbolRecord* record;
+        SymbolRecord* record = new SymbolRecord();
         if (type(record) && match("ID", {"OPENBRA", "OPENPARA", "DELI", "CLOSECURL"}) && record->set_name(get_last_token().lexeme_) && postTypeId(record)) {
             return true;
         }
@@ -299,7 +299,7 @@ bool SemanticParser::statement() {
             return true;
     } else if (is_lookahead_a_statement()) {
         form_derivation_string("<statement>", "<statementRes>");
-        SymbolRecord* record;
+        SymbolRecord* record = new SymbolRecord();
         if (statementRes(record))
             return true;
     }
@@ -814,7 +814,7 @@ bool SemanticParser::fParams(SymbolRecord* record) {
         return false;
     if (is_lookahead_a_type()) {
         form_derivation_string("<fParams>", "<type> id <arraySize> <fParamsTail>");
-        SymbolRecord* fParam_record;
+        SymbolRecord* fParam_record = new SymbolRecord();
         if (type(fParam_record) && match("ID") && fParam_record->set_name(get_last_token().lexeme_) && arraySize(fParam_record) && record->symbol_table_->create_parameter_entry(fParam_record) && fParamsTail(record))
             record->generate_function_type();
             return true;

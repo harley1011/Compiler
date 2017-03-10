@@ -10,12 +10,14 @@ SymbolRecord::SymbolRecord(string kind, string type, string name) {
     kind_ = kind;
     type_ = type;
     name_ = name;
+    symbol_table_ = new SymbolTable();
 }
 
 SymbolRecord::SymbolRecord() {
     kind_ ="";
     type_ = "";
     name_ ="";
+    symbol_table_ = new SymbolTable();
 }
 
 bool SymbolRecord::set_kind(string kind) {

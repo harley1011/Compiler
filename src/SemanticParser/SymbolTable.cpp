@@ -6,12 +6,16 @@
 #include "SymbolTable.h"
 void print_table(SymbolTable* table, string table_name);
 
+SymbolTable::SymbolTable() {
+    second_pass_ = false;
+}
+
 bool SymbolTable::create_class_entry_and_table(string kind, string type, string name) {
     if (second_pass_)
         return true;
-    SymbolRecord symbol_record(kind, type, name);
-    current_symbol_record_ = &symbol_record;
-    symbol_records_.push_back(symbol_record);
+    SymbolRecord* symbol_record = new SymbolRecord(kind, type, name);
+    current_symbol_record_ = symbol_record;
+    symbol_records_.push_back(*symbol_record);
     return true;
 }
 
@@ -24,9 +28,9 @@ bool SymbolTable::add_record_to_current_symbol_table() {
 
 
 bool SymbolTable::create_program_entry_and_table() {
-    SymbolRecord* record;
-    current_symbol_record_ = record;
-    symbol_records_.push_back(*record);
+    SymbolRecord* symbol_record = new SymbolRecord("function", "", "program");
+    current_symbol_record_ = symbol_record;
+    symbol_records_.push_back(*symbol_record);
     return true;
 }
 
