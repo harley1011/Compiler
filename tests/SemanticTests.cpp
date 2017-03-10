@@ -27,6 +27,8 @@ TEST(FuncDeclareClassTest, SemanticTests)
     EXPECT_EQ(syntaxParser.parse(tokens), true);
     EXPECT_EQ(syntaxParser.current_rhs_derivation_, "class id { int id ( int id [ integer ] ) { int id ; int id ; id = id [ integer ] ; for ( int id = integer ; id <= integer ; id = ( id ) + integer ) { if ( id [ id ] < id ) then { id = id [ id ] ; } else { } ; } ; return ( id ) ; } ; } ; program { } ;");
     EXPECT_EQ(syntaxParser.errors_.size(), 0);
+
+    syntaxParser.global_symbol_table_.print();
 }
 
 
