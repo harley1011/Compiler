@@ -16,14 +16,14 @@ bool SymbolTable::create_class_entry_and_table(string kind, string type, string 
         return true;
     SymbolRecord* symbol_record = new SymbolRecord(kind, type, name);
     current_symbol_record_ = symbol_record;
-    symbol_records_.push_back(*symbol_record);
+    add_record(symbol_record);
     return true;
 }
 
 bool SymbolTable::create_program_entry_and_table() {
     SymbolRecord* symbol_record = new SymbolRecord("function", "", "program");
     current_symbol_record_ = symbol_record;
-    symbol_records_.push_back(*symbol_record);
+    add_record(symbol_record);
     return true;
 }
 
@@ -32,7 +32,7 @@ bool SymbolTable::create_function_entry_and_table() {
         return true;
     SymbolRecord* record;
     current_symbol_record_ = record;
-    symbol_records_.push_back(*record);
+    add_record(record);
     return true;
 }
 
@@ -45,7 +45,7 @@ bool SymbolTable::create_variable_entry(SymbolRecord* record) {
     if (second_pass_)
         return true;
     record->kind_ = "variable";
-    current_symbol_record_->symbol_table_->symbol_records_.push_back(*record);
+    current_symbol_record_->symbol_table_->add_record(*record);
     return true;
 }
 
@@ -53,7 +53,7 @@ bool SymbolTable::create_function_class_entry_and_function_table(SymbolRecord *r
     if(second_pass_)
         return true;
     record->kind_ = "function";
-    symbol_records_.push_back(*record);
+    add_record(record);
     return true;
 }
 
@@ -61,6 +61,11 @@ bool SymbolTable::create_parameter_entry(SymbolRecord* record) {
     if (second_pass_)
         return true;
     record->kind_ = "parameter";
+    add_record(record);
+    return true;
+}
+
+bool SymbolTable::add_record(SymbolRecord* record) {
     symbol_records_.push_back(*record);
     return true;
 }

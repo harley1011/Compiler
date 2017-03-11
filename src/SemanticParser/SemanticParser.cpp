@@ -142,7 +142,7 @@ bool SemanticParser::postTypeId(SymbolRecord* record) {
     } else if (lookahead_ == "OPENPARA") {
         record->append_to_type(" : ");
         form_derivation_string("<postTypeId>", "( <fParams> ) <funcBody> ;");
-        if (match("OPENPARA") && fParams(record) && match("CLOSEPARA") && funcBody(record) && match("DELI") && record->symbol_table_->create_function_class_entry_and_function_table(record)) {
+        if (match("OPENPARA") && fParams(record) && match("CLOSEPARA") && funcBody(record) && match("DELI") && global_symbol_table_.current_symbol_record_->symbol_table_->create_function_class_entry_and_function_table(record)) {
             return true;
         }
     } else if (lookahead_ == "DELI") {
@@ -251,8 +251,9 @@ bool SemanticParser::funcInBody(SymbolRecord* record) {
     } else if (lookahead_ == "INT" || lookahead_ == "FLOAT") {
         form_derivation_string("<funcInBody>", "<numType> id <arraySize> ;");
         SymbolRecord* local_record = new SymbolRecord();
-        if (numType(local_record) && match("ID", {"OPENBRA", "DELI"}) && local_record->set_name(get_last_token().lexeme_) && record->symbol_table_->create_parameter_entry(local_record)) {
+        if (numType(local_record) && match("ID", {"OPENBRA", "DELI"}) && local_record->set_name(get_last_token().lexeme_)) {
             arraySize(record);
+            record->symbol_table_->create_parameter_entry(local_record);
                 if(match("DELI", {"INT", "ID", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN"}))
                     return true;
         }
@@ -266,7 +267,9 @@ bool SemanticParser::varOrStat(SymbolRecord* record) {
         return false;
     if (lookahead_ == "ID") {
         form_derivation_string("<varOrStat>", "id <arraySize> ;");
-        if (match("ID") && record->set_name(get_last_token().lexeme_) && arraySize(record) && match("DELI", {"INT", "ID", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN", "CLOSECURL"})) {
+        if (match("ID") && record->set_name(get_last_token().lexeme_) && arraySize(record)
+            && match("DELI", {"INT", "ID", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN", "CLOSECURL"} )
+            && global_symbol_table_.current_symbol_record_->symbol_table_->create_parameter_entry(record)) {
             return true;
         }
     } else if (lookahead_ == "OPENBRA" || lookahead_ == "EQUAL" || lookahead_ == "DOT") {
@@ -1046,7 +1049,7 @@ bool SemanticParser::form_derivation_string(string non_terminal, string rhs) {
             current_rhs_derivation_.erase(begin_index, non_terminal.size());
     } else
         current_rhs_derivation_.replace(begin_index, non_terminal.size(), rhs);
-    if (enable_derivation_output_)
+        if (enable_derivation_output_)
         cout << current_rhs_derivation_ << endl;
     if (output_to_file_)
         derivation_output_file_ << current_rhs_derivation_ << "\n";

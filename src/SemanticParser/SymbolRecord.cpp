@@ -44,6 +44,7 @@ bool SymbolRecord::append_to_type(string type) {
 bool SymbolRecord::add_array_size(IntegerToken integer_token) {
     append_to_type("[" + integer_token.lexeme_);
     array_sizes.push_back(integer_token.converted_lexeme_);
+    return true;
 }
 
 
@@ -56,4 +57,5 @@ bool SymbolRecord::generate_function_type() {
             type_ += ",";
         type_ += record.type_;
     }
+    return true;
 }
