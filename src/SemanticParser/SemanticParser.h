@@ -10,6 +10,8 @@
 #include <set>
 #include "../SemanticParser/SymbolTable.h"
 #include "../SemanticParser/SymbolRecord.h"
+#include "../IntegerToken.h"
+
 class SemanticParser {
 
 public:
@@ -118,6 +120,8 @@ public:
     bool match(string token, set<string> expected_post_tokens);
 
     bool match(string token, set<string> expected_post_tokens, string message_to_replace, string replace_message);
+
+    IntegerToken get_last_integer_token();
 };
 
 

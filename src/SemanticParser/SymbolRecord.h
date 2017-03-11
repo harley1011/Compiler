@@ -1,4 +1,6 @@
 #include <string>
+#include <vector>
+#include "../IntegerToken.h"
 
 using namespace std;
 
@@ -22,6 +24,9 @@ public:
     string type_;
     string name_;
     SymbolTable* symbol_table_;
+    bool properly_declared_;
+    vector<int> array_sizes;
+    string address;
 
     bool set_kind(string kind);
     bool set_type(string type);
@@ -30,6 +35,8 @@ public:
     bool append_to_type(string type);
 
     bool generate_function_type();
+
+    bool add_array_size(IntegerToken integer_token);
 };
 
 

@@ -2,7 +2,7 @@
 
 
 #include "SemanticParser.h"
-
+#include "../IntegerToken.h"
 
 
 SemanticParser::SemanticParser() {
@@ -142,7 +142,7 @@ bool SemanticParser::postTypeId(SymbolRecord* record) {
     } else if (lookahead_ == "OPENPARA") {
         record->append_to_type(" : ");
         form_derivation_string("<postTypeId>", "( <fParams> ) <funcBody> ;");
-        if (match("OPENPARA") && fParams(record) && match("CLOSEPARA") && funcBody(record) && match("DELI") && global_symbol_table_.create_function_class_entry(record)) {
+        if (match("OPENPARA") && fParams(record) && match("CLOSEPARA") && funcBody(record) && match("DELI") && record->symbol_table_->create_function_class_entry_and_function_table(record)) {
             return true;
         }
     } else if (lookahead_ == "DELI") {
@@ -318,9 +318,9 @@ bool SemanticParser::statementRes(SymbolRecord* record) {
             return true;
         }
     } else if (lookahead_ == "FOR") {
-        form_derivation_string("<statementRes>",
-                               "for ( <type> id <assignOp> <expr> ; <relExpr> ; <assignStat> ) <statBlock>");
-        if (match("FOR") && match("OPENPARA") && type(record) && match("ID") && record->set_name(get_last_token().lexeme_) && assignOp() && expr() && match("DELI") &&
+        form_derivation_string("<statementRes>", "for ( <type> id <assignOp> <expr> ; <relExpr> ; <assignStat> ) <statBlock>");
+        SymbolRecord* local_record = new SymbolRecord();
+        if (match("FOR") && match("OPENPARA") && type(local_record) && match("ID") && local_record->set_name(get_last_token().lexeme_) && record->symbol_table_->create_parameter_entry(local_record) && assignOp() && expr() && match("DELI") &&
             relExpr() && match("DELI") && assignStat() && match("CLOSEPARA") && statBlock()) {
             return true;
         }
@@ -421,8 +421,7 @@ bool SemanticParser::statThenBlock() {
 bool SemanticParser::expr() {
     if (!skip_errors({"ID", "INUM", "FNUM", "OPENPARA", "NOT", "ADD", "SUB"}, {"COM", "CLOSEPARA", "DELI"}, false))
         return false;
-    if (is_lookahead_a_value() || lookahead_ == "OPENPARA" || lookahead_ == "NOT" || lookahead_ == "ADD" ||
-        lookahead_ == "SUB") {
+    if (is_lookahead_a_value() || lookahead_ == "OPENPARA" || lookahead_ == "NOT" || lookahead_ == "ADD" || lookahead_ == "SUB") {
         form_derivation_string("<expr>", "<arithExpr> <relOrAri>");
         if (arithExpr() && relOrAri()) {
             return true;
@@ -763,7 +762,7 @@ bool SemanticParser::arraySize(SymbolRecord* record) {
         return false;
     if (lookahead_ == "OPENBRA") {
         form_derivation_string("<arraySize>", "[ integer ] <arraySize>");
-        if (match("OPENBRA") && match("INUM") && record->append_to_type("[" + get_last_token().lexeme_) && match("CLOSEBRA") && record->append_to_type("]") && arraySize(record)) {
+        if (match("OPENBRA") && match("INUM") && record->add_array_size(get_last_integer_token()) && match("CLOSEBRA") && record->append_to_type("]") && arraySize(record)) {
             return true;
         }
     } else if (lookahead_ == "COM" || lookahead_ == "DELI" || lookahead_ == "CLOSEPARA") {// Follow set
@@ -1071,4 +1070,10 @@ string SemanticParser::next_token() {
 Token SemanticParser::get_last_token() {
     Token* token = tokens_[current_token_position_ - 2];
     return *(token);
+}
+
+IntegerToken SemanticParser::get_last_integer_token() {
+    IntegerToken token = static_cast<IntegerToken&>(*tokens_[current_token_position_ - 2]);
+    return token;
+
 }

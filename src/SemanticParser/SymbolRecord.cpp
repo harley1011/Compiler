@@ -4,6 +4,7 @@
 
 #include "SymbolRecord.h"
 #include "SymbolTable.h"
+#include "../IntegerToken.h"
 
 
 SymbolRecord::SymbolRecord(string kind, string type, string name) {
@@ -38,6 +39,11 @@ bool SymbolRecord::set_name(string name) {
 bool SymbolRecord::append_to_type(string type) {
     type_ += type;
     return true;
+}
+
+bool SymbolRecord::add_array_size(IntegerToken integer_token) {
+    append_to_type("[" + integer_token.lexeme_);
+    array_sizes.push_back(integer_token.converted_lexeme_);
 }
 
 
