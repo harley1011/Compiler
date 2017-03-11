@@ -240,7 +240,7 @@ bool SemanticParser::funcInBody(SymbolRecord* record) {
     if (lookahead_ == "ID") {
         form_derivation_string("<funcInBody>", "id <varOrStat>");
         SymbolRecord* local_record = new SymbolRecord();
-        if (match("ID") && local_record->set_type(get_last_token().lexeme_) && varOrStat(record)) {
+        if (match("ID") && local_record->set_type(get_last_token().lexeme_) && varOrStat(local_record)) {
             return true;
         }
     } else if (is_lookahead_a_statement()) {

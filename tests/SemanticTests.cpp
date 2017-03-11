@@ -60,6 +60,13 @@ TEST(progTest, SemanticTests) {
     syntaxParser.global_symbol_table_.print();
 }
 
+TEST(progWithClassTest, SemanticTests) {
+    SemanticParser syntaxParser = common_setup_semantic("program { Utility utility; };", "<progBody>");
+    EXPECT_TRUE(syntaxParser.progBody());
+    EXPECT_EQ(syntaxParser.current_rhs_derivation_, "program { id id ; } ;");
+    syntaxParser.global_symbol_table_.print();
+}
+
 SemanticParser common_setup_semantic(string test_program, string derivation_string) {
     vector<Token*> tokens;
     Scanner scanner;
