@@ -253,7 +253,7 @@ bool SemanticParser::funcInBody(SymbolRecord* record) {
         SymbolRecord* local_record = new SymbolRecord();
         if (numType(local_record) && match("ID", {"OPENBRA", "DELI"}) && local_record->set_name(get_last_token().lexeme_)) {
             arraySize(record);
-            record->symbol_table_->create_parameter_entry(local_record);
+            record->symbol_table_->create_variable_entry(local_record);
                 if(match("DELI", {"INT", "ID", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN"}))
                     return true;
         }
@@ -269,7 +269,7 @@ bool SemanticParser::varOrStat(SymbolRecord* record) {
         form_derivation_string("<varOrStat>", "id <arraySize> ;");
         if (match("ID") && record->set_name(get_last_token().lexeme_) && arraySize(record)
             && match("DELI", {"INT", "ID", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN", "CLOSECURL"} )
-            && global_symbol_table_.current_symbol_record_->symbol_table_->create_parameter_entry(record)) {
+            && global_symbol_table_.current_symbol_record_->symbol_table_->create_variable_entry(record)) {
             return true;
         }
     } else if (lookahead_ == "OPENBRA" || lookahead_ == "EQUAL" || lookahead_ == "DOT") {
@@ -323,7 +323,7 @@ bool SemanticParser::statementRes(SymbolRecord* record) {
     } else if (lookahead_ == "FOR") {
         form_derivation_string("<statementRes>", "for ( <type> id <assignOp> <expr> ; <relExpr> ; <assignStat> ) <statBlock>");
         SymbolRecord* local_record = new SymbolRecord();
-        if (match("FOR") && match("OPENPARA") && type(local_record) && match("ID") && local_record->set_name(get_last_token().lexeme_) && record->symbol_table_->create_parameter_entry(local_record) && assignOp() && expr() && match("DELI") &&
+        if (match("FOR") && match("OPENPARA") && type(local_record) && match("ID") && local_record->set_name(get_last_token().lexeme_) && record->symbol_table_->create_variable_entry(local_record) && assignOp() && expr() && match("DELI") &&
             relExpr() && match("DELI") && assignStat() && match("CLOSEPARA") && statBlock()) {
             return true;
         }

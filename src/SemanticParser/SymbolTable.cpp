@@ -45,7 +45,7 @@ bool SymbolTable::create_variable_entry(SymbolRecord* record) {
     if (second_pass_)
         return true;
     record->kind_ = "variable";
-    current_symbol_record_->symbol_table_->add_record(record);
+    add_record(record);
     return true;
 }
 
