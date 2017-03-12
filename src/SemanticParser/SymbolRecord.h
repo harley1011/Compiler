@@ -7,13 +7,6 @@ using namespace std;
 #ifndef COMPILER_SYMBOLRECORD_H
 #define COMPILER_SYMBOLRECORD_H
 
-enum SymbolRecordType {
-    parameter,
-    variable,
-    classUse,
-    function
-
-};
 class SymbolTable;
 
 class SymbolRecord {
@@ -23,6 +16,7 @@ public:
     string kind_;
     string type_;
     string name_;
+    string structure_;
     SymbolTable* symbol_table_;
     bool properly_declared_;
     vector<int> array_sizes;
@@ -31,7 +25,7 @@ public:
     bool set_kind(string kind);
     bool set_type(string type);
     bool set_name(string name);
-
+    bool set_structure(string structure);
     bool append_to_type(string type);
 
     bool generate_function_type();

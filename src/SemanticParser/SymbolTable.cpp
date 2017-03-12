@@ -15,6 +15,7 @@ bool SymbolTable::create_class_entry_and_table(string kind, string type, string 
     if (second_pass_)
         return true;
     SymbolRecord* symbol_record = new SymbolRecord(kind, type, name);
+    symbol_record->structure_ = "class";
     current_symbol_record_ = symbol_record;
     add_record(symbol_record);
     return true;
@@ -30,7 +31,18 @@ bool SymbolTable::create_program_entry_and_table() {
 bool SymbolTable::create_function_entry_and_table() {
     if (second_pass_)
         return true;
-    SymbolRecord* record;
+    SymbolRecord* record = new SymbolRecord();
+    record->kind_ = "function";
+    current_symbol_record_ = record;
+    add_record(record);
+    return true;
+}
+
+bool SymbolTable::create_function_entry() {
+    if (second_pass_)
+        return true;
+    SymbolRecord* record = new SymbolRecord();
+    record->kind_ = "function";
     current_symbol_record_ = record;
     add_record(record);
     return true;
@@ -77,6 +89,7 @@ void print_table(SymbolTable* table, string table_name, int indent_count) {
     int name_width_out = 20;
     int type_width_out = 20;
     int kind_width_out = 20;
+    int structure_width_out = 20;
 
     for(SymbolRecord record: table->symbol_records_) {
         if (record.kind_.size() > kind_width_out)
@@ -84,20 +97,23 @@ void print_table(SymbolTable* table, string table_name, int indent_count) {
         if (record.name_.size() > name_width_out)
             name_width_out = record.name_.size();
         if (record.type_.size() > type_width_out)
-            type_width_out = record.type_.size();
+        if (record.type_.size() > structure_width_out)
+            structure_width_out = record.structure_.size();
     }
 
-    int horizontal_width_out = name_width_out + type_width_out + kind_width_out + 4;
+    int horizontal_width_out = name_width_out + type_width_out + kind_width_out + structure_width_out + 5;
 
     cout << string(indent_count, ' ') << "Symbol table name: " + table_name << endl;
     cout << string(indent_count, ' ') << string(horizontal_width_out, '-') << endl;
     cout << string(indent_count, ' ') << "|" << setw(name_width_out) << "Name" << std::right << std::setfill(' ') << "|";
     cout << setw(kind_width_out) << "Kind" << std::right << std::setfill(' ') << "|";
+    cout << setw(kind_width_out) << "Structure" << std::right << std::setfill(' ') << "|";
     cout << setw(type_width_out) << "Type" << std::right << std::setfill(' ') << "|" << endl;
     cout <<  string(indent_count, ' ') << string(horizontal_width_out, '-') << endl;
     for(SymbolRecord record: table->symbol_records_) {
         cout  << string(indent_count, ' ') << "|" << setw(name_width_out) << record.name_ << std::right << std::setfill(' ') << "|";
         cout << setw(kind_width_out) << record.kind_ << std::right << std::setfill(' ') << "|";
+        cout << setw(kind_width_out) << record.structure_ << std::right << std::setfill(' ') << "|";
         cout << setw(type_width_out) << record.type_ << std::right << std::setfill(' ') << "|" << endl;
     }
 

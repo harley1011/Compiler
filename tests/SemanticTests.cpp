@@ -57,6 +57,7 @@ TEST(progTest, SemanticTests) {
     SemanticParser syntaxParser = common_setup_semantic("program {int sample[100]; int idx; int maxValue; int minValue; Utility utility; Utility arrayUtility[2][3][6][7]; for(int t = 0; t<=100 ; t = t + 1) { get(sample[t]); sample[t] = (sample[t] * randomize()); }; maxValue = utility.findMax(sample); minValue = utility.findMin(sample); utility. var1[4][1][0][0][0][0][0] = 10; arrayUtility[1][1][1][1].var1[4][1][0][0][0][0][0] = 2; put(maxValue); put(minValue); };", "<progBody>");
     EXPECT_TRUE(syntaxParser.progBody());
     EXPECT_EQ(syntaxParser.current_rhs_derivation_, "program { int id [ integer ] ; int id ; int id ; int id ; id id ; id id [ integer ] [ integer ] [ integer ] [ integer ] ; for ( int id = integer ; id <= integer ; id = id + integer ) { get ( id [ id ] ) ; id [ id ] = ( id [ id ] * id ( ) ) ; } ; id = id . id ( id ) ; id = id . id ( id ) ; id . id [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] = integer ; id [ integer ] [ integer ] [ integer ] [ integer ] . id [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] = integer ; put ( id ) ; put ( id ) ; } ;");
+    EXPECT_EQ(syntaxParser.global_symbol_table_.symbol_records_[0].symbol_table_->symbol_records_.size(), 7);
     syntaxParser.global_symbol_table_.print();
 }
 
@@ -64,6 +65,17 @@ TEST(progWithClassTest, SemanticTests) {
     SemanticParser syntaxParser = common_setup_semantic("program { Utility utility; };", "<progBody>");
     EXPECT_TRUE(syntaxParser.progBody());
     EXPECT_EQ(syntaxParser.current_rhs_derivation_, "program { id id ; } ;");
+    EXPECT_EQ(syntaxParser.global_symbol_table_.symbol_records_[0].symbol_table_->symbol_records_.size(), 1);
+    EXPECT_EQ(syntaxParser.global_symbol_table_.symbol_records_[0].symbol_table_->symbol_records_[0].name_, "utility");
+    syntaxParser.global_symbol_table_.print();
+}
+
+TEST(funcTest, SemanticTests) {
+    SemanticParser syntaxParser = common_setup_semantic("program { Utility utility; }; int findMin(int x) { };", "<progBody>");
+    EXPECT_TRUE(syntaxParser.progBody());
+    EXPECT_EQ(syntaxParser.current_rhs_derivation_, "program { id id ; } ;");
+    EXPECT_EQ(syntaxParser.global_symbol_table_.symbol_records_[0].symbol_table_->symbol_records_.size(), 1);
+    EXPECT_EQ(syntaxParser.global_symbol_table_.symbol_records_[0].symbol_table_->symbol_records_[0].name_, "utility");
     syntaxParser.global_symbol_table_.print();
 }
 

@@ -136,7 +136,7 @@ bool SemanticParser::postTypeId(SymbolRecord* record) {
         return false;
     if (lookahead_ == "OPENBRA") {
         form_derivation_string("<postTypeId>", "<arraySize> ;");
-        if (arraySize(record) && match("DELI") && global_symbol_table_.create_variable_entry(record)) {
+        if (arraySize(record) && match("DELI") && record->set_structure("array") && global_symbol_table_.create_variable_entry(record)) {
             return true;
         }
     } else if (lookahead_ == "OPENPARA") {
@@ -147,7 +147,7 @@ bool SemanticParser::postTypeId(SymbolRecord* record) {
         }
     } else if (lookahead_ == "DELI") {
         form_derivation_string("<postTypeId>", ";");
-        if (match("DELI") && global_symbol_table_.create_variable_entry(record))
+        if (match("DELI") && record->set_structure("simple") && global_symbol_table_.create_variable_entry(record))
             return true;
     }
 
@@ -174,7 +174,7 @@ bool SemanticParser::funcHead(SymbolRecord* record) {
         return false;
     if (is_lookahead_a_type()) {
         form_derivation_string("<funcHead>", "<type> id ( <fParams> )");
-        if (type(record) && match("ID") && match("OPENPARA") && fParams(record) && match("CLOSEPARA"))
+        if (type(record) && record->set_type(get_last_token().lexeme_) && match("ID") && record->set_name(get_last_token().lexeme_) && match("OPENPARA") && fParams(record) && match("CLOSEPARA"))
             return true;
     }
     return false;
@@ -267,7 +267,7 @@ bool SemanticParser::varOrStat(SymbolRecord* record) {
         return false;
     if (lookahead_ == "ID") {
         form_derivation_string("<varOrStat>", "id <arraySize> ;");
-        if (match("ID") && record->set_name(get_last_token().lexeme_) && arraySize(record)
+        if (match("ID") && record->set_structure("class") && record->set_name(get_last_token().lexeme_) && arraySize(record)
             && match("DELI", {"INT", "ID", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN", "CLOSECURL"} )
             && global_symbol_table_.current_symbol_record_->symbol_table_->create_variable_entry(record)) {
             return true;
@@ -765,7 +765,7 @@ bool SemanticParser::arraySize(SymbolRecord* record) {
         return false;
     if (lookahead_ == "OPENBRA") {
         form_derivation_string("<arraySize>", "[ integer ] <arraySize>");
-        if (match("OPENBRA") && match("INUM") && record->add_array_size(get_last_integer_token()) && match("CLOSEBRA") && record->append_to_type("]") && arraySize(record)) {
+        if (match("OPENBRA") && record->set_structure("array") && match("INUM") && record->add_array_size(get_last_integer_token()) && match("CLOSEBRA") && record->append_to_type("]") && arraySize(record)) {
             return true;
         }
     } else if (lookahead_ == "COM" || lookahead_ == "DELI" || lookahead_ == "CLOSEPARA") {// Follow set
@@ -782,14 +782,17 @@ bool SemanticParser::type(SymbolRecord* record) {
     if (lookahead_ == "INT" && match("INT")) {
         form_derivation_string("<type>", "int");
         record->type_ = "int";
+        record->structure_ = "simple";
         return true;
     } else if (lookahead_ == "FLOAT" && match("FLOAT")) {
         form_derivation_string("<type>", "float");
         record->type_ = "float";
-        return true;
+        record->structure_ = "simple";
+        true;
     } else if (lookahead_ == "ID" && match("ID")) {
         form_derivation_string("<type>", "id");
         record->type_ = "id";
+        record->structure_ = "class";
         return true;
     }
     return false;
@@ -802,12 +805,14 @@ bool SemanticParser::numType(SymbolRecord* record) {
         form_derivation_string("<numType>", "int");
         if (match("INT")) {
             record->type_ = "int";
+            record->structure_ = "simple";
             return true;
         }
     } else if (lookahead_ == "FLOAT") {
         form_derivation_string("<numType>", "float");
         if (match("FLOAT")) {
             record->type_ = "float";
+            record->structure_ = "simple";
             return true;
         }
     }

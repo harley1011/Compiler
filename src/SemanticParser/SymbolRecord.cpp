@@ -40,6 +40,10 @@ bool SymbolRecord::append_to_type(string type) {
     type_ += type;
     return true;
 }
+bool SymbolRecord::set_structure(string structure) {
+    structure_ = structure;
+    return true;
+}
 
 bool SymbolRecord::add_array_size(IntegerToken integer_token) {
     append_to_type("[" + integer_token.lexeme_);
