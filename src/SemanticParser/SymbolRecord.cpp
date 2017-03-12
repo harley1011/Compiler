@@ -54,12 +54,12 @@ bool SymbolRecord::add_array_size(IntegerToken integer_token) {
 
 bool SymbolRecord::generate_function_type() {
     bool first = true;
-    for(SymbolRecord record: symbol_table_->symbol_records_) {
+    for(SymbolRecord* record: symbol_table_->symbol_records_) {
         if (first)
             first = false;
         else
             type_ += ",";
-        type_ += record.type_;
+        type_ += record->type_;
     }
     return true;
 }

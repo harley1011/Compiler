@@ -10,7 +10,7 @@ public:
     SymbolTable();
 
     bool second_pass_;
-    vector<SymbolRecord> symbol_records_;
+    vector<SymbolRecord*> symbol_records_;
 
     bool create_class_entry_and_table(string kind, string type, string name);
     bool add_record_to_current_symbol_table();
@@ -31,7 +31,9 @@ public:
 
     bool create_parameter_entry(SymbolRecord* record);
 
-    bool add_record(SymbolRecord *record);
+    bool insert(SymbolRecord *record);
+
+    SymbolRecord* search(string name);
 };
 
 

@@ -174,7 +174,7 @@ bool SemanticParser::funcHead(SymbolRecord* record) {
         return false;
     if (is_lookahead_a_type()) {
         form_derivation_string("<funcHead>", "<type> id ( <fParams> )");
-        if (type(record) && record->set_type(get_last_token().lexeme_) && match("ID") && record->set_name(get_last_token().lexeme_) && match("OPENPARA") && fParams(record) && match("CLOSEPARA"))
+        if (type(record) && match("ID") && record->set_name(get_last_token().lexeme_) && match("OPENPARA") && fParams(record) && match("CLOSEPARA"))
             return true;
     }
     return false;
@@ -788,10 +788,10 @@ bool SemanticParser::type(SymbolRecord* record) {
         form_derivation_string("<type>", "float");
         record->type_ = "float";
         record->structure_ = "simple";
-        true;
+        return true;
     } else if (lookahead_ == "ID" && match("ID")) {
         form_derivation_string("<type>", "id");
-        record->type_ = "id";
+        record->type_ = get_last_token().lexeme_;
         record->structure_ = "class";
         return true;
     }
