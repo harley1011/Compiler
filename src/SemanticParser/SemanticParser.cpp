@@ -1066,6 +1066,7 @@ string SemanticParser::next_token() {
     do {
         if (current_token_position_ < tokens_.size()) {
             current_token_ = tokens_[current_token_position_++];
+            global_symbol_table_.current_token = current_token_;
             lookahead_ = current_token_->token_identifier_;
         } else {
             lookahead_ = "END";

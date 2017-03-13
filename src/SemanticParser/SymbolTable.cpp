@@ -38,17 +38,6 @@ bool SymbolTable::create_function_entry_and_table() {
     return true;
 }
 
-bool SymbolTable::create_function_entry() {
-    if (second_pass_)
-        return true;
-    SymbolRecord* record = new SymbolRecord();
-    record->kind_ = "function";
-    current_symbol_record_ = record;
-    insert(record);
-    return true;
-}
-
-
 void SymbolTable::print() {
     print_table(this, "Global", 0);
 }
@@ -78,8 +67,11 @@ bool SymbolTable::create_parameter_entry(SymbolRecord* record) {
 }
 
 bool SymbolTable::insert(SymbolRecord *record) {
-    if (search(record->name_) != NULL)
+    record->symbol_table_->parent_symbol_table_ = this;
+    if (search(record->name_) != NULL) {
+        report_error_to_highest_symbol_table("Error: A variable with the name " + record->name_ + " already exists within this scope:" + to_string(current_token->row_location_) + ":" + to_string(current_token->column_location_));
         return false;
+    }
 
     symbol_records_.push_back(record);
     return true;
@@ -92,6 +84,14 @@ SymbolRecord* SymbolTable::search(string name) {
             return symbol_records_[i];
     }
     return NULL;
+}
+
+void SymbolTable::report_error_to_highest_symbol_table(string error_message) {
+
+    if (parent_symbol_table_ == NULL)
+        errors_.push_back(error_message);
+    else
+        parent_symbol_table_->report_error_to_highest_symbol_table(error_message);
 }
 
 void print_table(SymbolTable* table, string table_name, int indent_count) {

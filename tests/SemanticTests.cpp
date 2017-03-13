@@ -6,6 +6,7 @@
 #include "gtest/gtest.h"
 #include "../src/SemanticParser/SemanticParser.h"
 SemanticParser common_setup_semantic(string test_program, string derivation_string);
+bool check_if_record_exists_in_table(SymbolRecord record, SymbolTable symbol);
 
 TEST(arraySizeTest, SemanticTests) {
     SymbolRecord* record = new SymbolRecord();
@@ -47,12 +48,12 @@ TEST(FuncDeclareClassTwoTest, SemanticTests)
     SemanticParser syntaxParser;
 
     EXPECT_EQ(syntaxParser.parse(tokens), true);
-    EXPECT_EQ(syntaxParser.current_rhs_derivation_, "class id { int id ( int id [ integer ] ) { int id ; int id ; id = id [ integer ] ; for ( int id = integer ; id <= integer ; id = ( id ) + integer ) { if ( id [ id ] < id ) then { id = id [ id ] ; } else { } ; } ; return ( id ) ; } ; } ; program { } ;");
     EXPECT_EQ(syntaxParser.errors_.size(), 0);
 
-    //EXPECT_EQ(syntaxParser.global_symbol_table_.symbol_records_.size(), 2);
-  //  EXPECT_EQ(syntaxParser.global_symbol_table_.symbol_records_[0]->symbol_table_->symbol_records_.size(), 1);
-  //  EXPECT_EQ(syntaxParser.global_symbol_table_.symbol_records_[0]->symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_.size(), 4);
+    EXPECT_EQ(syntaxParser.global_symbol_table_.symbol_records_.size(), 4);
+    EXPECT_EQ(syntaxParser.global_symbol_table_.symbol_records_[0]->symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(syntaxParser.global_symbol_table_.symbol_records_[0]->symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_.size(), 3);
+    EXPECT_EQ(syntaxParser.global_symbol_table_.symbol_records_[0]->symbol_table_->symbol_records_[1]->symbol_table_->symbol_records_.size(), 3);
     syntaxParser.global_symbol_table_.print();
 }
 
@@ -91,6 +92,15 @@ TEST(funcTest, SemanticTests) {
     EXPECT_TRUE(syntaxParser.progBody());
     EXPECT_EQ(syntaxParser.global_symbol_table_.symbol_records_[1]->symbol_table_->symbol_records_.size(), 5);
     syntaxParser.global_symbol_table_.print();
+}
+
+bool check_if_record_exists_in_table(SymbolRecord record, SymbolTable symbol) {
+    SymbolRecord* found_record = symbol.search(record.name_);
+
+    if (found_record == NULL)
+        return false;
+
+    return found_record->type_ == record.type_ && found_record->kind_ == record.kind_ && found_record->structure_ == record.structure_;
 }
 
 SemanticParser common_setup_semantic(string test_program, string derivation_string) {
