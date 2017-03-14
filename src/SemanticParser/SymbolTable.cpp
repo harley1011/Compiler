@@ -69,8 +69,8 @@ bool SymbolTable::create_parameter_entry(SymbolRecord* record) {
 bool SymbolTable::insert(SymbolRecord *record) {
     record->symbol_table_->parent_symbol_table_ = this;
     if (search(record->name_) != NULL) {
-        report_error_to_highest_symbol_table("Error: A variable with the name " + record->name_ + " already exists within this scope:" + to_string(current_token->row_location_) + ":" + to_string(current_token->column_location_));
-        return false;
+        report_error_to_highest_symbol_table("Error: A variable with the name " + record->name_ + " already exists within this scope:");
+        return true;
     }
 
     symbol_records_.push_back(record);
@@ -91,7 +91,7 @@ void SymbolTable::report_error_to_highest_symbol_table(string error_message) {
     if (parent_symbol_table_ == NULL)
         errors_.push_back(error_message);
     else
-        parent_symbol_table_->report_error_to_highest_symbol_table(error_message);
+        parent_symbol_table_->report_error_to_highest_symbol_table(error_message + to_string(current_token->row_location_) + ":" + to_string(current_token->column_location_));
 }
 
 void print_table(SymbolTable* table, string table_name, int indent_count) {
