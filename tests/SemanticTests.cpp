@@ -18,6 +18,23 @@ TEST(arraySizeTest, SemanticTests) {
     EXPECT_EQ(record->array_sizes[1], 10);
 }
 
+
+
+TEST(FuncDeclareDuplicateVarClassTest, SemanticTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class nameHere { int idx; int idx; }; program { };", false);
+
+    SemanticParser syntaxParser;
+
+    EXPECT_EQ(syntaxParser.parse(tokens), true);
+    EXPECT_EQ(syntaxParser.semantic_errors_.size(), 1);
+
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_.size(), 2);
+    syntaxParser.global_symbol_table_->print();
+}
+
 TEST(FuncDeclareClassTest, SemanticTests)
 {
     string find_min_func_string = "int findMin(int array[100]) { int minValue; int idxc; minValue = array[100]; for( int idx = 1; idx <= 99; idx = ( idx ) + 1) { if(array[idx] < maxValue) then { maxValue = array[idx]; }else{}; }; return (minValue); }; ";
@@ -31,10 +48,10 @@ TEST(FuncDeclareClassTest, SemanticTests)
     EXPECT_EQ(syntaxParser.current_rhs_derivation_, "class id { int id ( int id [ integer ] ) { int id ; int id ; id = id [ integer ] ; for ( int id = integer ; id <= integer ; id = ( id ) + integer ) { if ( id [ id ] < id ) then { id = id [ id ] ; } else { } ; } ; return ( id ) ; } ; } ; program { } ;");
     EXPECT_EQ(syntaxParser.errors_.size(), 0);
 
-    EXPECT_EQ(syntaxParser.global_symbol_table_.symbol_records_.size(), 2);
-    EXPECT_EQ(syntaxParser.global_symbol_table_.symbol_records_[0]->symbol_table_->symbol_records_.size(), 1);
-    EXPECT_EQ(syntaxParser.global_symbol_table_.symbol_records_[0]->symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_.size(), 4);
-    syntaxParser.global_symbol_table_.print();
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_.size(), 1);
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_.size(), 4);
+    syntaxParser.global_symbol_table_->print();
 }
 
 
@@ -50,11 +67,11 @@ TEST(FuncDeclareClassTwoTest, SemanticTests)
     EXPECT_EQ(syntaxParser.parse(tokens), true);
     EXPECT_EQ(syntaxParser.errors_.size(), 0);
 
-    EXPECT_EQ(syntaxParser.global_symbol_table_.symbol_records_.size(), 4);
-    EXPECT_EQ(syntaxParser.global_symbol_table_.symbol_records_[0]->symbol_table_->symbol_records_.size(), 2);
-    EXPECT_EQ(syntaxParser.global_symbol_table_.symbol_records_[0]->symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_.size(), 3);
-    EXPECT_EQ(syntaxParser.global_symbol_table_.symbol_records_[0]->symbol_table_->symbol_records_[1]->symbol_table_->symbol_records_.size(), 3);
-    syntaxParser.global_symbol_table_.print();
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_.size(), 4);
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_.size(), 3);
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[1]->symbol_table_->symbol_records_.size(), 3);
+    syntaxParser.global_symbol_table_->print();
 }
 
 
@@ -68,30 +85,30 @@ TEST(FullProgramTest, SemanticTests)
 
     EXPECT_EQ(syntaxParser.parse(tokens), true);
     EXPECT_EQ(syntaxParser.errors_.size(), 0);
-    syntaxParser.global_symbol_table_.print();
+    syntaxParser.global_symbol_table_->print();
 }
 
 
 TEST(progTest, SemanticTests) {
     SemanticParser syntaxParser = common_setup_semantic("program {int sample[100]; int idx; int maxValue; int minValue; Utility utility; Utility arrayUtility[2][3][6][7]; for(int t = 0; t<=100 ; t = t + 1) { get(sample[t]); sample[t] = (sample[t] * randomize()); }; maxValue = utility.findMax(sample); minValue = utility.findMin(sample); utility. var1[4][1][0][0][0][0][0] = 10; arrayUtility[1][1][1][1].var1[4][1][0][0][0][0][0] = 2; put(maxValue); put(minValue); };", "<progBody>");
     EXPECT_TRUE(syntaxParser.progBody());
-    EXPECT_EQ(syntaxParser.global_symbol_table_.symbol_records_[0]->symbol_table_->symbol_records_.size(), 7);
-    syntaxParser.global_symbol_table_.print();
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_.size(), 7);
+    syntaxParser.global_symbol_table_->print();
 }
 
 TEST(progWithClassTest, SemanticTests) {
     SemanticParser syntaxParser = common_setup_semantic("program { Utility utility; };", "<progBody>");
     EXPECT_TRUE(syntaxParser.progBody());
-    EXPECT_EQ(syntaxParser.global_symbol_table_.symbol_records_[0]->symbol_table_->symbol_records_.size(), 1);
-    EXPECT_EQ(syntaxParser.global_symbol_table_.symbol_records_[0]->symbol_table_->symbol_records_[0]->name_, "utility");
-    syntaxParser.global_symbol_table_.print();
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_.size(), 1);
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[0]->name_, "utility");
+    syntaxParser.global_symbol_table_->print();
 }
 
 TEST(funcTest, SemanticTests) {
     SemanticParser syntaxParser = common_setup_semantic("program { }; int findMin(int x) { int r; int y; float p;  Utility utility;};", "<progBody>");
     EXPECT_TRUE(syntaxParser.progBody());
-    EXPECT_EQ(syntaxParser.global_symbol_table_.symbol_records_[1]->symbol_table_->symbol_records_.size(), 5);
-    syntaxParser.global_symbol_table_.print();
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[1]->symbol_table_->symbol_records_.size(), 5);
+    syntaxParser.global_symbol_table_->print();
 }
 
 bool check_if_record_exists_in_table(SymbolRecord record, SymbolTable symbol) {

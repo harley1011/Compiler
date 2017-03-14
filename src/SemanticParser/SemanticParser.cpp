@@ -9,6 +9,7 @@ SemanticParser::SemanticParser() {
     current_rhs_derivation_ = "<classDeclLst> <progBody>";
     derivations_.push_back(current_rhs_derivation_);
     enable_derivation_output_ = false;
+    global_symbol_table_ = new SymbolTable();
 
 }
 
@@ -19,6 +20,7 @@ SemanticParser::SemanticParser(string derivation_output_path, string error_outpu
     derivation_output_path_ = derivation_output_path;
     error_output_path_ = error_output_path;
     output_to_file_ = true;
+    global_symbol_table_ = new SymbolTable();
 }
 
 SemanticParser::SemanticParser(bool enable_derivation_output) {
@@ -26,6 +28,7 @@ SemanticParser::SemanticParser(bool enable_derivation_output) {
     derivations_.push_back(current_rhs_derivation_);
     enable_derivation_output_ = false;
     enable_derivation_output_ = enable_derivation_output;
+    global_symbol_table_ = new SymbolTable();
 }
 
 SemanticParser::SemanticParser(vector<Token *> tokens) {
@@ -51,6 +54,7 @@ bool SemanticParser::parse(vector<Token *> tokens) {
 
     bool result = prog();
 
+    semantic_errors_ = global_symbol_table_->errors_;
     if (output_to_file_) {
         error_output_file_.close();
         derivation_output_file_.close();
@@ -58,12 +62,13 @@ bool SemanticParser::parse(vector<Token *> tokens) {
     if (errors_.size() > 1) {
         return false;
     }
+
     return result;
 }
 
 
 bool SemanticParser::prog() {
-    global_symbol_table_.second_pass_ = false;
+    global_symbol_table_->second_pass_ = false;
     if (!skip_errors({"CLASS"}, {}, false))
         return false;
     if (lookahead_ == "CLASS") {
@@ -96,7 +101,7 @@ bool SemanticParser::classDecl() {
     if (lookahead_ == "CLASS") {
         form_derivation_string("<classDecl>", "class id { <classBody> } ;");
 
-        if (match("CLASS") && match("ID") && global_symbol_table_.create_class_entry_and_table("class", "", get_last_token().lexeme_) && match("OPENCURL") && classBody() && match("CLOSECURL") && match("DELI")) {
+        if (match("CLASS") && match("ID") && global_symbol_table_->create_class_entry_and_table("class", "", get_last_token().lexeme_) && match("OPENCURL") && classBody() && match("CLOSECURL") && match("DELI")) {
             return true;
         }
     }
@@ -124,6 +129,7 @@ bool SemanticParser::classInDecl() {
     if (is_lookahead_a_type()) {
         form_derivation_string("<classInDecl>", "<type> id <postTypeId>");
         SymbolRecord* record = new SymbolRecord();
+        record->symbol_table_->parent_symbol_table_ = global_symbol_table_;
         if (type(record) && match("ID", {"OPENBRA", "OPENPARA", "DELI", "CLOSECURL"}) && record->set_name(get_last_token().lexeme_) && postTypeId(record)) {
             return true;
         }
@@ -136,18 +142,18 @@ bool SemanticParser::postTypeId(SymbolRecord* record) {
         return false;
     if (lookahead_ == "OPENBRA") {
         form_derivation_string("<postTypeId>", "<arraySize> ;");
-        if (arraySize(record) && match("DELI") && record->set_structure("array") && global_symbol_table_.create_variable_entry(record)) {
+        if (arraySize(record) && match("DELI") && record->set_structure("array") && global_symbol_table_->current_symbol_record_->symbol_table_->create_variable_entry(record)) {
             return true;
         }
     } else if (lookahead_ == "OPENPARA") {
         record->append_to_type(" : ");
         form_derivation_string("<postTypeId>", "( <fParams> ) <funcBody> ;");
-        if (match("OPENPARA") && fParams(record) && match("CLOSEPARA") && funcBody(record) && match("DELI") && global_symbol_table_.current_symbol_record_->symbol_table_->create_function_class_entry_and_function_table(record)) {
+        if (match("OPENPARA") && fParams(record) && match("CLOSEPARA") && funcBody(record) && match("DELI") && global_symbol_table_->current_symbol_record_->symbol_table_->create_function_class_entry_and_function_table(record)) {
             return true;
         }
     } else if (lookahead_ == "DELI") {
         form_derivation_string("<postTypeId>", ";");
-        if (match("DELI") && record->set_structure("simple") && global_symbol_table_.create_variable_entry(record))
+        if (match("DELI") && record->set_structure("simple") && global_symbol_table_->current_symbol_record_->symbol_table_->create_variable_entry(record))
             return true;
     }
 
@@ -163,7 +169,7 @@ bool SemanticParser::progBody() {
         return false;
     if (lookahead_ == "PROGRAM") {
         form_derivation_string("<progBody>", "program <funcBody> ; <funcDefLst>");
-        if (match("PROGRAM") && global_symbol_table_.create_program_entry_and_table() && funcBody(global_symbol_table_.current_symbol_record_) && match("DELI") && funcDefLst())
+        if (match("PROGRAM") && global_symbol_table_->create_program_entry_and_table() && funcBody(global_symbol_table_->current_symbol_record_) && match("DELI") && funcDefLst())
             return true;
     }
     return false;
@@ -185,7 +191,7 @@ bool SemanticParser::funcDefLst() {
         return false;
     if (is_lookahead_a_type()) {
         form_derivation_string("<funcDefLst>", "<funcDef> <funcDefLst>");
-        if (global_symbol_table_.create_function_entry_and_table() && funcDef(global_symbol_table_.current_symbol_record_) && funcDefLst())
+        if (global_symbol_table_->create_function_entry_and_table() && funcDef(global_symbol_table_->current_symbol_record_) && funcDefLst())
             return true;
     } else if (lookahead_ == "END") {
         form_derivation_string("<funcDefLst>", "");
@@ -269,7 +275,7 @@ bool SemanticParser::varOrStat(SymbolRecord* record) {
         form_derivation_string("<varOrStat>", "id <arraySize> ;");
         if (match("ID") && record->set_structure("class") && record->set_name(get_last_token().lexeme_) && arraySize(record)
             && match("DELI", {"INT", "ID", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN", "CLOSECURL"} )
-            && global_symbol_table_.current_symbol_record_->symbol_table_->create_variable_entry(record)) {
+            && global_symbol_table_->current_symbol_record_->symbol_table_->create_variable_entry(record)) {
             return true;
         }
     } else if (lookahead_ == "OPENBRA" || lookahead_ == "EQUAL" || lookahead_ == "DOT") {
@@ -1066,7 +1072,7 @@ string SemanticParser::next_token() {
     do {
         if (current_token_position_ < tokens_.size()) {
             current_token_ = tokens_[current_token_position_++];
-            global_symbol_table_.current_token = current_token_;
+            global_symbol_table_->current_token = current_token_;
             lookahead_ = current_token_->token_identifier_;
         } else {
             lookahead_ = "END";

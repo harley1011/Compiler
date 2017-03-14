@@ -22,11 +22,12 @@ public:
     SemanticParser(vector<Token *> tokens);
     SemanticParser(string derivation_output_path, string error_output_path);
 
-    SymbolTable global_symbol_table_;
+    SymbolTable *global_symbol_table_;
 
     string current_rhs_derivation_;
     string lookahead_;
     vector<string> errors_;
+    vector<string> semantic_errors_;
     vector<string> derivations_;
     Token*   current_token_;
     vector<Token*> tokens_;

@@ -9,6 +9,7 @@ void print_table(SymbolTable* table, string table_name, int indent_count);
 
 SymbolTable::SymbolTable() {
     second_pass_ = false;
+    parent_symbol_table_ = NULL;
 }
 
 bool SymbolTable::create_class_entry_and_table(string kind, string type, string name) {
@@ -89,9 +90,9 @@ SymbolRecord* SymbolTable::search(string name) {
 void SymbolTable::report_error_to_highest_symbol_table(string error_message) {
 
     if (parent_symbol_table_ == NULL)
-        errors_.push_back(error_message);
+        errors_.push_back(error_message + to_string(current_token->row_location_) + ":" + to_string(current_token->column_location_));
     else
-        parent_symbol_table_->report_error_to_highest_symbol_table(error_message + to_string(current_token->row_location_) + ":" + to_string(current_token->column_location_));
+        parent_symbol_table_->report_error_to_highest_symbol_table(error_message);
 }
 
 void print_table(SymbolTable* table, string table_name, int indent_count) {
