@@ -18,14 +18,16 @@ bool SymbolTable::create_class_entry_and_table(string kind, string type, string 
     SymbolRecord* symbol_record = new SymbolRecord(kind, type, name);
     symbol_record->structure_ = "class";
     current_symbol_record_ = symbol_record;
+    symbol_record->properly_declared_ = true;
     insert(symbol_record);
     return true;
 }
 
 bool SymbolTable::create_program_entry_and_table() {
-    SymbolRecord* symbol_record = new SymbolRecord("function", "", "program");
-    current_symbol_record_ = symbol_record;
-    insert(symbol_record);
+    SymbolRecord* record = new SymbolRecord("function", "", "program");
+    current_symbol_record_ = record;
+    record->properly_declared_ = true;
+    insert(record);
     return true;
 }
 
@@ -35,6 +37,7 @@ bool SymbolTable::create_function_entry_and_table() {
     SymbolRecord* record = new SymbolRecord();
     record->kind_ = "function";
     current_symbol_record_ = record;
+    record->properly_declared_ = true;
     insert(record);
     return true;
 }
@@ -43,10 +46,16 @@ void SymbolTable::print() {
     print_table(this, "Global", 0);
 }
 
+
+
 bool SymbolTable::create_variable_entry(SymbolRecord* record) {
     if (second_pass_)
         return true;
     record->kind_ = "variable";
+    if (record->type_.substr(0,3) == "int" || record->type_.substr(0, 5) == "float")
+        record->properly_declared_ = true;
+    else
+        record->properly_declared_ = false;
     insert(record);
     return true;
 }
@@ -55,6 +64,10 @@ bool SymbolTable::create_function_class_entry_and_function_table(SymbolRecord *r
     if(second_pass_)
         return true;
     record->kind_ = "function";
+    if (record->type_.substr(0,3) == "int" || record->type_.substr(0, 5) == "float")
+        record->properly_declared_ = true;
+    else
+        record->properly_declared_ = false;
     insert(record);
     return true;
 }
@@ -63,6 +76,7 @@ bool SymbolTable::create_parameter_entry(SymbolRecord* record) {
     if (second_pass_)
         return true;
     record->kind_ = "parameter";
+    record->properly_declared_ = true;
     insert(record);
     return true;
 }
@@ -103,6 +117,7 @@ void print_table(SymbolTable* table, string table_name, int indent_count) {
     int type_width_out = 20;
     int kind_width_out = 20;
     int structure_width_out = 20;
+    int declared_width_out = 10;
 
     for(SymbolRecord *record: table->symbol_records_) {
         if (record->kind_.size() > kind_width_out)
@@ -115,20 +130,22 @@ void print_table(SymbolTable* table, string table_name, int indent_count) {
             structure_width_out = record->structure_.size();
     }
 
-    int horizontal_width_out = name_width_out + type_width_out + kind_width_out + structure_width_out + 5;
+    int horizontal_width_out = name_width_out + type_width_out + kind_width_out + structure_width_out + declared_width_out + 6;
 
     cout << string(indent_count, ' ') << "Symbol table name: " + table_name << endl;
     cout << string(indent_count, ' ') << string(horizontal_width_out, '-') << endl;
     cout << string(indent_count, ' ') << "|" << setw(name_width_out) << "Name" << std::right << std::setfill(' ') << "|";
     cout << setw(kind_width_out) << "Kind" << std::right << std::setfill(' ') << "|";
-    cout << setw(kind_width_out) << "Structure" << std::right << std::setfill(' ') << "|";
-    cout << setw(type_width_out) << "Type" << std::right << std::setfill(' ') << "|" << endl;
+    cout << setw(structure_width_out) << "Structure" << std::right << std::setfill(' ') << "|";
+    cout << setw(type_width_out) << "Type" << std::right << std::setfill(' ') << "|";
+    cout << setw(declared_width_out) << "Declared" << std::right << std::setfill(' ') << "|" << endl;
     cout <<  string(indent_count, ' ') << string(horizontal_width_out, '-') << endl;
     for(SymbolRecord* record: table->symbol_records_) {
         cout  << string(indent_count, ' ') << "|" << setw(name_width_out) << record->name_ << std::right << std::setfill(' ') << "|";
         cout << setw(kind_width_out) << record->kind_ << std::right << std::setfill(' ') << "|";
-        cout << setw(kind_width_out) << record->structure_ << std::right << std::setfill(' ') << "|";
-        cout << setw(type_width_out) << record->type_ << std::right << std::setfill(' ') << "|" << endl;
+        cout << setw(structure_width_out) << record->structure_ << std::right << std::setfill(' ') << "|";
+        cout << setw(type_width_out) << record->type_ << std::right << std::setfill(' ') << "|";
+        cout << setw(declared_width_out) << record->properly_declared_ << std::right << std::setfill(' ') << "|" << endl;
     }
 
     cout << string(indent_count, ' ') << string(horizontal_width_out, '-') << endl << endl;

@@ -24,6 +24,7 @@ public:
 
     SymbolTable *global_symbol_table_;
 
+    int record_position_count;
     string current_rhs_derivation_;
     string lookahead_;
     vector<string> errors_;
@@ -123,6 +124,8 @@ public:
     bool match(string token, set<string> expected_post_tokens, string message_to_replace, string replace_message);
 
     IntegerToken get_last_integer_token();
+
+    SymbolRecord *create_or_find_created_record();
 };
 
 

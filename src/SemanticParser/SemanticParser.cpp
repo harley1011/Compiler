@@ -10,6 +10,7 @@ SemanticParser::SemanticParser() {
     derivations_.push_back(current_rhs_derivation_);
     enable_derivation_output_ = false;
     global_symbol_table_ = new SymbolTable();
+    record_position_count = 0;
 
 }
 
@@ -21,6 +22,7 @@ SemanticParser::SemanticParser(string derivation_output_path, string error_outpu
     error_output_path_ = error_output_path;
     output_to_file_ = true;
     global_symbol_table_ = new SymbolTable();
+    record_position_count = 0;
 }
 
 SemanticParser::SemanticParser(bool enable_derivation_output) {
@@ -29,12 +31,14 @@ SemanticParser::SemanticParser(bool enable_derivation_output) {
     enable_derivation_output_ = false;
     enable_derivation_output_ = enable_derivation_output;
     global_symbol_table_ = new SymbolTable();
+    record_position_count = 0;
 }
 
 SemanticParser::SemanticParser(vector<Token *> tokens) {
     SemanticParser();
     tokens_ = tokens;
     current_token_position_ = 0;
+    record_position_count = 0;
     next_token();
 }
 
@@ -66,6 +70,38 @@ bool SemanticParser::parse(vector<Token *> tokens) {
     return result;
 }
 
+
+SymbolRecord* SemanticParser::create_or_find_created_record() {
+    SymbolRecord* record;
+    vector<SymbolRecord*> records;
+
+    if (global_symbol_table_->second_pass_)
+    {
+        vector<SymbolRecord*> records;
+
+        while(true) {
+
+        }
+        record = global_symbol_table_->symbol_records_[0];
+        int current_symbol_table_count = 0;
+        for (int i = 0; i < record_position_count; i++)
+        {
+            if (record->symbol_table_ != NULL && record->symbol_table_->symbol_records_.size() > 0) {
+                record = record->symbol_table_->symbol_records_[current_symbol_table_count];
+            } else {
+
+            }
+        }
+        record = global_symbol_table_->current_symbol_record_;
+        record_position_count++;
+    }
+    else
+    {
+        record = new SymbolRecord();
+        record->symbol_table_->parent_symbol_table_ = global_symbol_table_;
+    }
+    return record;
+}
 
 bool SemanticParser::prog() {
     global_symbol_table_->second_pass_ = false;
