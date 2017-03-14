@@ -67,10 +67,10 @@ TEST(FuncDeclareClassTwoTest, SemanticTests)
     EXPECT_EQ(syntaxParser.parse(tokens), true);
     EXPECT_EQ(syntaxParser.errors_.size(), 0);
 
-    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_.size(), 4);
-    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_.size(), 2);
-    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_.size(), 3);
-    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[1]->symbol_table_->symbol_records_.size(), 3);
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_.size(), 4);
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[2]->symbol_table_->symbol_records_.size(), 3);
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[3]->symbol_table_->symbol_records_.size(), 3);
     syntaxParser.global_symbol_table_->print();
 }
 
