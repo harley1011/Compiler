@@ -25,7 +25,7 @@ public:
 
     bool create_program_entry_and_table();
 
-    bool create_function_entry_and_table();
+    bool create_function_entry_and_table(SymbolRecord* record);
 
     void print();
 
@@ -43,6 +43,10 @@ public:
 
 
     SymbolRecord* search(string name);
+
+    SymbolRecord *create_or_find_created_record(string name);
+
+    SymbolRecord *find_created_record(string name);
 };
 
 

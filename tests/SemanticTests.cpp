@@ -19,6 +19,38 @@ TEST(arraySizeTest, SemanticTests) {
 }
 
 
+TEST(FuncDeclareTest, SemanticTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    string find_min_func_string = "int findMin(int array[100]) { int minValue; int idxc; minValue = array[100]; for( int idx = 1; idx <= 99; idx = ( idx ) + 1) { if(array[idx] < maxValue) then { maxValue = array[idx]; }else{}; }; return (minValue); }; ";
+    tokens = scanner.generate_tokens("program { }; " + find_min_func_string, false);
+
+    SemanticParser syntaxParser;
+
+    EXPECT_EQ(syntaxParser.parse(tokens), true);
+    EXPECT_EQ(syntaxParser.semantic_errors_.size(), 0);
+
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_.size(), 4);
+    syntaxParser.global_symbol_table_->print();
+}
+
+TEST(FuncDeclareReturnClassTest, SemanticTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class Cord { int x; int y; int z; }; program { }; Cord create_cord(int x, int y, int z) { Cord cord; cord.x = x; cord.y = y; cord.z = z; return(cord); };", false);
+
+    SemanticParser syntaxParser;
+
+    EXPECT_EQ(syntaxParser.parse(tokens), true);
+    EXPECT_EQ(syntaxParser.semantic_errors_.size(), 0);
+
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_.size(), 4);
+    syntaxParser.global_symbol_table_->print();
+}
 
 TEST(FuncDeclareDuplicateVarClassTest, SemanticTests)
 {

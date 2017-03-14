@@ -58,7 +58,7 @@ public:
     bool progBody();
     bool funcHead(SymbolRecord* record);
     bool funcDefLst();
-    bool funcDef(SymbolRecord* record);
+    bool funcDef();
     bool funcBody(SymbolRecord* record);
     bool funcInBodyLst(SymbolRecord* record);
     bool funcInBody(SymbolRecord* record);
