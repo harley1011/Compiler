@@ -47,6 +47,8 @@ public:
     SymbolRecord *create_or_find_created_record(string name);
 
     SymbolRecord *find_created_record(string name);
+
+    void set_second_pass(bool second_pass);
 };
 
 

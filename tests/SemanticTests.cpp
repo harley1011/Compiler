@@ -69,6 +69,23 @@ TEST(FuncDeclareDuplicateVarClassTest, SemanticTests)
     syntaxParser.global_symbol_table_->print();
 }
 
+TEST(ClassWithClassVarTest, SemanticTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class Util { int idx; }; program { Util util; };", false);
+
+    SemanticParser syntaxParser;
+    syntaxParser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(syntaxParser.parse(tokens), true);
+    EXPECT_EQ(syntaxParser.semantic_errors_.size(), 0);
+
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_.size(), 2);
+    syntaxParser.global_symbol_table_->print();
+}
+
 TEST(FuncDeclareClassTest, SemanticTests)
 {
     string find_min_func_string = "int findMin(int array[100]) { int minValue; int idxc; minValue = array[100]; for( int idx = 1; idx <= 99; idx = ( idx ) + 1) { if(array[idx] < maxValue) then { maxValue = array[idx]; }else{}; }; return (minValue); }; ";

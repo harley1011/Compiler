@@ -36,21 +36,38 @@ SymbolRecord* SymbolTable::find_created_record(string name) {
 
 
 bool SymbolTable::create_class_entry_and_table(string kind, string type, string name) {
+    SymbolRecord* record;
+
     if (second_pass_)
+    {
+        record = search(name);
+        current_symbol_record_ = record;
         return true;
-    SymbolRecord* symbol_record = create_or_find_created_record(name);
-    symbol_record->kind_ = kind;
-    symbol_record->type_ = type;
-    symbol_record->structure_ = "class";
-    current_symbol_record_ = symbol_record;
-    symbol_record->properly_declared_ = true;
-    insert(symbol_record);
+    }
+
+    record = new SymbolRecord();
+    record->name_ = name;
+    record->kind_ = kind;
+    record->type_ = type;
+    record->structure_ = "class";
+    current_symbol_record_ = record;
+    record->properly_declared_ = true;
+    insert(record);
     return true;
 }
 
 bool SymbolTable::create_program_entry_and_table() {
-    SymbolRecord* record = create_or_find_created_record("program");
+    SymbolRecord* record;
+
+    if (second_pass_)
+    {
+        record = search("program");
+        current_symbol_record_ = record;
+        return true;
+    }
+    record = new SymbolRecord();
     record->kind_ = "function";
+    record->name_ = "program";
     current_symbol_record_ = record;
     record->properly_declared_ = true;
     insert(record);
@@ -79,8 +96,15 @@ void SymbolTable::print() {
 bool SymbolTable::create_variable_entry(SymbolRecord* record) {
     if (second_pass_) {
         string name = record->name_;
+        SymbolRecord* found_record = search(record->name_);
         delete record;
-        record = search(name);
+        record = found_record;
+        if (!record->properly_declared_) {
+            record->properly_declared_ = search(record->type_) != NULL;
+            if (!record->properly_declared_) {
+                record->symbol_table_->report_error_to_highest_symbol_table("Error:" + record->type_ + " is not a valid type:");
+            }
+        }
         return true;
     }
     record->kind_ = "variable";
@@ -152,6 +176,14 @@ void SymbolTable::report_error_to_highest_symbol_table(string error_message) {
         errors_.push_back(error_message + to_string(current_token->row_location_) + ":" + to_string(current_token->column_location_));
     else
         parent_symbol_table_->report_error_to_highest_symbol_table(error_message);
+}
+
+
+void SymbolTable::set_second_pass(bool second_pass) {
+    second_pass_ = second_pass;
+    for (SymbolRecord* record: symbol_records_) {
+        record->symbol_table_->set_second_pass(second_pass);
+    }
 }
 
 void print_table(SymbolTable* table, string table_name, int indent_count) {

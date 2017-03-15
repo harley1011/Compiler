@@ -49,7 +49,7 @@ bool SemanticParser::parse(vector<Token *> tokens) {
     current_token_position_ = 0;
     tokens_ = tokens;
     next_token();
-
+    global_symbol_table_->second_pass_ = false;
     if (output_to_file_) {
         error_output_file_.open(error_output_path_);
         derivation_output_file_.open(derivation_output_path_);
@@ -59,7 +59,9 @@ bool SemanticParser::parse(vector<Token *> tokens) {
 
     if (enable_double_pass_parse_)
     {
-        global_symbol_table_->second_pass_ = true;
+        current_token_position_ = 0;
+        global_symbol_table_->set_second_pass(true);
+        next_token();
         prog();
     }
 
@@ -77,7 +79,6 @@ bool SemanticParser::parse(vector<Token *> tokens) {
 
 
 bool SemanticParser::prog() {
-    global_symbol_table_->second_pass_ = false;
     if (!skip_errors({"CLASS", "PROGRAM"}, {}, false))
         return false;
     if (lookahead_ == "CLASS" || lookahead_ == "PROGRAM") {
