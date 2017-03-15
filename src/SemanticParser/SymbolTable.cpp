@@ -58,7 +58,6 @@ bool SymbolTable::create_class_entry_and_table(string kind, string type, string 
 
 bool SymbolTable::create_program_entry_and_table() {
     SymbolRecord* record;
-
     if (second_pass_)
     {
         record = search("program");
@@ -79,6 +78,7 @@ bool SymbolTable::create_function_entry_and_table(SymbolRecord* record) {
         string name = record->name_;
         delete record;
         record = search(name);
+        current_symbol_record_ = record;
         return true;
     }
     record->kind_ = "function";
@@ -108,27 +108,49 @@ bool SymbolTable::create_variable_entry(SymbolRecord* record) {
         return true;
     }
     record->kind_ = "variable";
-    if (record->type_.substr(0,3) == "int" || record->type_.substr(0, 5) == "float")
-        record->properly_declared_ = true;
-    else
+    if (record->type_.substr(0,3) == "int" || record->type_.substr(0, 5) == "float") {
+        string t = record->type_.substr(3,4);
+        if ((record->type_.size() > 3 && record ->type_.substr(3,1) == "[") || record->type_.size() > 5 && record ->type_.substr(5,1) == "[" ) {
+            record->properly_declared_ = true;
+            record->set_structure("array");
+        }
+        else if (record->type_.size() == 3 || record->type_.size() == 5) {
+            record->properly_declared_ = true;
+            record->set_structure("simple");
+        }
+        else {
+            record->set_structure("class");
+
+            if (record->type_.find("[") != string::npos) {
+                record->structure_ += " array";
+            }
+        }
+    }
+    else {
         record->properly_declared_ = false;
+        record->set_structure("class");
+
+        if (record->type_.find("[") != string::npos) {
+            record->structure_ += " array";
+        }
+    }
     insert(record);
     return true;
 }
 
-bool SymbolTable::create_function_class_entry_and_function_table(SymbolRecord *record) {
+bool SymbolTable::create_function_class_entry_and_function_table(SymbolRecord **record) {
     if (second_pass_) {
-        string name = record->name_;
-        delete record;
-        record = search(name);
+        string name = (*record)->name_;
+        //delete record;
+        *record = search(name);
         return true;
     }
-    record->kind_ = "function";
-    if (record->type_.substr(0,3) == "int" || record->type_.substr(0, 5) == "float")
-        record->properly_declared_ = true;
+    (*record)->kind_ = "function";
+    if ((*record)->type_.substr(0,3) == "int" || (*record)->type_.substr(0, 5) == "float")
+        (*record)->properly_declared_ = true;
     else
-        record->properly_declared_ = false;
-    insert(record);
+        (*record)->properly_declared_ = false;
+    insert((*record));
     return true;
 }
 

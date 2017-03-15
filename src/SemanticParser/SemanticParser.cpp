@@ -152,17 +152,17 @@ bool SemanticParser::postTypeId(SymbolRecord* record) {
         return false;
     if (lookahead_ == "OPENBRA") {
         form_derivation_string("<postTypeId>", "<arraySize> ;");
-        if (arraySize(record) && match("DELI") && record->set_structure("array") && global_symbol_table_->current_symbol_record_->symbol_table_->create_variable_entry(record)) {
+        if (arraySize(record) && match("DELI") && global_symbol_table_->current_symbol_record_->symbol_table_->create_variable_entry(record)) {
             return true;
         }
     } else if (lookahead_ == "OPENPARA") {
         form_derivation_string("<postTypeId>", "( <fParams> ) <funcBody> ;");
-        if (match("OPENPARA") && fParams(record) && match("CLOSEPARA") && funcBody(record) && match("DELI") && global_symbol_table_->current_symbol_record_->symbol_table_->create_function_class_entry_and_function_table(record)) {
+        if (global_symbol_table_->current_symbol_record_->symbol_table_->create_function_class_entry_and_function_table(&record) && match("OPENPARA") && fParams(record) && match("CLOSEPARA") && funcBody(record) && match("DELI")) {
             return true;
         }
     } else if (lookahead_ == "DELI") {
         form_derivation_string("<postTypeId>", ";");
-        if (match("DELI") && record->set_structure("simple") && global_symbol_table_->current_symbol_record_->symbol_table_->create_variable_entry(record))
+        if (match("DELI") && global_symbol_table_->current_symbol_record_->symbol_table_->create_variable_entry(record))
             return true;
     }
 
@@ -256,7 +256,10 @@ bool SemanticParser::funcInBody(SymbolRecord* record) {
     if (lookahead_ == "ID") {
         form_derivation_string("<funcInBody>", "id <varOrStat>");
         SymbolRecord* local_record = new SymbolRecord();
+        SymbolRecord* previous_current_symbol_record = global_symbol_table_->current_symbol_record_;
+        global_symbol_table_->current_symbol_record_ = record;
         if (match("ID") && local_record->set_type(get_last_token().lexeme_) && varOrStat(local_record)) {
+            global_symbol_table_->current_symbol_record_ = previous_current_symbol_record;
             return true;
         }
     } else if (is_lookahead_a_statement()) {
@@ -268,7 +271,7 @@ bool SemanticParser::funcInBody(SymbolRecord* record) {
         form_derivation_string("<funcInBody>", "<numType> id <arraySize> ;");
         SymbolRecord* local_record = new SymbolRecord();
         if (numType(local_record) && match("ID", {"OPENBRA", "DELI"}) && local_record->set_name(get_last_token().lexeme_)) {
-            arraySize(record);
+            arraySize(local_record);
             record->symbol_table_->create_variable_entry(local_record);
                 if(match("DELI", {"INT", "ID", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN"}))
                     return true;
@@ -283,7 +286,7 @@ bool SemanticParser::varOrStat(SymbolRecord* record) {
         return false;
     if (lookahead_ == "ID") {
         form_derivation_string("<varOrStat>", "id <arraySize> ;");
-        if (match("ID") && record->set_structure("class") && record->set_name(get_last_token().lexeme_) && arraySize(record)
+        if (match("ID") && record->set_name(get_last_token().lexeme_) && arraySize(record)
             && match("DELI", {"INT", "ID", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN", "CLOSECURL"} )
             && global_symbol_table_->current_symbol_record_->symbol_table_->create_variable_entry(record)) {
             return true;
@@ -781,7 +784,7 @@ bool SemanticParser::arraySize(SymbolRecord* record) {
         return false;
     if (lookahead_ == "OPENBRA") {
         form_derivation_string("<arraySize>", "[ integer ] <arraySize>");
-        if (match("OPENBRA") && record->set_structure("array") && match("INUM") && record->add_array_size(get_last_integer_token()) && match("CLOSEBRA") && record->append_to_type("]") && arraySize(record)) {
+        if (match("OPENBRA") && match("INUM") && record->add_array_size(get_last_integer_token()) && match("CLOSEBRA") && record->append_to_type("]") && arraySize(record)) {
             return true;
         }
     } else if (lookahead_ == "COM" || lookahead_ == "DELI" || lookahead_ == "CLOSEPARA") {// Follow set

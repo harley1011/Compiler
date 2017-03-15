@@ -7,15 +7,311 @@
 #include "../src/SemanticParser/SemanticParser.h"
 SemanticParser common_setup_semantic(string test_program, string derivation_string);
 bool check_if_record_exists_in_table(SymbolRecord record, SymbolTable symbol);
+bool check_record_properties(string type, string name, string kind, string structure, SymbolRecord* record);
+bool check_record_properties_with_array_sizes(string type, string name, string kind, string structure, vector<int> array_sizes, SymbolRecord* record);
+bool check_record_properties(string type, string name, string kind, string structure, SymbolRecord* record) {
+    EXPECT_EQ(record->type_, type);
+    EXPECT_EQ(record->name_, name);
+    EXPECT_EQ(record->kind_, kind);
+    EXPECT_EQ(record->structure_, structure);
 
-TEST(arraySizeTest, SemanticTests) {
-    SymbolRecord* record = new SymbolRecord();
-    SemanticParser syntaxParser = common_setup_semantic("[ 5 ] [ 10 ];", "<arraySize>");
-    EXPECT_TRUE(syntaxParser.arraySize(record));
-    EXPECT_EQ(syntaxParser.current_rhs_derivation_, "[ integer ] [ integer ]");
-    EXPECT_EQ(record->type_, "[5][10]");
-    EXPECT_EQ(record->array_sizes[0], 5);
-    EXPECT_EQ(record->array_sizes[1], 10);
+}
+bool check_record_properties_with_array_sizes(string type, string name, string kind, string structure, vector<int> array_sizes, SymbolRecord* record) {
+    EXPECT_EQ(record->type_, type);
+    EXPECT_EQ(record->name_, name);
+    EXPECT_EQ(record->kind_, kind);
+    EXPECT_EQ(record->structure_, structure);
+
+    for (int i = 0; i < record->array_sizes.size(); i++) {
+        if (i < array_sizes.size()) {
+            EXPECT_EQ(array_sizes[i], record->array_sizes[i]);
+        } else {
+            EXPECT_TRUE(false);
+        }
+    }
+
+}
+
+
+
+
+TEST(varDeclareInProgramTest, SemanticTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("program { int x; float y; Util util; };", false);
+
+    SemanticParser syntaxParser;
+    syntaxParser.enable_double_pass_parse_ = false;
+
+    EXPECT_EQ(syntaxParser.parse(tokens), true);
+    EXPECT_EQ(syntaxParser.semantic_errors_.size(), 0);
+
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_.size(), 1);
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_.size(), 3);
+    check_record_properties("int", "x", "variable", "simple", syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[0]);
+    check_record_properties("float", "y", "variable", "simple", syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[1]);
+    check_record_properties("Util", "util", "variable", "class", syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[2]);
+
+    syntaxParser.global_symbol_table_->print();
+}
+
+TEST(varDeclareInClassTest, SemanticTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class Util { int x; float y; Util util; }; program { };", false);
+
+    SemanticParser syntaxParser;
+    syntaxParser.enable_double_pass_parse_ = false;
+
+    EXPECT_EQ(syntaxParser.parse(tokens), true);
+    EXPECT_EQ(syntaxParser.semantic_errors_.size(), 0);
+
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_.size(), 3);
+    check_record_properties("int", "x", "variable", "simple", syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[0]);
+    check_record_properties("float", "y", "variable", "simple", syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[1]);
+    check_record_properties("Util", "util", "variable", "class", syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[2]);
+
+    syntaxParser.global_symbol_table_->print();
+}
+
+TEST(varDeclareInClassFuncTest, SemanticTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class Util { int classFunc() { int x; float y; Util util; }; }; program { };", false);
+
+    SemanticParser syntaxParser;
+    syntaxParser.enable_double_pass_parse_ = false;
+
+    EXPECT_EQ(syntaxParser.parse(tokens), true);
+    EXPECT_EQ(syntaxParser.semantic_errors_.size(), 0);
+
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_.size(), 1);
+    syntaxParser.global_symbol_table_->print();
+    check_record_properties("int", "x", "variable", "simple", syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[0]);
+    check_record_properties("float", "y", "variable", "simple", syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[1]);
+    check_record_properties("Util", "util", "variable", "class", syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[2]);
+}
+
+TEST(varProperlyDeclaredInProgramTest, SemanticTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class Cord { int x; int y; int z; }; program { Cord cord; };", false);
+
+    SemanticParser syntaxParser;
+    syntaxParser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(syntaxParser.parse(tokens), true);
+    EXPECT_EQ(syntaxParser.semantic_errors_.size(), 0);
+
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_.size(), 3);
+    EXPECT_TRUE(syntaxParser.global_symbol_table_->symbol_records_[1]->symbol_table_->symbol_records_[1]->properly_declared_);
+    syntaxParser.global_symbol_table_->print();
+}
+
+TEST(varNotProperlyDeclaredInProgramTest, SemanticTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("program { Cord cord; };", false);
+
+    SemanticParser syntaxParser;
+    syntaxParser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(syntaxParser.parse(tokens), true);
+    EXPECT_EQ(syntaxParser.semantic_errors_.size(), 1);
+    syntaxParser.global_symbol_table_->print();
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_.size(), 1);
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_.size(), 1);
+    EXPECT_FALSE(syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[0]->properly_declared_);
+
+}
+
+TEST(varProperlyDeclaredInClassTest, SemanticTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class Cord { int x; int y; int z; Cord cord; }; program { };", false);
+
+    SemanticParser syntaxParser;
+    syntaxParser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(syntaxParser.parse(tokens), true);
+    EXPECT_EQ(syntaxParser.semantic_errors_.size(), 0);
+
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_.size(), 4);
+    EXPECT_TRUE(syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[3]->properly_declared_);
+    syntaxParser.global_symbol_table_->print();
+}
+
+TEST(varNonProperlyDeclaredInClassTest, SemanticTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class Cord { int x; int y; int z; Cordz cord; }; program { };", false);
+
+    SemanticParser syntaxParser;
+    syntaxParser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(syntaxParser.parse(tokens), true);
+    EXPECT_EQ(syntaxParser.semantic_errors_.size(), 1);
+
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_.size(), 4);
+    EXPECT_FALSE(syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[3]->properly_declared_);
+    syntaxParser.global_symbol_table_->print();
+}
+
+
+
+TEST(varProperlyDeclaredInClassFuncTest, SemanticTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class Cord { int funcClass(){ Cord cord; }; }; program { };", false);
+
+    SemanticParser syntaxParser;
+    syntaxParser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(syntaxParser.parse(tokens), true);
+    EXPECT_EQ(syntaxParser.semantic_errors_.size(), 0);
+
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_.size(), 1);
+    EXPECT_TRUE(syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[0]->properly_declared_);
+
+    syntaxParser.global_symbol_table_->print();
+}
+
+TEST(varNonProperlyDeclaredInClassFuncTest, SemanticTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class Cord { int funcClass(){ Cordz cord; }; }; program { };", false);
+
+    SemanticParser syntaxParser;
+    syntaxParser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(syntaxParser.parse(tokens), true);
+    EXPECT_EQ(syntaxParser.semantic_errors_.size(), 1);
+
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_.size(), 1);
+    EXPECT_FALSE(syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[0]->properly_declared_);
+
+    syntaxParser.global_symbol_table_->print();
+}
+
+
+TEST(varDeclareFuncTest, SemanticTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("program { }; int funcTest() { int x; float y; Util util; };", false);
+
+    SemanticParser syntaxParser;
+    syntaxParser.enable_double_pass_parse_ = false;
+
+    EXPECT_EQ(syntaxParser.parse(tokens), true);
+    EXPECT_EQ(syntaxParser.semantic_errors_.size(), 0);
+
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[1]->symbol_table_->symbol_records_.size(), 3);
+    syntaxParser.global_symbol_table_->print();
+    check_record_properties("int", "x", "variable", "simple", syntaxParser.global_symbol_table_->symbol_records_[1]->symbol_table_->symbol_records_[0]);
+    check_record_properties("float", "y", "variable", "simple", syntaxParser.global_symbol_table_->symbol_records_[1]->symbol_table_->symbol_records_[1]);
+    check_record_properties("Util", "util", "variable", "class", syntaxParser.global_symbol_table_->symbol_records_[1]->symbol_table_->symbol_records_[2]);
+}
+
+
+
+TEST(arrayDeclareInProgramTest, SemanticTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("program { int x[5][10]; float y[10][12][23]; Util util[1][2]; };", false);
+
+    SemanticParser syntaxParser;
+    syntaxParser.enable_double_pass_parse_ = false;
+
+    EXPECT_EQ(syntaxParser.parse(tokens), true);
+    EXPECT_EQ(syntaxParser.semantic_errors_.size(), 0);
+
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_.size(), 1);
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_.size(), 3);
+    check_record_properties_with_array_sizes("int[5][10]", "x", "variable", "array", {5, 10}, syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[0]);
+    check_record_properties_with_array_sizes("float[10][12][23]", "y", "variable", "array", {10, 12, 23}, syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[1]);
+    check_record_properties_with_array_sizes("Util[1][2]", "util", "variable", "class array", {1, 2}, syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[2]);
+
+    syntaxParser.global_symbol_table_->print();
+}
+
+TEST(arrayDeclareInClassTest, SemanticTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class Util { int x[5][10]; float y[10][12][23]; Util util[1][2]; }; program { };", false);
+
+    SemanticParser syntaxParser;
+    syntaxParser.enable_double_pass_parse_ = false;
+
+    EXPECT_EQ(syntaxParser.parse(tokens), true);
+    EXPECT_EQ(syntaxParser.semantic_errors_.size(), 0);
+
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_.size(), 3);
+    check_record_properties_with_array_sizes("int[5][10]", "x", "variable", "array", {5, 10}, syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[0]);
+    check_record_properties_with_array_sizes("float[10][12][23]", "y", "variable", "array", {10, 12, 23}, syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[1]);
+    check_record_properties_with_array_sizes("Util[1][2]", "util", "variable", "class array", {1, 2}, syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[2]);
+
+    syntaxParser.global_symbol_table_->print();
+}
+
+TEST(arrayDeclareInClassFuncTest, SemanticTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class Util { int classFunc() { int x[5][10]; float y[10][12][23]; Util util[1][2]; }; }; program { };", false);
+
+    SemanticParser syntaxParser;
+    syntaxParser.enable_double_pass_parse_ = false;
+
+    EXPECT_EQ(syntaxParser.parse(tokens), true);
+    EXPECT_EQ(syntaxParser.semantic_errors_.size(), 0);
+
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_.size(), 1);
+    syntaxParser.global_symbol_table_->print();
+    check_record_properties_with_array_sizes("int[5][10]", "x", "variable", "array", {5, 10}, syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[0]);
+    check_record_properties_with_array_sizes("float[10][12][23]", "y", "variable", "array", {10, 12, 23}, syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[1]);
+    check_record_properties_with_array_sizes("Util[1][2]", "util", "variable", "class array", {1, 2}, syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[2]);
+}
+
+TEST(arrayDeclareFuncTest, SemanticTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("program { }; int funcTest() { int x[5][10]; float y[10][12][23]; Util util[1][2]; };", false);
+
+    SemanticParser syntaxParser;
+    syntaxParser.enable_double_pass_parse_ = false;
+
+    EXPECT_EQ(syntaxParser.parse(tokens), true);
+    EXPECT_EQ(syntaxParser.semantic_errors_.size(), 0);
+
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[1]->symbol_table_->symbol_records_.size(), 3);
+    syntaxParser.global_symbol_table_->print();
+    check_record_properties_with_array_sizes("int[5][10]", "x", "variable", "array", {5, 10}, syntaxParser.global_symbol_table_->symbol_records_[1]->symbol_table_->symbol_records_[0]);
+    check_record_properties_with_array_sizes("float[10][12][23]", "y", "variable", "array", {10, 12, 23}, syntaxParser.global_symbol_table_->symbol_records_[1]->symbol_table_->symbol_records_[1]);
+    check_record_properties_with_array_sizes("Util[1][2]", "util", "variable", "class array", {1, 2}, syntaxParser.global_symbol_table_->symbol_records_[1]->symbol_table_->symbol_records_[2]);
 }
 
 
@@ -32,9 +328,10 @@ TEST(FuncDeclareTest, SemanticTests)
     EXPECT_EQ(syntaxParser.semantic_errors_.size(), 0);
 
     EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_.size(), 2);
-    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_.size(), 4);
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[1]->symbol_table_->symbol_records_.size(), 4);
     syntaxParser.global_symbol_table_->print();
 }
+
 
 TEST(FuncDeclareReturnClassTest, SemanticTests)
 {
@@ -51,6 +348,27 @@ TEST(FuncDeclareReturnClassTest, SemanticTests)
     EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_.size(), 3);
     EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_.size(), 3);
     EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[2]->symbol_table_->symbol_records_.size(), 4);
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[2]->symbol_table_->symbol_records_[3]->properly_declared_, true);
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[2]->symbol_table_->symbol_records_[3]->type_, "Cord");
+    syntaxParser.global_symbol_table_->print();
+}
+
+TEST(FuncDeclareReturnNonDeclareClassTest, SemanticTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("program { }; Cord create_cord(int x, int y, int z) { Cord cord; cord.x = x; cord.y = y; cord.z = z; return(cord); };", false);
+
+    SemanticParser syntaxParser;
+    syntaxParser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(syntaxParser.parse(tokens), true);
+    EXPECT_EQ(syntaxParser.semantic_errors_.size(), 1);
+
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[1]->symbol_table_->symbol_records_.size(), 4);
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[1]->symbol_table_->symbol_records_[3]->properly_declared_, false);
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[1]->symbol_table_->symbol_records_[3]->type_, "Cord");
     syntaxParser.global_symbol_table_->print();
 }
 

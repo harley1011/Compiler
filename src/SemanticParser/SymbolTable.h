@@ -32,7 +32,7 @@ public:
     bool create_variable_entry(SymbolRecord* record);
 
 
-    bool create_function_class_entry_and_function_table(SymbolRecord *record);
+    bool create_function_class_entry_and_function_table(SymbolRecord **record);
 
     bool create_parameter_entry(SymbolRecord* record);
 
