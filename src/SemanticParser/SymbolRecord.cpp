@@ -58,7 +58,7 @@ bool SymbolRecord::generate_function_type() {
         if (first)
             first = false;
         else
-            type_ += ",";
+            type_ += ", ";
         type_ += record->type_;
     }
     return true;

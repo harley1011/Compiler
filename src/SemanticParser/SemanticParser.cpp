@@ -10,8 +10,7 @@ SemanticParser::SemanticParser() {
     derivations_.push_back(current_rhs_derivation_);
     enable_derivation_output_ = false;
     global_symbol_table_ = new SymbolTable();
-    record_position_count = 0;
-
+    enable_double_pass_parse_ = true;
 }
 
 SemanticParser::SemanticParser(string derivation_output_path, string error_output_path) {
@@ -22,7 +21,7 @@ SemanticParser::SemanticParser(string derivation_output_path, string error_outpu
     error_output_path_ = error_output_path;
     output_to_file_ = true;
     global_symbol_table_ = new SymbolTable();
-    record_position_count = 0;
+    enable_double_pass_parse_ = true;
 }
 
 SemanticParser::SemanticParser(bool enable_derivation_output) {
@@ -31,14 +30,14 @@ SemanticParser::SemanticParser(bool enable_derivation_output) {
     enable_derivation_output_ = false;
     enable_derivation_output_ = enable_derivation_output;
     global_symbol_table_ = new SymbolTable();
-    record_position_count = 0;
+    enable_double_pass_parse_ = true;
 }
 
 SemanticParser::SemanticParser(vector<Token *> tokens) {
     SemanticParser();
     tokens_ = tokens;
     current_token_position_ = 0;
-    record_position_count = 0;
+    enable_double_pass_parse_ = true;
     next_token();
 }
 
@@ -57,6 +56,12 @@ bool SemanticParser::parse(vector<Token *> tokens) {
     }
 
     bool result = prog();
+
+    if (enable_double_pass_parse_)
+    {
+        global_symbol_table_->second_pass_ = true;
+        prog();
+    }
 
     semantic_errors_ = global_symbol_table_->errors_;
     if (output_to_file_) {
@@ -150,7 +155,6 @@ bool SemanticParser::postTypeId(SymbolRecord* record) {
             return true;
         }
     } else if (lookahead_ == "OPENPARA") {
-        record->append_to_type(" : ");
         form_derivation_string("<postTypeId>", "( <fParams> ) <funcBody> ;");
         if (match("OPENPARA") && fParams(record) && match("CLOSEPARA") && funcBody(record) && match("DELI") && global_symbol_table_->current_symbol_record_->symbol_table_->create_function_class_entry_and_function_table(record)) {
             return true;
@@ -835,6 +839,7 @@ bool SemanticParser::fParams(SymbolRecord* record) {
     if (is_lookahead_a_type()) {
         form_derivation_string("<fParams>", "<type> id <arraySize> <fParamsTail>");
         SymbolRecord* fParam_record = new SymbolRecord();
+        record->append_to_type(" : ");
         fParam_record->symbol_table_->parent_symbol_table_ = global_symbol_table_;
         if (type(fParam_record) && match("ID") && fParam_record->set_name(get_last_token().lexeme_) && arraySize(fParam_record) && record->symbol_table_->create_parameter_entry(fParam_record) && fParamsTail(global_symbol_table_->current_symbol_record_))
             record->generate_function_type();
@@ -868,7 +873,7 @@ bool SemanticParser::fParamsTail(SymbolRecord* record) {
         form_derivation_string("<fParamsTail>", ", <type> id <arraySize> <fParamsTail>");
         SymbolRecord* fParam_record = new SymbolRecord();
         fParam_record->symbol_table_->parent_symbol_table_ = global_symbol_table_;
-        if (match("COM") && type(fParam_record) && match("ID") && fParam_record->set_name(get_last_token().lexeme_) && arraySize(record) && record->symbol_table_->create_parameter_entry(fParam_record) && fParamsTail(record))
+        if (match("COM") && type(fParam_record) && match("ID") && fParam_record->set_name(get_last_token().lexeme_) && arraySize(fParam_record) && record->symbol_table_->create_parameter_entry(fParam_record) && fParamsTail(record))
             return true;
     } else if (lookahead_ == "CLOSEPARA") { // Follow set
         form_derivation_string("<fParamsTail>", "");

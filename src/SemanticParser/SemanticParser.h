@@ -24,7 +24,7 @@ public:
 
     SymbolTable *global_symbol_table_;
 
-    int record_position_count;
+    bool enable_double_pass_parse_;
     string current_rhs_derivation_;
     string lookahead_;
     vector<string> errors_;
@@ -40,8 +40,7 @@ public:
     ofstream derivation_output_file_;
     bool enable_derivation_output_;
     string previous_token_;
-    vector<string> token_error_buffer_;
-    vector<string> skipped_token_error_buffer_;
+
     string next_token();
     bool form_derivation_string(string non_terminal, string rhs);
     bool skip_errors(set<string> first_set, set<string> follow_set, bool epsilon);

@@ -43,12 +43,14 @@ TEST(FuncDeclareReturnClassTest, SemanticTests)
     tokens = scanner.generate_tokens("class Cord { int x; int y; int z; }; program { }; Cord create_cord(int x, int y, int z) { Cord cord; cord.x = x; cord.y = y; cord.z = z; return(cord); };", false);
 
     SemanticParser syntaxParser;
+    syntaxParser.enable_double_pass_parse_ = true;
 
     EXPECT_EQ(syntaxParser.parse(tokens), true);
     EXPECT_EQ(syntaxParser.semantic_errors_.size(), 0);
 
-    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_.size(), 2);
-    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_.size(), 4);
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_.size(), 3);
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_.size(), 3);
+    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[2]->symbol_table_->symbol_records_.size(), 4);
     syntaxParser.global_symbol_table_->print();
 }
 

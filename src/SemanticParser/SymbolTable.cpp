@@ -93,8 +93,12 @@ bool SymbolTable::create_variable_entry(SymbolRecord* record) {
 }
 
 bool SymbolTable::create_function_class_entry_and_function_table(SymbolRecord *record) {
-    if(second_pass_)
+    if (second_pass_) {
+        string name = record->name_;
+        delete record;
+        record = search(name);
         return true;
+    }
     record->kind_ = "function";
     if (record->type_.substr(0,3) == "int" || record->type_.substr(0, 5) == "float")
         record->properly_declared_ = true;
@@ -105,8 +109,12 @@ bool SymbolTable::create_function_class_entry_and_function_table(SymbolRecord *r
 }
 
 bool SymbolTable::create_parameter_entry(SymbolRecord* record) {
-    if (second_pass_)
+    if (second_pass_) {
+        string name = record->name_;
+        delete record;
+        record = search(name);
         return true;
+    }
     record->kind_ = "parameter";
     record->properly_declared_ = true;
     insert(record);
