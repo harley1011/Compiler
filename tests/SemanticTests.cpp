@@ -4,7 +4,7 @@
 
 #include "SemanticTests.h"
 #include "gtest/gtest.h"
-#include "../src/SemanticParser/SemanticParser.h"
+#include "../src/Parser/Parser.h"
 SemanticParser common_setup_semantic(string test_program, string derivation_string);
 bool check_if_record_exists_in_table(SymbolRecord record, SymbolTable symbol);
 bool check_record_properties(string type, string name, string kind, string structure, SymbolRecord* record);
@@ -489,14 +489,14 @@ TEST(FullProgramTest, SemanticTests)
 
 //
 //TEST(progTest, SemanticTests) {
-//    SemanticParser syntaxParser = common_setup_semantic("program {int sample[100]; int idx; int maxValue; int minValue; Utility utility; Utility arrayUtility[2][3][6][7]; for(int t = 0; t<=100 ; t = t + 1) { get(sample[t]); sample[t] = (sample[t] * randomize()); }; maxValue = utility.findMax(sample); minValue = utility.findMin(sample); utility. var1[4][1][0][0][0][0][0] = 10; arrayUtility[1][1][1][1].var1[4][1][0][0][0][0][0] = 2; put(maxValue); put(minValue); };", "<progBody>");
+//    Parser syntaxParser = common_setup_semantic("program {int sample[100]; int idx; int maxValue; int minValue; Utility utility; Utility arrayUtility[2][3][6][7]; for(int t = 0; t<=100 ; t = t + 1) { get(sample[t]); sample[t] = (sample[t] * randomize()); }; maxValue = utility.findMax(sample); minValue = utility.findMin(sample); utility. var1[4][1][0][0][0][0][0] = 10; arrayUtility[1][1][1][1].var1[4][1][0][0][0][0][0] = 2; put(maxValue); put(minValue); };", "<progBody>");
 //    EXPECT_TRUE(syntaxParser.progBody());
 //    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_.size(), 7);
 //    syntaxParser.global_symbol_table_->print();
 //}
 
 //TEST(progWithClassTest, SemanticTests) {
-//    SemanticParser syntaxParser = common_setup_semantic("program { Utility utility; };", "<progBody>");
+//    Parser syntaxParser = common_setup_semantic("program { Utility utility; };", "<progBody>");
 //    EXPECT_TRUE(syntaxParser.progBody());
 //    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_.size(), 1);
 //    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[0]->name_, "utility");
@@ -504,7 +504,7 @@ TEST(FullProgramTest, SemanticTests)
 //}
 //
 //TEST(funcTest, SemanticTests) {
-//    SemanticParser syntaxParser = common_setup_semantic("program { }; int findMin(int x) { int r; int y; float p;  Utility utility;};", "<progBody>");
+//    Parser syntaxParser = common_setup_semantic("program { }; int findMin(int x) { int r; int y; float p;  Utility utility;};", "<progBody>");
 //    EXPECT_TRUE(syntaxParser.progBody());
 //    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[1]->symbol_table_->symbol_records_.size(), 5);
 //    syntaxParser.global_symbol_table_->print();

@@ -1,4 +1,4 @@
-set(core_SRCS Scanner.cpp State.cpp State.h Token.cpp Token.h IntegerToken.cpp IntegerToken.h FloatToken.cpp FloatToken.h ErrorToken.cpp ErrorToken.h SyntaxParser/SyntaxParser.cpp SyntaxParser/SyntaxParser.h SemanticParser/SymbolTable.cpp SemanticParser/SymbolTable.h SemanticParser/SymbolRecord.cpp SemanticParser/SymbolRecord.h)
+set(core_SRCS Scanner.cpp State.cpp State.h Token.cpp Token.h IntegerToken.cpp IntegerToken.h FloatToken.cpp FloatToken.h ErrorToken.cpp ErrorToken.h Parser/SymbolTable.cpp Parser/SymbolTable.h Parser/SymbolRecord.cpp Parser/SymbolRecord.h)
 
 add_library(scanner ${core_SRCS} Scanner.h)
 add_executable(exe main.cpp)

@@ -1,7 +1,7 @@
 
 
 
-#include "SemanticParser.h"
+#include "Parser.h"
 #include "../IntegerToken.h"
 
 
@@ -38,6 +38,7 @@ SemanticParser::SemanticParser(vector<Token *> tokens) {
     tokens_ = tokens;
     current_token_position_ = 0;
     enable_double_pass_parse_ = true;
+    global_symbol_table_ = new SymbolTable();
     next_token();
 }
 
@@ -1096,7 +1097,12 @@ string SemanticParser::next_token() {
 
 
 Token SemanticParser::get_last_token() {
-    Token* token = tokens_[current_token_position_ - 2];
+    Token* token;
+    if (tokens_.size() <= current_token_position_)
+        token = tokens_[tokens_.size()-1];
+    else
+        token = tokens_[current_token_position_ - 2];
+
     return *(token);
 }
 
