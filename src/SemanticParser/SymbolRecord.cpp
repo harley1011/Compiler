@@ -55,8 +55,10 @@ bool SymbolRecord::add_array_size(IntegerToken integer_token) {
 bool SymbolRecord::generate_function_type() {
     bool first = true;
     for(SymbolRecord* record: symbol_table_->symbol_records_) {
-        if (first)
+        if (first){
             first = false;
+            type_ += " : ";
+        }
         else
             type_ += ", ";
         type_ += record->type_;

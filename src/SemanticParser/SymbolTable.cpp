@@ -73,17 +73,42 @@ bool SymbolTable::create_program_entry_and_table() {
     return true;
 }
 
+void SymbolTable::set_properly_declared(SymbolRecord* record) {
+
+    if (!record->properly_declared_) {
+        record->properly_declared_ = search(record->type_) != NULL;
+        if (!record->properly_declared_) {
+            record->symbol_table_->report_error_to_highest_symbol_table("Error:" + record->type_ + " is not a valid type:");
+        }
+    }
+}
 bool SymbolTable::create_function_entry_and_table(SymbolRecord** record) {
     if (second_pass_) {
         string name = (*record)->name_;
       //  delete record;
         (*record) = search(name);
         current_symbol_record_ = (*record);
+        set_properly_declared(*record);
         return true;
     }
     (*record)->kind_ = "function";
     current_symbol_record_ = (*record);
-    (*record)->properly_declared_ = true;
+    if ((*record)->type_.substr(0,3) == "int" || (*record)->type_.substr(0, 5) == "float") {
+        if (((*record)->type_.size() > 3 && ((*record) ->type_.substr(3,1) == "[" || (*record) ->type_.substr(3,1) == " "))
+            || (*record)->type_.size() > 5 && ((*record)->type_.substr(5,1) == "[" || (*record)->type_.substr(5,1) == " " ) ) {
+            (*record)->properly_declared_ = true;
+        }
+        else if ((*record)->type_.size() == 3 || (*record)->type_.size() == 5) {
+            (*record)->properly_declared_ = true;
+        }
+        else {
+            (*record)->set_structure("class");
+        }
+
+    }
+    else {
+        (*record)->properly_declared_ = false;
+    }
     insert((*record));
     return true;
 }
@@ -99,18 +124,13 @@ bool SymbolTable::create_variable_entry(SymbolRecord* record) {
         SymbolRecord* found_record = search(record->name_);
         delete record;
         record = found_record;
-        if (!record->properly_declared_) {
-            record->properly_declared_ = search(record->type_) != NULL;
-            if (!record->properly_declared_) {
-                record->symbol_table_->report_error_to_highest_symbol_table("Error:" + record->type_ + " is not a valid type:");
-            }
-        }
+        set_properly_declared(record);
         return true;
     }
     record->kind_ = "variable";
     if (record->type_.substr(0,3) == "int" || record->type_.substr(0, 5) == "float") {
-        string t = record->type_.substr(3,4);
-        if ((record->type_.size() > 3 && record ->type_.substr(3,1) == "[") || record->type_.size() > 5 && record ->type_.substr(5,1) == "[" ) {
+        if ((record->type_.size() > 3 && (record ->type_.substr(3,1) == "[" || record ->type_.substr(3,1) == " "))
+            || record->type_.size() > 5 && (record->type_.substr(5,1) == "[" || record->type_.substr(5,1) == " " )) {
             record->properly_declared_ = true;
             record->set_structure("array");
         }
@@ -143,13 +163,27 @@ bool SymbolTable::create_function_class_entry_and_function_table(SymbolRecord **
         string name = (*record)->name_;
         //delete record;
         *record = search(name);
+        set_properly_declared(*record);
         return true;
     }
     (*record)->kind_ = "function";
-    if ((*record)->type_.substr(0,3) == "int" || (*record)->type_.substr(0, 5) == "float")
-        (*record)->properly_declared_ = true;
-    else
+
+    if ((*record)->type_.substr(0,3) == "int" || (*record)->type_.substr(0, 5) == "float") {
+        if (((*record)->type_.size() > 3 && (*record) ->type_.substr(3,1) == "[") || (*record)->type_.size() > 5 && (*record)->type_.substr(5,1) == "[" ) {
+            (*record)->properly_declared_ = true;
+        }
+        else if ((*record)->type_.size() == 3 || (*record)->type_.size() == 5) {
+            (*record)->properly_declared_ = true;
+        }
+        else {
+            (*record)->set_structure("class");
+        }
+
+    }
+    else {
         (*record)->properly_declared_ = false;
+    }
+
     insert((*record));
     return true;
 }
