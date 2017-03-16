@@ -73,18 +73,18 @@ bool SymbolTable::create_program_entry_and_table() {
     return true;
 }
 
-bool SymbolTable::create_function_entry_and_table(SymbolRecord* record) {
+bool SymbolTable::create_function_entry_and_table(SymbolRecord** record) {
     if (second_pass_) {
-        string name = record->name_;
-        delete record;
-        record = search(name);
-        current_symbol_record_ = record;
+        string name = (*record)->name_;
+      //  delete record;
+        (*record) = search(name);
+        current_symbol_record_ = (*record);
         return true;
     }
-    record->kind_ = "function";
-    current_symbol_record_ = record;
-    record->properly_declared_ = true;
-    insert(record);
+    (*record)->kind_ = "function";
+    current_symbol_record_ = (*record);
+    (*record)->properly_declared_ = true;
+    insert((*record));
     return true;
 }
 

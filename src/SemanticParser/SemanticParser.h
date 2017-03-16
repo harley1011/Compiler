@@ -61,7 +61,7 @@ public:
     bool funcBody(SymbolRecord* record);
     bool funcInBodyLst(SymbolRecord* record);
     bool funcInBody(SymbolRecord* record);
-    bool varOrStat(SymbolRecord* record);
+    bool varOrStat(SymbolRecord* func_record, SymbolRecord* record);
     bool statementLst();
     bool statement();
     bool statementRes(SymbolRecord* record);

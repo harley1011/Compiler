@@ -189,7 +189,7 @@ bool SemanticParser::funcHead(SymbolRecord* record) {
         return false;
     if (is_lookahead_a_type()) {
         form_derivation_string("<funcHead>", "<type> id ( <fParams> )");
-        if (type(record) && match("ID") && record->set_name(get_last_token().lexeme_) && global_symbol_table_->create_function_entry_and_table(record) && match("OPENPARA") && fParams(record) && match("CLOSEPARA"))
+        if (type(record) && match("ID") && record->set_name(get_last_token().lexeme_) && global_symbol_table_->create_function_entry_and_table(&record) && match("OPENPARA") && fParams(record) && match("CLOSEPARA"))
             return true;
     }
     return false;
@@ -256,10 +256,10 @@ bool SemanticParser::funcInBody(SymbolRecord* record) {
     if (lookahead_ == "ID") {
         form_derivation_string("<funcInBody>", "id <varOrStat>");
         SymbolRecord* local_record = new SymbolRecord();
-        SymbolRecord* previous_current_symbol_record = global_symbol_table_->current_symbol_record_;
-        global_symbol_table_->current_symbol_record_ = record;
-        if (match("ID") && local_record->set_type(get_last_token().lexeme_) && varOrStat(local_record)) {
-            global_symbol_table_->current_symbol_record_ = previous_current_symbol_record;
+       // SymbolRecord* previous_current_symbol_record = global_symbol_table_->current_symbol_record_;
+       // global_symbol_table_->current_symbol_record_ = record;
+        if (match("ID") && local_record->set_type(get_last_token().lexeme_) && varOrStat(record, local_record)) {
+            //global_symbol_table_->current_symbol_record_ = previous_current_symbol_record;
             return true;
         }
     } else if (is_lookahead_a_statement()) {
@@ -280,7 +280,7 @@ bool SemanticParser::funcInBody(SymbolRecord* record) {
     return false;
 }
 
-bool SemanticParser::varOrStat(SymbolRecord* record) {
+bool SemanticParser::varOrStat(SymbolRecord* func_record, SymbolRecord* record) {
     if (!skip_errors({"ID", "OPENBRA", "EQUAL", "DOT"},
                      {"INT", "ID", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN", "CLOSECURL"}, false))
         return false;
@@ -288,7 +288,7 @@ bool SemanticParser::varOrStat(SymbolRecord* record) {
         form_derivation_string("<varOrStat>", "id <arraySize> ;");
         if (match("ID") && record->set_name(get_last_token().lexeme_) && arraySize(record)
             && match("DELI", {"INT", "ID", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN", "CLOSECURL"} )
-            && global_symbol_table_->current_symbol_record_->symbol_table_->create_variable_entry(record)) {
+            && func_record->symbol_table_->create_variable_entry(record)) {
             return true;
         }
     } else if (lookahead_ == "OPENBRA" || lookahead_ == "EQUAL" || lookahead_ == "DOT") {

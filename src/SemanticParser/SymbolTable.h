@@ -25,7 +25,7 @@ public:
 
     bool create_program_entry_and_table();
 
-    bool create_function_entry_and_table(SymbolRecord* record);
+    bool create_function_entry_and_table(SymbolRecord** record);
 
     void print();
 
