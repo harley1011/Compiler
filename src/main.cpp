@@ -1,5 +1,5 @@
 #include <iostream>
-#include "./SyntaxParser/SyntaxParser.h"
+#include "Parser/Parser.h"
 #include <sys/stat.h>
 
 using namespace std;
@@ -54,7 +54,7 @@ int main(int argc, char *argv[] ) {
         cout << "Enter error output location: ";
         getline(cin, error_output);
 
-        SyntaxParser syntaxParser(output, error_output);
+        Parser syntaxParser(output, error_output);
 
 
         bool parse_result = syntaxParser.parse(tokens);

@@ -1,11 +1,11 @@
 
 
 
-#include "SemanticParser.h"
+#include "Parser.h"
 #include "../IntegerToken.h"
 
 
-SemanticParser::SemanticParser() {
+Parser::Parser() {
     current_rhs_derivation_ = "<classDeclLst> <progBody>";
     derivations_.push_back(current_rhs_derivation_);
     enable_derivation_output_ = false;
@@ -13,7 +13,7 @@ SemanticParser::SemanticParser() {
     enable_double_pass_parse_ = true;
 }
 
-SemanticParser::SemanticParser(string derivation_output_path, string error_output_path) {
+Parser::Parser(string derivation_output_path, string error_output_path) {
     current_rhs_derivation_ = "<classDeclLst> <progBody>";
     derivations_.push_back(current_rhs_derivation_);
     enable_derivation_output_ = false;
@@ -24,7 +24,7 @@ SemanticParser::SemanticParser(string derivation_output_path, string error_outpu
     enable_double_pass_parse_ = true;
 }
 
-SemanticParser::SemanticParser(bool enable_derivation_output) {
+Parser::Parser(bool enable_derivation_output) {
     current_rhs_derivation_ = "<classDeclLst> <progBody>";
     derivations_.push_back(current_rhs_derivation_);
     enable_derivation_output_ = false;
@@ -33,16 +33,17 @@ SemanticParser::SemanticParser(bool enable_derivation_output) {
     enable_double_pass_parse_ = true;
 }
 
-SemanticParser::SemanticParser(vector<Token *> tokens) {
-    SemanticParser();
+Parser::Parser(vector<Token *> tokens) {
+    Parser();
     tokens_ = tokens;
     current_token_position_ = 0;
     enable_double_pass_parse_ = true;
+    global_symbol_table_ = new SymbolTable();
     next_token();
 }
 
 
-bool SemanticParser::parse(vector<Token *> tokens) {
+bool Parser::parse(vector<Token *> tokens) {
     if (enable_derivation_output_) {
         cout << current_rhs_derivation_ << endl;
     }
@@ -78,7 +79,7 @@ bool SemanticParser::parse(vector<Token *> tokens) {
 }
 
 
-bool SemanticParser::prog() {
+bool Parser::prog() {
     if (!skip_errors({"CLASS", "PROGRAM"}, {}, false))
         return false;
     if (lookahead_ == "CLASS" || lookahead_ == "PROGRAM") {
@@ -90,7 +91,7 @@ bool SemanticParser::prog() {
     return false;
 }
 
-bool SemanticParser::classDeclLst() {
+bool Parser::classDeclLst() {
     if (!skip_errors({"CLASS"}, {"PROGRAM"}, true))
         return false;
     if (lookahead_ == "CLASS") {
@@ -105,7 +106,7 @@ bool SemanticParser::classDeclLst() {
     return false;
 }
 
-bool SemanticParser::classDecl() {
+bool Parser::classDecl() {
     if (!skip_errors({"CLASS"}, {"PROGRAM"}, false))
         return false;
     if (lookahead_ == "CLASS") {
@@ -118,7 +119,7 @@ bool SemanticParser::classDecl() {
     return false;
 }
 
-bool SemanticParser::classBody() {
+bool Parser::classBody() {
     if (!skip_errors({"INT", "ID", "FLOAT"}, {"CLOSECURL"}, true))
         return false;
     if (is_lookahead_a_type()) {
@@ -133,7 +134,7 @@ bool SemanticParser::classBody() {
     return false;
 }
 
-bool SemanticParser::classInDecl() {
+bool Parser::classInDecl() {
     if (!skip_errors({"INT", "ID", "FLOAT"}, {"INT", "ID", "FLOAT", "CLOSECURL"}, false))
         return false;
     if (is_lookahead_a_type()) {
@@ -147,7 +148,7 @@ bool SemanticParser::classInDecl() {
     return false;
 }
 
-bool SemanticParser::postTypeId(SymbolRecord* record) {
+bool Parser::postTypeId(SymbolRecord* record) {
     if (!skip_errors({"OPENBRA", "OPENPARA", "DELI"}, {"INT", "ID", "FLOAT", "CLOSECURL"}, false))
         return false;
     if (lookahead_ == "OPENBRA") {
@@ -173,7 +174,7 @@ bool SemanticParser::postTypeId(SymbolRecord* record) {
     //return false;
 }
 
-bool SemanticParser::progBody() {
+bool Parser::progBody() {
     if (!skip_errors({"PROGRAM"}, {"END"}, false))
         return false;
     if (lookahead_ == "PROGRAM") {
@@ -184,18 +185,18 @@ bool SemanticParser::progBody() {
     return false;
 }
 
-bool SemanticParser::funcHead(SymbolRecord* record) {
+bool Parser::funcHead(SymbolRecord** record) {
     if (!skip_errors({"INT", "ID", "FLOAT"}, {"OPENCURL"}, false))
         return false;
     if (is_lookahead_a_type()) {
         form_derivation_string("<funcHead>", "<type> id ( <fParams> )");
-        if (type(record) && match("ID") && record->set_name(get_last_token().lexeme_) && match("OPENPARA") && fParams(record) && match("CLOSEPARA"))
+        if (type(*record) && match("ID") && (*record)->set_name(get_last_token().lexeme_) && global_symbol_table_->create_function_entry_and_table(record) && match("OPENPARA") && fParams(*record) && match("CLOSEPARA"))
             return true;
     }
     return false;
 }
 
-bool SemanticParser::funcDefLst() {
+bool Parser::funcDefLst() {
     if (!skip_errors({"INT", "ID", "FLOAT"}, {"END"}, true))
         return false;
     if (is_lookahead_a_type()) {
@@ -209,19 +210,21 @@ bool SemanticParser::funcDefLst() {
     return false;
 }
 
-bool SemanticParser::funcDef() {
+bool Parser::funcDef() {
     if (!skip_errors({"INT", "ID", "FLOAT"}, {"INT", "ID", "FLOAT", "END"}, false))
         return false;
     if (is_lookahead_a_type()) {
         form_derivation_string("<funcDef>", "<funcHead> <funcBody> ;");
-        SymbolRecord* record = new SymbolRecord();
-        if (funcHead(record) && global_symbol_table_->create_function_entry_and_table(&record) && funcBody(record) && match("DELI"))
+        SymbolRecord** record;
+        SymbolRecord* r = new SymbolRecord();
+        record = &r;
+        if (funcHead(record) && funcBody(*record) && match("DELI"))
             return true;
     }
     return false;
 }
 
-bool SemanticParser::funcBody(SymbolRecord* record) {
+bool Parser::funcBody(SymbolRecord* record) {
     if (!skip_errors({"OPENCURL"}, {"DELI"}, false))
         return false;
     if (lookahead_ == "OPENCURL") {
@@ -234,7 +237,7 @@ bool SemanticParser::funcBody(SymbolRecord* record) {
 }
 
 
-bool SemanticParser::funcInBodyLst(SymbolRecord* record) {
+bool Parser::funcInBodyLst(SymbolRecord* record) {
     if (!skip_errors({"INT", "ID", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN"}, {"CLOSECURL"}, true))
         return false;
     if (is_lookahead_a_type() || is_lookahead_a_statement()) {
@@ -249,7 +252,7 @@ bool SemanticParser::funcInBodyLst(SymbolRecord* record) {
     return false;
 }
 
-bool SemanticParser::funcInBody(SymbolRecord* record) {
+bool Parser::funcInBody(SymbolRecord* record) {
     if (!skip_errors({"INT", "ID", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN"},
                      {"INT", "ID", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN", "CLOSECURL"}, false))
         return false;
@@ -277,7 +280,7 @@ bool SemanticParser::funcInBody(SymbolRecord* record) {
     return false;
 }
 
-bool SemanticParser::varOrStat(SymbolRecord* func_record, SymbolRecord* record) {
+bool Parser::varOrStat(SymbolRecord* func_record, SymbolRecord* record) {
     if (!skip_errors({"ID", "OPENBRA", "EQUAL", "DOT"},
                      {"INT", "ID", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN", "CLOSECURL"}, false))
         return false;
@@ -297,7 +300,7 @@ bool SemanticParser::varOrStat(SymbolRecord* func_record, SymbolRecord* record) 
     return false;
 }
 
-bool SemanticParser::statementLst() {
+bool Parser::statementLst() {
     if (!skip_errors({"INT", "ID", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN"}, {"CLOSECURL"}, true))
         return false;
     if (lookahead_ == "ID" || is_lookahead_a_statement()) {
@@ -310,7 +313,7 @@ bool SemanticParser::statementLst() {
     }
 }
 
-bool SemanticParser::statement() {
+bool Parser::statement() {
     if (!skip_errors({"ID", "IF", "FOR", "GET", "PUT", "RETURN"},
                      {"ID", "IF", "FOR", "GET", "PUT", "RETURN", "ELSE", "DELI", "CLOSECURL"}, false))
         return false;
@@ -327,7 +330,7 @@ bool SemanticParser::statement() {
     return false;
 }
 
-bool SemanticParser::statementRes(SymbolRecord* record) {
+bool Parser::statementRes(SymbolRecord* record) {
     if (!skip_errors({"IF", "FOR", "GET", "PUT", "RETURN"},
                      {"ID", "INT", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN", "ELSE", "DELI", "CLOSECURL",}, false))
         return false;
@@ -362,7 +365,7 @@ bool SemanticParser::statementRes(SymbolRecord* record) {
     return false;
 }
 
-bool SemanticParser::statIfElseBlock() {
+bool Parser::statIfElseBlock() {
     if (!skip_errors({"ELSE", "DELI"}, {"DELI", "ELSE", "ID", "IF", "FOR", "GET", "PUT", "RETURN"}, false))
         return false;
     if (lookahead_ == "ELSE") {
@@ -377,7 +380,7 @@ bool SemanticParser::statIfElseBlock() {
     return false;
 }
 
-bool SemanticParser::statElseBlock() {
+bool Parser::statElseBlock() {
     if (!skip_errors({"ELSE", "DELI"}, {"DELI", "ELSE", "ID", "IF", "FOR", "GET", "PUT", "RETURN"}, false))
         return false;
     if (lookahead_ == "ELSE") {
@@ -393,7 +396,7 @@ bool SemanticParser::statElseBlock() {
     return true;
 }
 
-bool SemanticParser::assignStat() {
+bool Parser::assignStat() {
     if (!skip_errors({"ID"}, {"CLOSEPARA", "DELI"}, false))
         return false;
     if (lookahead_ == "ID") {
@@ -404,7 +407,7 @@ bool SemanticParser::assignStat() {
     return false;
 }
 
-bool SemanticParser::statBlock() {
+bool Parser::statBlock() {
     if (!skip_errors({"OPENCURL", "ID", "IF", "FOR", "GET", "PUT", "RETURN"}, {"ELSE", "DELI"}, true))
         return false;
     if (lookahead_ == "OPENCURL") {
@@ -422,7 +425,7 @@ bool SemanticParser::statBlock() {
     return false;
 }
 
-bool SemanticParser::statThenBlock() {
+bool Parser::statThenBlock() {
     if (!skip_errors({"OPENCURL", "ID", "IF", "FOR", "GET", "PUT", "RETURN"}, {"ELSE", "DELI"}, true))
         return false;
     if (lookahead_ == "OPENCURL") {
@@ -437,7 +440,7 @@ bool SemanticParser::statThenBlock() {
     return false;
 }
 
-bool SemanticParser::expr() {
+bool Parser::expr() {
     if (!skip_errors({"ID", "INUM", "FNUM", "OPENPARA", "NOT", "ADD", "SUB"}, {"COM", "CLOSEPARA", "DELI"}, false))
         return false;
     if (is_lookahead_a_value() || lookahead_ == "OPENPARA" || lookahead_ == "NOT" || lookahead_ == "ADD" || lookahead_ == "SUB") {
@@ -449,7 +452,7 @@ bool SemanticParser::expr() {
     return false;
 }
 
-bool SemanticParser::relOrAri() {
+bool Parser::relOrAri() {
     if (!skip_errors({"EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ", "ADD", "SUB", "OR"}, {"COM", "CLOSEPARA", "DELI"},
                      true))
         return false;
@@ -471,7 +474,7 @@ bool SemanticParser::relOrAri() {
 }
 
 
-bool SemanticParser::relExpr() {
+bool Parser::relExpr() {
     if (!skip_errors({"OPENPARA", "ID", "INUM", "FNUM", "NOT", "ADD", "SUB"}, {"DELI"}, false))
         return false;
     if (is_lookahead_a_value() || lookahead_ == "OPENPARA" || lookahead_ == "NOT" || lookahead_ == "ADD" ||
@@ -484,7 +487,7 @@ bool SemanticParser::relExpr() {
 
 }
 
-bool SemanticParser::arithExpr() {
+bool Parser::arithExpr() {
     if (!skip_errors({"OPENPARA", "ID", "INUM", "FNUM", "NOT", "ADD", "SUB"},
                      {"CLOSEBRA", "CLOSEPARA", "EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ", "DELI", "COM"}, false))
         return false;
@@ -497,7 +500,7 @@ bool SemanticParser::arithExpr() {
     return false;
 }
 
-bool SemanticParser::arithExprD() {
+bool Parser::arithExprD() {
     if (!skip_errors({"ADD", "SUB", "OR"},
                      {"CLOSEBRA", "CLOSEPARA", "EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ", "DELI", "COM"}, true))
         return false;
@@ -513,7 +516,7 @@ bool SemanticParser::arithExprD() {
     return false;
 }
 
-bool SemanticParser::sign() {
+bool Parser::sign() {
     if (!skip_errors({"ADD", "SUB"},
                      {"CLOSEBRA", "CLOSEPARA", "EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ", "DELI", "COM"}, false))
         return false;
@@ -529,7 +532,7 @@ bool SemanticParser::sign() {
     return false;
 }
 
-bool SemanticParser::term() {
+bool Parser::term() {
     if (!skip_errors({"OPENPARA", "ID", "INUM", "FNUM", "NOT", "ADD", "SUB"},
                      {"ADD", "SUB", "OR", "CLOSEBRA", "CLOSEPARA", "EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ", "DELI",
                       "COM"}, false))
@@ -544,7 +547,7 @@ bool SemanticParser::term() {
     return false;
 }
 
-bool SemanticParser::termD() {
+bool Parser::termD() {
     if (!skip_errors({"MULT", "DASH", "AND"},
                      {"ADD", "SUB", "OR", "CLOSEBRA", "CLOSEPARA", "EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ", "DELI",
                       "COM"}, true))
@@ -562,7 +565,7 @@ bool SemanticParser::termD() {
     return false;
 }
 
-bool SemanticParser::factor() {
+bool Parser::factor() {
     if (!skip_errors({"OPENPARA", "ID", "INUM", "FNUM", "NOT", "ADD", "SUB"},
                      {"MULT", "DASH", "AND", "ADD", "SUB", "OR", "CLOSEBRA", "CLOSEPARA", "EQUIV", "NOTEQ", "LT", "GT",
                       "LTEQ", "GTEQ", "DELI", "COM"}, false))
@@ -591,7 +594,7 @@ bool SemanticParser::factor() {
     return false;
 }
 
-bool SemanticParser::factorVarOrFunc() {
+bool Parser::factorVarOrFunc() {
     if (!skip_errors({"OPENPARA", "OPENBRA", "DOT"},
                      {"MULT", "DASH", "AND", "ADD", "SUB", "OR", "CLOSEBRA", "CLOSEPARA", "EQUIV", "NOTEQ", "LT", "GT",
                       "LTEQ", "GTEQ", "DELI", "COM"}, true))
@@ -613,7 +616,7 @@ bool SemanticParser::factorVarOrFunc() {
     return false;
 }
 
-bool SemanticParser::factorVarArray() {
+bool Parser::factorVarArray() {
     if (!skip_errors({"OPENBRA"},
                      {"MULT", "DASH", "AND", "ADD", "SUB", "OR", "CLOSEBRA", "CLOSEPARA", "EQUIV", "NOTEQ", "LT", "GT",
                       "LTEQ", "GTEQ", "DELI", "COM"}, false))
@@ -625,7 +628,7 @@ bool SemanticParser::factorVarArray() {
     }
 }
 
-bool SemanticParser::factorVarArrayNestId() {
+bool Parser::factorVarArrayNestId() {
     if (!skip_errors({"DOT"},
                      {"MULT", "DASH", "AND", "ADD", "SUB", "OR", "CLOSEBRA", "CLOSEPARA", "EQUIV", "NOTEQ", "LT", "GT",
                       "LTEQ", "GTEQ", "DELI", "COM"}, true))
@@ -643,7 +646,7 @@ bool SemanticParser::factorVarArrayNestId() {
     return false;
 }
 
-bool SemanticParser::varOrFuncIdNest() {
+bool Parser::varOrFuncIdNest() {
     if (!skip_errors({"OPENPARA", "DOT"},
                      {"MULT", "DASH", "AND", "ADD", "SUB", "OR", "CLOSEBRA", "CLOSEPARA", "EQUIV", "NOTEQ", "LT", "GT",
                       "LTEQ", "GTEQ", "DELI", "COM"}, true))
@@ -660,7 +663,7 @@ bool SemanticParser::varOrFuncIdNest() {
     return false;
 }
 
-bool SemanticParser::variable() {
+bool Parser::variable() {
     if (!skip_errors({"ID"}, {"EQUAL", "CLOSEPARA"}, false))
         return false;
     if (lookahead_ == "ID") {
@@ -671,7 +674,7 @@ bool SemanticParser::variable() {
     return false;
 }
 
-bool SemanticParser::variableIndice() {
+bool Parser::variableIndice() {
     if (!skip_errors({"OPENBRA", "DOT"}, {"EQUAL", "CLOSEPARA"}, true))
         return false;
     if (lookahead_ == "OPENBRA" || lookahead_ == "DOT") {
@@ -685,11 +688,11 @@ bool SemanticParser::variableIndice() {
     return false;
 }
 
-bool SemanticParser::check_if_lookahead_is_in_set(set<string> values) {
+bool Parser::check_if_lookahead_is_in_set(set<string> values) {
     return values.find(lookahead_) != values.end();
 }
 
-bool SemanticParser::idnest() {
+bool Parser::idnest() {
     if (!skip_errors({"DOT"}, {"EQUAL", "CLOSEPARA"}, true))
         return false;
     if (lookahead_ == "DOT") {
@@ -704,7 +707,7 @@ bool SemanticParser::idnest() {
     return false;
 }
 
-bool SemanticParser::indice() {
+bool Parser::indice() {
     if (!skip_errors({"OPENBRA"},
                      {"OPENBRA", "DOT", "EQUAL", "MULT", "DASH", "AND", "ADD", "SUB", "OR", "CLOSEBRA", "CLOSEPARA",
                       "EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ", "DELI", "COM"}, false))
@@ -718,7 +721,7 @@ bool SemanticParser::indice() {
     return false;
 }
 
-bool SemanticParser::indiceLst() {
+bool Parser::indiceLst() {
     if (!skip_errors({"OPENBRA"},
                      {"OPENBRA", "DOT", "EQUAL", "MULT", "DASH", "AND", "ADD", "SUB", "OR", "CLOSEBRA", "CLOSEPARA",
                       "EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ", "DELI", "COM"}, true))
@@ -740,21 +743,23 @@ bool SemanticParser::indiceLst() {
     return false;
 }
 
-bool SemanticParser::is_lookahead_a_type() {
+bool Parser::is_lookahead_a_type() {
     return lookahead_ == "ID" || lookahead_ == "INT" || lookahead_ == "FLOAT";
 }
 
-bool SemanticParser::is_lookahead_a_value() {
+bool Parser::is_lookahead_a_value() {
     return lookahead_ == "INUM" || lookahead_ == "FNUM" || lookahead_ == "ID";
 }
 
-bool SemanticParser::is_lookahead_a_statement() {
+bool Parser::is_lookahead_a_statement() {
     return lookahead_ == "FOR" || lookahead_ == "GET" || lookahead_ == "PUT" || lookahead_ == "RETURN" ||
            lookahead_ == "IF";
 }
 
 
-void SemanticParser::report_error(string expected_token, string actual_token) {
+void Parser::report_error(string expected_token, string actual_token) {
+    if (global_symbol_table_->second_pass_)
+        return;
     string error_message = "Syntax Error at " + to_string(current_token_->row_location_) + " : " +
                            to_string(current_token_->column_location_);
     if (expected_token.size() > 1 && actual_token.size() > 1) {
@@ -776,7 +781,7 @@ void SemanticParser::report_error(string expected_token, string actual_token) {
     }
 }
 
-bool SemanticParser::arraySize(SymbolRecord* record) {
+bool Parser::arraySize(SymbolRecord* record) {
     if (!skip_errors({"OPENBRA"}, {"COM", "DELI", "CLOSEPARA"}, true))
         return false;
     if (lookahead_ == "OPENBRA") {
@@ -792,7 +797,7 @@ bool SemanticParser::arraySize(SymbolRecord* record) {
     return false;
 }
 
-bool SemanticParser::type(SymbolRecord* record) {
+bool Parser::type(SymbolRecord* record) {
     if (!skip_errors({"INT", "FLOAT", "ID"}, {"ID"}, false))
         return false;
     if (lookahead_ == "INT" && match("INT")) {
@@ -814,7 +819,7 @@ bool SemanticParser::type(SymbolRecord* record) {
     return false;
 }
 
-bool SemanticParser::numType(SymbolRecord* record) {
+bool Parser::numType(SymbolRecord* record) {
     if (!skip_errors({"INT", "FLOAT"}, {"ID"}, false))
         return false;
     if (lookahead_ == "INT") {
@@ -834,14 +839,14 @@ bool SemanticParser::numType(SymbolRecord* record) {
     }
 }
 
-bool SemanticParser::fParams(SymbolRecord* record) {
+bool Parser::fParams(SymbolRecord* record) {
     if (!skip_errors({"INT", "FLOAT", "ID"}, {"CLOSEPARA"}, true))
         return false;
     if (is_lookahead_a_type()) {
         form_derivation_string("<fParams>", "<type> id <arraySize> <fParamsTail>");
         SymbolRecord* fParam_record = new SymbolRecord();
         fParam_record->symbol_table_->parent_symbol_table_ = global_symbol_table_;
-        if (type(fParam_record) && match("ID") && fParam_record->set_name(get_last_token().lexeme_) && arraySize(fParam_record) && record->symbol_table_->create_parameter_entry(fParam_record) && fParamsTail(global_symbol_table_->current_symbol_record_))
+        if (type(fParam_record) && match("ID") && fParam_record->set_name(get_last_token().lexeme_) && arraySize(fParam_record) && record->symbol_table_->create_parameter_entry(fParam_record) && fParamsTail(record))
             if (!global_symbol_table_->second_pass_)
                 record->generate_function_type();
             return true;
@@ -852,7 +857,7 @@ bool SemanticParser::fParams(SymbolRecord* record) {
     return false;
 }
 
-bool SemanticParser::aParams() {
+bool Parser::aParams() {
     if (!skip_errors({"ID", "INUM", "FNUM", "OPENPARA", "NOT", "ADD", "SUB"}, {"CLOSEPARA"}, true))
         return false;
     if (is_lookahead_a_value() || lookahead_ == "OPENPARA" || lookahead_ == "NOT" || lookahead_ == "ADD" ||
@@ -867,7 +872,7 @@ bool SemanticParser::aParams() {
     return false;
 }
 
-bool SemanticParser::fParamsTail(SymbolRecord* record) {
+bool Parser::fParamsTail(SymbolRecord* record) {
     if (!skip_errors({"COM"}, {"CLOSEPARA"}, true))
         return false;
     if (lookahead_ == "COM") {
@@ -883,7 +888,7 @@ bool SemanticParser::fParamsTail(SymbolRecord* record) {
     return false;
 }
 
-bool SemanticParser::aParamsTail() {
+bool Parser::aParamsTail() {
     if (!skip_errors({"COM"}, {"CLOSEPARA"}, true))
         return false;
     if (lookahead_ == "COM") {
@@ -897,7 +902,7 @@ bool SemanticParser::aParamsTail() {
     return false;
 }
 
-bool SemanticParser::assignOp() {
+bool Parser::assignOp() {
     if (!skip_errors({"EQUAL"},
                      {"ID", "OPENPARA", "NOT", "INUM", "FNUM", "ADD", "SUB", "IF", "FOR", "GET", "PUT", "RETURN", "INT",
                       "CLOSECURL"}, false))
@@ -909,7 +914,7 @@ bool SemanticParser::assignOp() {
     return false;
 }
 
-bool SemanticParser::relOp() {
+bool Parser::relOp() {
     if (!skip_errors({"EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ"},
                      {"ID", "OPENPARA", "NOT", "INUM", "FNUM", "ADD", "SUB"}, false))
         return false;
@@ -941,7 +946,7 @@ bool SemanticParser::relOp() {
     return false;
 }
 
-bool SemanticParser::addOp() {
+bool Parser::addOp() {
     if (!skip_errors({"ADD", "SUB", "OR"}, {"ID", "OPENPARA", "NOT", "INUM", "FNUM", "ADD", "SUB"}, false))
         return false;
     if (lookahead_ == "ADD") {
@@ -960,7 +965,7 @@ bool SemanticParser::addOp() {
     return false;
 }
 
-bool SemanticParser::multOp() {
+bool Parser::multOp() {
     if (!skip_errors({"MULT", "DASH", "AND"}, {"ID", "OPENPARA", "NOT", "INUM", "FNUM", "ADD", "SUB"}, false))
         return false;
     if (lookahead_ == "MULT") {
@@ -980,7 +985,7 @@ bool SemanticParser::multOp() {
 }
 
 
-bool SemanticParser::num() {
+bool Parser::num() {
     if (!skip_errors({"INUM", "FNUM"},
                      {"MULT", "DASH", "AND", "ADD", "SUB", "OR", "EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ",
                       "CLOSEBRA", "CLOSEPARA", "DELI"}, false))
@@ -997,7 +1002,7 @@ bool SemanticParser::num() {
     return false;
 }
 
-bool SemanticParser::skip_errors(set<string> first_set, set<string> follow_set, bool epsilon) {
+bool Parser::skip_errors(set<string> first_set, set<string> follow_set, bool epsilon) {
     if (first_set.find(lookahead_) != first_set.end() || (epsilon && follow_set.find(lookahead_) != follow_set.end())) {
         return true;
     }
@@ -1013,7 +1018,7 @@ bool SemanticParser::skip_errors(set<string> first_set, set<string> follow_set, 
     return true;
 }
 
-bool SemanticParser::match(string token, set<string> expected_post_tokens, string message_to_replace,  string replace_message) {
+bool Parser::match(string token, set<string> expected_post_tokens, string message_to_replace,  string replace_message) {
     if (lookahead_ == token) {
         lookahead_ = next_token();
         return true;
@@ -1032,7 +1037,7 @@ bool SemanticParser::match(string token, set<string> expected_post_tokens, strin
     return true;
 }
 
-bool SemanticParser::match(string token, set<string> expected_post_tokens) {
+bool Parser::match(string token, set<string> expected_post_tokens) {
     if (lookahead_ == token) {
         lookahead_ = next_token();
         return true;
@@ -1051,7 +1056,7 @@ bool SemanticParser::match(string token, set<string> expected_post_tokens) {
 
 }
 
-bool SemanticParser::match(string token) {
+bool Parser::match(string token) {
     if (lookahead_ == token) {
         lookahead_ = next_token();
         return (true);
@@ -1062,7 +1067,9 @@ bool SemanticParser::match(string token) {
     }
 }
 
-bool SemanticParser::form_derivation_string(string non_terminal, string rhs) {
+bool Parser::form_derivation_string(string non_terminal, string rhs) {
+    if (global_symbol_table_->second_pass_)
+        return true;
     int begin_index = current_rhs_derivation_.find(non_terminal);
     if (begin_index == string::npos)
         return false;
@@ -1081,7 +1088,7 @@ bool SemanticParser::form_derivation_string(string non_terminal, string rhs) {
     return true;
 }
 
-string SemanticParser::next_token() {
+string Parser::next_token() {
     do {
         if (current_token_position_ < tokens_.size()) {
             current_token_ = tokens_[current_token_position_++];
@@ -1095,12 +1102,17 @@ string SemanticParser::next_token() {
 }
 
 
-Token SemanticParser::get_last_token() {
-    Token* token = tokens_[current_token_position_ - 2];
+Token Parser::get_last_token() {
+    Token* token;
+    if (tokens_.size() <= current_token_position_)
+        token = tokens_[tokens_.size()-1];
+    else
+        token = tokens_[current_token_position_ - 2];
+
     return *(token);
 }
 
-IntegerToken SemanticParser::get_last_integer_token() {
+IntegerToken Parser::get_last_integer_token() {
     IntegerToken token = static_cast<IntegerToken&>(*tokens_[current_token_position_ - 2]);
     return token;
 

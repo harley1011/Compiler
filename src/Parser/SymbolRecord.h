@@ -15,6 +15,7 @@ public:
     SymbolRecord();
     string kind_;
     string type_;
+    vector<string> function_parameters;
     string name_;
     string structure_;
     SymbolTable* symbol_table_;
@@ -27,6 +28,7 @@ public:
     bool set_name(string name);
     bool set_structure(string structure);
     bool append_to_type(string type);
+    bool add_function_parameter(string type);
 
     bool generate_function_type();
 

@@ -8,20 +8,27 @@
 #include <iostream>
 #include "../Scanner.h"
 #include <set>
+#include "../Parser/SymbolTable.h"
+#include "../Parser/SymbolRecord.h"
+#include "../IntegerToken.h"
 
-class SyntaxParser {
+class Parser {
 
 public:
-    SyntaxParser();
+    Parser();
 
-    SyntaxParser(bool enable_derivation_output);
+    Parser(bool enable_derivation_output);
 
-    SyntaxParser(vector<Token *> tokens);
-    SyntaxParser(string derivation_output_path, string error_output_path);
+    Parser(vector<Token *> tokens);
+    Parser(string derivation_output_path, string error_output_path);
 
+    SymbolTable *global_symbol_table_;
+
+    bool enable_double_pass_parse_;
     string current_rhs_derivation_;
     string lookahead_;
     vector<string> errors_;
+    vector<string> semantic_errors_;
     vector<string> derivations_;
     Token*   current_token_;
     vector<Token*> tokens_;
@@ -33,31 +40,31 @@ public:
     ofstream derivation_output_file_;
     bool enable_derivation_output_;
     string previous_token_;
-    vector<string> token_error_buffer_;
-    vector<string> skipped_token_error_buffer_;
+
     string next_token();
     bool form_derivation_string(string non_terminal, string rhs);
     bool skip_errors(set<string> first_set, set<string> follow_set, bool epsilon);
     bool parse(vector<Token*> tokens);
     bool match(string token);
 
+    Token get_last_token();
     bool prog();
     bool classDeclLst();
     bool classDecl();
     bool classBody();
     bool classInDecl();
-    bool postTypeId();
+    bool postTypeId(SymbolRecord* record);
     bool progBody();
-    bool funcHead();
+    bool funcHead(SymbolRecord** record);
     bool funcDefLst();
     bool funcDef();
-    bool funcBody();
-    bool funcInBodyLst();
-    bool funcInBody();
-    bool varOrStat();
+    bool funcBody(SymbolRecord* record);
+    bool funcInBodyLst(SymbolRecord* record);
+    bool funcInBody(SymbolRecord* record);
+    bool varOrStat(SymbolRecord* func_record, SymbolRecord* record);
     bool statementLst();
     bool statement();
-    bool statementRes();
+    bool statementRes(SymbolRecord* record);
     bool assignStat();
     bool statBlock();
     bool expr();
@@ -75,12 +82,12 @@ public:
     bool idnest();
     bool indice();
     bool indiceLst();
-    bool arraySize();
-    bool type();
-    bool numType();
-    bool fParams();
+    bool arraySize(SymbolRecord* record);
+    bool type(SymbolRecord* record);
+    bool numType(SymbolRecord* record);
+    bool fParams(SymbolRecord* record);
     bool aParams();
-    bool fParamsTail();
+    bool fParamsTail(SymbolRecord* record);
     bool aParamsTail();
     bool assignOp();
     bool relOp();
@@ -114,6 +121,10 @@ public:
     bool match(string token, set<string> expected_post_tokens);
 
     bool match(string token, set<string> expected_post_tokens, string message_to_replace, string replace_message);
+
+    IntegerToken get_last_integer_token();
+
+    SymbolRecord *create_or_find_created_record();
 };
 
 

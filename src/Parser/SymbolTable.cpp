@@ -109,7 +109,6 @@ bool SymbolTable::create_function_entry_and_table(SymbolRecord** record) {
         else {
             (*record)->set_structure("class");
         }
-
     }
     else {
         (*record)->properly_declared_ = false;
@@ -196,12 +195,39 @@ bool SymbolTable::create_function_class_entry_and_function_table(SymbolRecord **
 bool SymbolTable::create_parameter_entry(SymbolRecord* record) {
     if (second_pass_) {
         string name = record->name_;
+        SymbolRecord* found_record = search(record->name_);
         delete record;
-        record = search(name);
+        record = found_record;
+        set_properly_declared(record);
         return true;
     }
     record->kind_ = "parameter";
-    record->properly_declared_ = true;
+    if (record->type_.substr(0,3) == "int" || record->type_.substr(0, 5) == "float") {
+        if ((record->type_.size() > 3 && (record ->type_.substr(3,1) == "[" || record ->type_.substr(3,1) == " "))
+            || record->type_.size() > 5 && (record->type_.substr(5,1) == "[" || record->type_.substr(5,1) == " " )) {
+            record->properly_declared_ = true;
+            record->set_structure("array");
+        }
+        else if (record->type_.size() == 3 || record->type_.size() == 5) {
+            record->properly_declared_ = true;
+            record->set_structure("simple");
+        }
+        else {
+            record->set_structure("class");
+
+            if (record->type_.find("[") != string::npos) {
+                record->structure_ += " array";
+            }
+        }
+    }
+    else {
+        record->properly_declared_ = false;
+        record->set_structure("class");
+
+        if (record->type_.find("[") != string::npos) {
+            record->structure_ += " array";
+        }
+    }
     insert(record);
     return true;
 }
@@ -262,10 +288,23 @@ void print_table(SymbolTable* table, string table_name, int indent_count) {
             kind_width_out = record->kind_.size();
         if (record->name_.size() > name_width_out)
             name_width_out = record->name_.size();
-        if (record->type_.size() > type_width_out)
-            type_width_out = record->type_.size();
+
         if (record->structure_.size() > structure_width_out)
             structure_width_out = record->structure_.size();
+
+//        if (record->kind_ == "function" && record->function_parameters.size() > 1) {
+//            record->type_ += " : ";
+//            bool first = true;
+//            for (string para: record->function_parameters) {
+//                if (first)
+//                    first = false;
+//                else
+//                    record->type_ += ", ";
+//                record->type_ += para;
+//            }
+//        }
+        if (record->type_.size() > type_width_out)
+            type_width_out = record->type_.size();
     }
 
     int horizontal_width_out = name_width_out + type_width_out + kind_width_out + structure_width_out + declared_width_out + 6;
@@ -278,7 +317,9 @@ void print_table(SymbolTable* table, string table_name, int indent_count) {
     cout << setw(type_width_out) << "Type" << std::right << std::setfill(' ') << "|";
     cout << setw(declared_width_out) << "Declared" << std::right << std::setfill(' ') << "|" << endl;
     cout <<  string(indent_count, ' ') << string(horizontal_width_out, '-') << endl;
+
     for(SymbolRecord* record: table->symbol_records_) {
+
         cout  << string(indent_count, ' ') << "|" << setw(name_width_out) << record->name_ << std::right << std::setfill(' ') << "|";
         cout << setw(kind_width_out) << record->kind_ << std::right << std::setfill(' ') << "|";
         cout << setw(structure_width_out) << record->structure_ << std::right << std::setfill(' ') << "|";

@@ -40,6 +40,11 @@ bool SymbolRecord::append_to_type(string type) {
     type_ += type;
     return true;
 }
+
+bool SymbolRecord::add_function_parameter(string type) {
+    function_parameters.push_back(type);
+    return true;
+}
 bool SymbolRecord::set_structure(string structure) {
     structure_ = structure;
     return true;
@@ -55,13 +60,14 @@ bool SymbolRecord::add_array_size(IntegerToken integer_token) {
 bool SymbolRecord::generate_function_type() {
     bool first = true;
     for(SymbolRecord* record: symbol_table_->symbol_records_) {
-        if (first){
-            first = false;
-            type_ += " : ";
-        }
-        else
-            type_ += ", ";
-        type_ += record->type_;
+        function_parameters.push_back(record->type_);
+//        if (first){
+//            first = false;
+//            type_ += " : ";
+//        }
+//        else
+//            type_ += ", ";
+//        type_ += record->type_;
     }
     return true;
 }
