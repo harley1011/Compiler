@@ -41,7 +41,12 @@ bool SymbolTable::create_class_entry_and_table(string kind, string type, string 
     if (second_pass_)
     {
         record = search(name);
+        if (record->properly_declared_)
+            record = new SymbolRecord();
+        else
+            record->properly_declared_ = true;
         current_symbol_record_ = record;
+
         return true;
     }
 
@@ -51,7 +56,7 @@ bool SymbolTable::create_class_entry_and_table(string kind, string type, string 
     record->type_ = type;
     record->structure_ = "class";
     current_symbol_record_ = record;
-    record->properly_declared_ = true;
+    record->properly_declared_ = false;
     insert(record);
     return true;
 }
