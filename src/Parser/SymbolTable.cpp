@@ -104,7 +104,6 @@ bool SymbolTable::create_function_entry_and_table(SymbolRecord** record) {
         else {
             (*record)->set_structure("class");
         }
-
     }
     else {
         (*record)->properly_declared_ = false;

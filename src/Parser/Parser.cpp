@@ -756,6 +756,8 @@ bool Parser::is_lookahead_a_statement() {
 
 
 void Parser::report_error(string expected_token, string actual_token) {
+    if (global_symbol_table_->second_pass_)
+        return;
     string error_message = "Syntax Error at " + to_string(current_token_->row_location_) + " : " +
                            to_string(current_token_->column_location_);
     if (expected_token.size() > 1 && actual_token.size() > 1) {
@@ -1064,6 +1066,8 @@ bool Parser::match(string token) {
 }
 
 bool Parser::form_derivation_string(string non_terminal, string rhs) {
+    if (global_symbol_table_->second_pass_)
+        return true;
     int begin_index = current_rhs_derivation_.find(non_terminal);
     if (begin_index == string::npos)
         return false;

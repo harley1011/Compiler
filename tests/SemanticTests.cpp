@@ -5,8 +5,7 @@
 #include "SemanticTests.h"
 #include "gtest/gtest.h"
 #include "../src/Parser/Parser.h"
-Parser common_setup_semantic(string test_program, string derivation_string);
-bool check_if_record_exists_in_table(SymbolRecord record, SymbolTable symbol);
+
 bool check_record_properties(string type, string name, string kind, string structure, SymbolRecord* record);
 bool check_record_properties_with_array_sizes(string type, string name, string kind, string structure, vector<int> array_sizes, SymbolRecord* record);
 bool check_record_properties(string type, string name, string kind, string structure, SymbolRecord* record) {
@@ -31,8 +30,6 @@ bool check_record_properties_with_array_sizes(string type, string name, string k
     }
 
 }
-
-
 
 
 TEST(varDeclareInProgramTest, SemanticTests)
@@ -168,8 +165,6 @@ TEST(varNonProperlyDeclaredInClassTest, SemanticTests)
     EXPECT_FALSE(syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[3]->properly_declared_);
     syntaxParser.global_symbol_table_->print();
 }
-
-
 
 TEST(varProperlyDeclaredInClassFuncTest, SemanticTests)
 {
@@ -485,47 +480,4 @@ TEST(FullProgramTest, SemanticTests)
     EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[1]->symbol_table_->symbol_records_.size(), 7);
     EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[2]->symbol_table_->symbol_records_.size(), 1);
     syntaxParser.global_symbol_table_->print();
-}
-
-//
-//TEST(progTest, SemanticTests) {
-//    Parser syntaxParser = common_setup_semantic("program {int sample[100]; int idx; int maxValue; int minValue; Utility utility; Utility arrayUtility[2][3][6][7]; for(int t = 0; t<=100 ; t = t + 1) { get(sample[t]); sample[t] = (sample[t] * randomize()); }; maxValue = utility.findMax(sample); minValue = utility.findMin(sample); utility. var1[4][1][0][0][0][0][0] = 10; arrayUtility[1][1][1][1].var1[4][1][0][0][0][0][0] = 2; put(maxValue); put(minValue); };", "<progBody>");
-//    EXPECT_TRUE(syntaxParser.progBody());
-//    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_.size(), 7);
-//    syntaxParser.global_symbol_table_->print();
-//}
-
-//TEST(progWithClassTest, SemanticTests) {
-//    Parser syntaxParser = common_setup_semantic("program { Utility utility; };", "<progBody>");
-//    EXPECT_TRUE(syntaxParser.progBody());
-//    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_.size(), 1);
-//    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[0]->name_, "utility");
-//    syntaxParser.global_symbol_table_->print();
-//}
-//
-//TEST(funcTest, SemanticTests) {
-//    Parser syntaxParser = common_setup_semantic("program { }; int findMin(int x) { int r; int y; float p;  Utility utility;};", "<progBody>");
-//    EXPECT_TRUE(syntaxParser.progBody());
-//    EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_[1]->symbol_table_->symbol_records_.size(), 5);
-//    syntaxParser.global_symbol_table_->print();
-//}
-
-bool check_if_record_exists_in_table(SymbolRecord record, SymbolTable symbol) {
-    SymbolRecord* found_record = symbol.search(record.name_);
-
-    if (found_record == NULL)
-        return false;
-
-    return found_record->type_ == record.type_ && found_record->kind_ == record.kind_ && found_record->structure_ == record.structure_;
-}
-
-Parser common_setup_semantic(string test_program, string derivation_string) {
-    vector<Token*> tokens;
-    Scanner scanner;
-    tokens = scanner.generate_tokens(test_program, false);
-
-    Parser semanticParser(tokens);
-    semanticParser.current_rhs_derivation_ = derivation_string;
-    semanticParser.enable_derivation_output_ = false;
-    return semanticParser;
 }
