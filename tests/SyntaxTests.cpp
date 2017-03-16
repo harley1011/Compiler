@@ -2,7 +2,7 @@
 // Created by Harley Mcphee on 2017-02-06.
 //
 
-#include "ParserTests.h"
+#include "SyntaxTests.h"
 #include "gtest/gtest.h"
 #include "../src/Parser/Parser.h"
 
@@ -711,14 +711,18 @@ TEST(funcDefTest, ParserTests) {
 }
 TEST(funcHeadTest, ParserTests) {
     Parser parser = common_setup("int varFunc(int a, int b[5], float c)", "<funcHead>");
-    SymbolRecord* record = new SymbolRecord();
+    SymbolRecord** record;
+    SymbolRecord* r = new SymbolRecord();
+    record = &r;
     EXPECT_TRUE(parser.funcHead(record));
     EXPECT_EQ(parser.current_rhs_derivation_, "int id ( int id , int id [ integer ] , float id )");
 }
 
 TEST(funcHeadEmptyTest, ParserTests) {
     Parser parser = common_setup("var varFunc()", "<funcHead>");
-    SymbolRecord* record = new SymbolRecord();
+    SymbolRecord** record;
+    SymbolRecord* r = new SymbolRecord();
+    record = &r;
     EXPECT_TRUE(parser.funcHead(record));
     EXPECT_EQ(parser.current_rhs_derivation_, "id id ( )");
 }

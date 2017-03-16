@@ -55,7 +55,7 @@ public:
     bool classInDecl();
     bool postTypeId(SymbolRecord* record);
     bool progBody();
-    bool funcHead(SymbolRecord* record);
+    bool funcHead(SymbolRecord** record);
     bool funcDefLst();
     bool funcDef();
     bool funcBody(SymbolRecord* record);

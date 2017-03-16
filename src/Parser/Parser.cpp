@@ -185,12 +185,12 @@ bool Parser::progBody() {
     return false;
 }
 
-bool Parser::funcHead(SymbolRecord* record) {
+bool Parser::funcHead(SymbolRecord** record) {
     if (!skip_errors({"INT", "ID", "FLOAT"}, {"OPENCURL"}, false))
         return false;
     if (is_lookahead_a_type()) {
         form_derivation_string("<funcHead>", "<type> id ( <fParams> )");
-        if (type(record) && match("ID") && record->set_name(get_last_token().lexeme_) && match("OPENPARA") && fParams(record) && match("CLOSEPARA"))
+        if (type(*record) && match("ID") && (*record)->set_name(get_last_token().lexeme_) && global_symbol_table_->create_function_entry_and_table(record) && match("OPENPARA") && fParams(*record) && match("CLOSEPARA"))
             return true;
     }
     return false;
@@ -215,8 +215,10 @@ bool Parser::funcDef() {
         return false;
     if (is_lookahead_a_type()) {
         form_derivation_string("<funcDef>", "<funcHead> <funcBody> ;");
-        SymbolRecord* record = new SymbolRecord();
-        if (funcHead(record) && global_symbol_table_->create_function_entry_and_table(&record) && funcBody(record) && match("DELI"))
+        SymbolRecord** record;
+        SymbolRecord* r = new SymbolRecord();
+        record = &r;
+        if (funcHead(record) && funcBody(*record) && match("DELI"))
             return true;
     }
     return false;
@@ -844,7 +846,7 @@ bool Parser::fParams(SymbolRecord* record) {
         form_derivation_string("<fParams>", "<type> id <arraySize> <fParamsTail>");
         SymbolRecord* fParam_record = new SymbolRecord();
         fParam_record->symbol_table_->parent_symbol_table_ = global_symbol_table_;
-        if (type(fParam_record) && match("ID") && fParam_record->set_name(get_last_token().lexeme_) && arraySize(fParam_record) && record->symbol_table_->create_parameter_entry(fParam_record) && fParamsTail(global_symbol_table_->current_symbol_record_))
+        if (type(fParam_record) && match("ID") && fParam_record->set_name(get_last_token().lexeme_) && arraySize(fParam_record) && record->symbol_table_->create_parameter_entry(fParam_record) && fParamsTail(record))
             if (!global_symbol_table_->second_pass_)
                 record->generate_function_type();
             return true;
