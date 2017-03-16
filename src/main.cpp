@@ -54,7 +54,7 @@ int main(int argc, char *argv[] ) {
         cout << "Enter error output location: ";
         getline(cin, error_output);
 
-        SemanticParser syntaxParser(output, error_output);
+        Parser syntaxParser(output, error_output);
 
 
         bool parse_result = syntaxParser.parse(tokens);

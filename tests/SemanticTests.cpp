@@ -5,7 +5,7 @@
 #include "SemanticTests.h"
 #include "gtest/gtest.h"
 #include "../src/Parser/Parser.h"
-SemanticParser common_setup_semantic(string test_program, string derivation_string);
+Parser common_setup_semantic(string test_program, string derivation_string);
 bool check_if_record_exists_in_table(SymbolRecord record, SymbolTable symbol);
 bool check_record_properties(string type, string name, string kind, string structure, SymbolRecord* record);
 bool check_record_properties_with_array_sizes(string type, string name, string kind, string structure, vector<int> array_sizes, SymbolRecord* record);
@@ -41,7 +41,7 @@ TEST(varDeclareInProgramTest, SemanticTests)
     Scanner scanner;
     tokens = scanner.generate_tokens("program { int x; float y; Util util; };", false);
 
-    SemanticParser syntaxParser;
+    Parser syntaxParser;
     syntaxParser.enable_double_pass_parse_ = false;
 
     EXPECT_EQ(syntaxParser.parse(tokens), true);
@@ -62,7 +62,7 @@ TEST(varDeclareInClassTest, SemanticTests)
     Scanner scanner;
     tokens = scanner.generate_tokens("class Util { int x; float y; Util util; }; program { };", false);
 
-    SemanticParser syntaxParser;
+    Parser syntaxParser;
     syntaxParser.enable_double_pass_parse_ = false;
 
     EXPECT_EQ(syntaxParser.parse(tokens), true);
@@ -83,7 +83,7 @@ TEST(varDeclareInClassFuncTest, SemanticTests)
     Scanner scanner;
     tokens = scanner.generate_tokens("class Util { int classFunc() { int x; float y; Util util; }; }; program { };", false);
 
-    SemanticParser syntaxParser;
+    Parser syntaxParser;
     syntaxParser.enable_double_pass_parse_ = false;
 
     EXPECT_EQ(syntaxParser.parse(tokens), true);
@@ -103,7 +103,7 @@ TEST(varProperlyDeclaredInProgramTest, SemanticTests)
     Scanner scanner;
     tokens = scanner.generate_tokens("class Cord { int x; int y; int z; }; program { Cord cord; };", false);
 
-    SemanticParser syntaxParser;
+    Parser syntaxParser;
     syntaxParser.enable_double_pass_parse_ = true;
 
     EXPECT_EQ(syntaxParser.parse(tokens), true);
@@ -121,7 +121,7 @@ TEST(varNotProperlyDeclaredInProgramTest, SemanticTests)
     Scanner scanner;
     tokens = scanner.generate_tokens("program { Cord cord; };", false);
 
-    SemanticParser syntaxParser;
+    Parser syntaxParser;
     syntaxParser.enable_double_pass_parse_ = true;
 
     EXPECT_EQ(syntaxParser.parse(tokens), true);
@@ -139,7 +139,7 @@ TEST(varProperlyDeclaredInClassTest, SemanticTests)
     Scanner scanner;
     tokens = scanner.generate_tokens("class Cord { int x; int y; int z; Cord cord; }; program { };", false);
 
-    SemanticParser syntaxParser;
+    Parser syntaxParser;
     syntaxParser.enable_double_pass_parse_ = true;
 
     EXPECT_EQ(syntaxParser.parse(tokens), true);
@@ -157,7 +157,7 @@ TEST(varNonProperlyDeclaredInClassTest, SemanticTests)
     Scanner scanner;
     tokens = scanner.generate_tokens("class Cord { int x; int y; int z; Cordz cord; }; program { };", false);
 
-    SemanticParser syntaxParser;
+    Parser syntaxParser;
     syntaxParser.enable_double_pass_parse_ = true;
 
     EXPECT_EQ(syntaxParser.parse(tokens), true);
@@ -177,7 +177,7 @@ TEST(varProperlyDeclaredInClassFuncTest, SemanticTests)
     Scanner scanner;
     tokens = scanner.generate_tokens("class Cord { int funcClass(){ Cord cord; }; }; program { };", false);
 
-    SemanticParser syntaxParser;
+    Parser syntaxParser;
     syntaxParser.enable_double_pass_parse_ = true;
 
     EXPECT_EQ(syntaxParser.parse(tokens), true);
@@ -196,7 +196,7 @@ TEST(varNonProperlyDeclaredInClassFuncTest, SemanticTests)
     Scanner scanner;
     tokens = scanner.generate_tokens("class Cord { int funcClass(){ Cordz cord; }; }; program { };", false);
 
-    SemanticParser syntaxParser;
+    Parser syntaxParser;
     syntaxParser.enable_double_pass_parse_ = true;
 
     EXPECT_EQ(syntaxParser.parse(tokens), true);
@@ -216,7 +216,7 @@ TEST(varDeclareFuncTest, SemanticTests)
     Scanner scanner;
     tokens = scanner.generate_tokens("program { }; int funcTest() { int x; float y; Util util; };", false);
 
-    SemanticParser syntaxParser;
+    Parser syntaxParser;
     syntaxParser.enable_double_pass_parse_ = false;
 
     EXPECT_EQ(syntaxParser.parse(tokens), true);
@@ -238,7 +238,7 @@ TEST(arrayDeclareInProgramTest, SemanticTests)
     Scanner scanner;
     tokens = scanner.generate_tokens("program { int x[5][10]; float y[10][12][23]; Util util[1][2]; };", false);
 
-    SemanticParser syntaxParser;
+    Parser syntaxParser;
     syntaxParser.enable_double_pass_parse_ = false;
 
     EXPECT_EQ(syntaxParser.parse(tokens), true);
@@ -259,7 +259,7 @@ TEST(arrayDeclareInClassTest, SemanticTests)
     Scanner scanner;
     tokens = scanner.generate_tokens("class Util { int x[5][10]; float y[10][12][23]; Util util[1][2]; }; program { };", false);
 
-    SemanticParser syntaxParser;
+    Parser syntaxParser;
     syntaxParser.enable_double_pass_parse_ = false;
 
     EXPECT_EQ(syntaxParser.parse(tokens), true);
@@ -280,7 +280,7 @@ TEST(arrayDeclareInClassFuncTest, SemanticTests)
     Scanner scanner;
     tokens = scanner.generate_tokens("class Util { int classFunc() { int x[5][10]; float y[10][12][23]; Util util[1][2]; }; }; program { };", false);
 
-    SemanticParser syntaxParser;
+    Parser syntaxParser;
     syntaxParser.enable_double_pass_parse_ = false;
 
     EXPECT_EQ(syntaxParser.parse(tokens), true);
@@ -300,7 +300,7 @@ TEST(arrayDeclareFuncTest, SemanticTests)
     Scanner scanner;
     tokens = scanner.generate_tokens("program { }; int funcTest() { int x[5][10]; float y[10][12][23]; Util util[1][2]; };", false);
 
-    SemanticParser syntaxParser;
+    Parser syntaxParser;
     syntaxParser.enable_double_pass_parse_ = false;
 
     EXPECT_EQ(syntaxParser.parse(tokens), true);
@@ -322,7 +322,7 @@ TEST(FuncDeclareTest, SemanticTests)
     string find_min_func_string = "int findMin(int array[100]) { int minValue; int idxc; minValue = array[100]; for( int idx = 1; idx <= 99; idx = ( idx ) + 1) { if(array[idx] < maxValue) then { maxValue = array[idx]; }else{}; }; return (minValue); }; ";
     tokens = scanner.generate_tokens("program { }; " + find_min_func_string, false);
 
-    SemanticParser syntaxParser;
+    Parser syntaxParser;
 
     EXPECT_EQ(syntaxParser.parse(tokens), true);
     EXPECT_EQ(syntaxParser.semantic_errors_.size(), 0);
@@ -344,7 +344,7 @@ TEST(FuncDeclareClassTest, SemanticTests)
     Scanner scanner;
     tokens = scanner.generate_tokens("class nameHere { " + find_min_func_string + "}; program { };", false);
 
-    SemanticParser syntaxParser;
+    Parser syntaxParser;
 
     EXPECT_EQ(syntaxParser.parse(tokens), true);
     EXPECT_EQ(syntaxParser.semantic_errors_.size(), 0);
@@ -367,7 +367,7 @@ TEST(FuncDeclareClassWithDuplicateVariablesTest, SemanticTests)
     Scanner scanner;
     tokens = scanner.generate_tokens( find_min_func_string + " program { };", false);
 
-    SemanticParser syntaxParser;
+    Parser syntaxParser;
 
     EXPECT_EQ(syntaxParser.parse(tokens), true);
     EXPECT_EQ(syntaxParser.errors_.size(), 0);
@@ -387,7 +387,7 @@ TEST(FuncDeclareReturnClassWithDoublePassTest, SemanticTests)
     Scanner scanner;
     tokens = scanner.generate_tokens("class Cord { }; program { }; Cord create_cord() { Cord cord; return(cord); };", false);
 
-    SemanticParser syntaxParser;
+    Parser syntaxParser;
     syntaxParser.enable_double_pass_parse_ = true;
 
     EXPECT_EQ(syntaxParser.parse(tokens), true);
@@ -406,7 +406,7 @@ TEST(FuncDeclareReturnClassWithoutDoublePassTest, SemanticTests)
     Scanner scanner;
     tokens = scanner.generate_tokens("class Cord { }; program { }; Cord create_cord() { Cord cord; return(cord); };", false);
 
-    SemanticParser syntaxParser;
+    Parser syntaxParser;
     syntaxParser.enable_double_pass_parse_ = false;
 
     EXPECT_EQ(syntaxParser.parse(tokens), true);
@@ -425,7 +425,7 @@ TEST(FuncDeclareReturnNonDeclareClassTest, SemanticTests)
     Scanner scanner;
     tokens = scanner.generate_tokens("program { }; Cord create_cord() { Cord cord; return(cord); };", false);
 
-    SemanticParser syntaxParser;
+    Parser syntaxParser;
     syntaxParser.enable_double_pass_parse_ = true;
 
     EXPECT_EQ(syntaxParser.parse(tokens), true);
@@ -443,7 +443,7 @@ TEST(FuncDeclareDuplicateVarClassTest, SemanticTests)
     Scanner scanner;
     tokens = scanner.generate_tokens("class nameHere { int idx; int idx; }; program { };", false);
 
-    SemanticParser syntaxParser;
+    Parser syntaxParser;
 
     EXPECT_EQ(syntaxParser.parse(tokens), true);
     EXPECT_EQ(syntaxParser.semantic_errors_.size(), 1);
@@ -458,7 +458,7 @@ TEST(ClassWithClassVarTest, SemanticTests)
     Scanner scanner;
     tokens = scanner.generate_tokens("class Util { int idx; }; program { Util util; };", false);
 
-    SemanticParser syntaxParser;
+    Parser syntaxParser;
     syntaxParser.enable_double_pass_parse_ = true;
 
     EXPECT_EQ(syntaxParser.parse(tokens), true);
@@ -475,7 +475,7 @@ TEST(FullProgramTest, SemanticTests)
     Scanner scanner;
     tokens = scanner.generate_tokens("class Utility { int var1[4][5][7][8][9][1][0]; float var2; int findMax(int array[100]) { int maxValue; int idp; maxValue = array[100]; for( int idx = 99; idx > 0; idx = idx - 1 ) { if(array[idx] > maxValue) then { maxValue = array[idx]; }else{}; }; return (maxValue); }; int findMin(int array[100]) { int minValue; int idp; minValue = array[100]; for( int idx = 1; idx <= 99; idx = ( idx ) + 1) { if(array[idx] < maxValue) then { maxValue = array[idx]; }else{}; }; return (minValue); }; }; program { int sample[100]; int idx; int maxValue; int minValue; Utility utility; Utility arrayUtility[2][3][6][7]; for(int t = 0; t<=100 ; t = t + 1) { get(sample[t]); sample[t] = (sample[t] * randomize()); }; maxValue = utility.findMax(sample); minValue = utility.findMin(sample); utility. var1[4][1][0][0][0][0][0] = 10; arrayUtility[1][1][1][1].var1[4][1][0][0][0][0][0] = 2; put(maxValue); put(minValue); }; float randomize() { float value; value = 100 * (2 + 3.0 / 7.0006); value = 1.05 + ((2.04 * 2.47) - 3.0) + 7.0006 ; return (value); };", false);
 
-    SemanticParser syntaxParser;
+    Parser syntaxParser;
 
     EXPECT_EQ(syntaxParser.parse(tokens), true);
     EXPECT_EQ(syntaxParser.global_symbol_table_->symbol_records_.size(), 3);
@@ -519,12 +519,12 @@ bool check_if_record_exists_in_table(SymbolRecord record, SymbolTable symbol) {
     return found_record->type_ == record.type_ && found_record->kind_ == record.kind_ && found_record->structure_ == record.structure_;
 }
 
-SemanticParser common_setup_semantic(string test_program, string derivation_string) {
+Parser common_setup_semantic(string test_program, string derivation_string) {
     vector<Token*> tokens;
     Scanner scanner;
     tokens = scanner.generate_tokens(test_program, false);
 
-    SemanticParser semanticParser(tokens);
+    Parser semanticParser(tokens);
     semanticParser.current_rhs_derivation_ = derivation_string;
     semanticParser.enable_derivation_output_ = false;
     return semanticParser;

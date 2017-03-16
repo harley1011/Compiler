@@ -12,15 +12,15 @@
 #include "../Parser/SymbolRecord.h"
 #include "../IntegerToken.h"
 
-class SemanticParser {
+class Parser {
 
 public:
-    SemanticParser();
+    Parser();
 
-    SemanticParser(bool enable_derivation_output);
+    Parser(bool enable_derivation_output);
 
-    SemanticParser(vector<Token *> tokens);
-    SemanticParser(string derivation_output_path, string error_output_path);
+    Parser(vector<Token *> tokens);
+    Parser(string derivation_output_path, string error_output_path);
 
     SymbolTable *global_symbol_table_;
 
