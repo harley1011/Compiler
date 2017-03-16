@@ -697,7 +697,7 @@ TEST(MultiClassTest, SemanticTests)
     Scanner scanner;
     tokens = scanner.generate_tokens("class A { int idx; }; class B { int idx; A a; }; class C { int idx; A a; B b; }; program { C c;  c.a.idx = 10;};", false);
 
-    SemanticParser syntaxParser;
+    Parser syntaxParser;
     syntaxParser.enable_double_pass_parse_ = true;
 
     EXPECT_EQ(syntaxParser.parse(tokens), true);
