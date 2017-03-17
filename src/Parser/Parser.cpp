@@ -1,9 +1,4 @@
-
-
-
 #include "Parser.h"
-#include "../IntegerToken.h"
-
 
 Parser::Parser() {
     current_rhs_derivation_ = "<classDeclLst> <progBody>";
@@ -25,6 +20,7 @@ Parser::Parser(string derivation_output_path, string symbol_table_output_path,  
     global_symbol_table_ = new SymbolTable();
     enable_double_pass_parse_ = true;
 }
+
 Parser::Parser(string derivation_output_path,  string syntax_error_output_path) {
     current_rhs_derivation_ = "<classDeclLst> <progBody>";
     derivations_.push_back(current_rhs_derivation_);
@@ -45,7 +41,7 @@ Parser::Parser(bool enable_derivation_output) {
     enable_double_pass_parse_ = true;
 }
 
-Parser::Parser(vector<Token *> tokens) {
+Parser::Parser(vector<Token*> tokens) {
     Parser();
     tokens_ = tokens;
     current_token_position_ = 0;
@@ -55,7 +51,7 @@ Parser::Parser(vector<Token *> tokens) {
 }
 
 
-bool Parser::parse(vector<Token *> tokens) {
+bool Parser::parse(vector<Token*> tokens) {
     if (enable_derivation_output_) {
         cout << current_rhs_derivation_ << endl;
     }

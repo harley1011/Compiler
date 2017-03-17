@@ -11,15 +11,14 @@
 #include "../Parser/SymbolTable.h"
 #include "../Parser/SymbolRecord.h"
 #include "../IntegerToken.h"
+#include "../Token.h"
 
 class Parser {
 
 public:
     Parser();
-
     Parser(bool enable_derivation_output);
-
-    Parser(vector<Token *> tokens);
+    Parser(vector<Token*> tokens);
     Parser(string derivation_output_path, string symbol_table_output_path,  string syntax_error_output_path, string semantic_error_output_path);
     Parser(string derivation_output_path, string syntax_error_output_path);
 
