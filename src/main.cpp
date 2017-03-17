@@ -61,8 +61,8 @@ int main(int argc, char *argv[] ) {
 
         if (!parse_result) {
             cout << "Program is syntactically invalid, errors are below:" << endl;
-            for (int i = 0; i < syntaxParser.errors_.size(); i++) {
-                cout << syntaxParser.errors_[i] << endl;
+            for (int i = 0; i < syntaxParser.syntax_errors.size(); i++) {
+                cout << syntaxParser.syntax_errors[i] << endl;
             }
         } else {
             cout << "Program is syntactically valid" << endl;

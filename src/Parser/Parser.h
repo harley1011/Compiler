@@ -20,14 +20,15 @@ public:
     Parser(bool enable_derivation_output);
 
     Parser(vector<Token *> tokens);
-    Parser(string derivation_output_path, string error_output_path);
+    Parser(string derivation_output_path, string symbol_table_output_path,  string syntax_error_output_path, string semantic_error_output_path);
+    Parser(string derivation_output_path, string syntax_error_output_path);
 
     SymbolTable *global_symbol_table_;
 
     bool enable_double_pass_parse_;
     string current_rhs_derivation_;
     string lookahead_;
-    vector<string> errors_;
+    vector<string> syntax_errors;
     vector<string> semantic_errors_;
     vector<string> derivations_;
     Token*   current_token_;
@@ -35,9 +36,13 @@ public:
     int current_token_position_;
     bool output_to_file_;
     string derivation_output_path_;
-    string error_output_path_;
-    ofstream error_output_file_;
+    string symbol_table_output_path_;
+    string syntax_error_output_path_;
+    string semantic_error_output_path_;
+    ofstream syntax_error_output_file_;
+    ofstream semantic_error_output_file_;
     ofstream derivation_output_file_;
+    ofstream symbol_table_output_file_;
     bool enable_derivation_output_;
     string previous_token_;
 
@@ -124,7 +129,6 @@ public:
 
     IntegerToken get_last_integer_token();
 
-    SymbolRecord *create_or_find_created_record();
 };
 
 

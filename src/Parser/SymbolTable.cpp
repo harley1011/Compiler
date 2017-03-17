@@ -3,37 +3,14 @@
 //
 #include <iostream>
 #include <iomanip>
-
+#include <sstream>
 #include "SymbolTable.h"
-void print_table(SymbolTable* table, string table_name, int indent_count);
+
 
 SymbolTable::SymbolTable() {
     second_pass_ = false;
     parent_symbol_table_ = NULL;
 }
-
-
-SymbolRecord* SymbolTable::create_or_find_created_record(string name) {
-    SymbolRecord* record;
-
-    if (second_pass_)
-    {
-        record = search(name);
-    }
-    else
-    {
-        record = new SymbolRecord();
-        record->name_ = name;
-    }
-    return record;
-}
-
-SymbolRecord* SymbolTable::find_created_record(string name) {
-    SymbolRecord* record;
-    record = search(name);
-    return record;
-}
-
 
 bool SymbolTable::create_class_entry_and_table(string kind, string type, string name) {
     SymbolRecord* record;
@@ -80,10 +57,16 @@ bool SymbolTable::create_program_entry_and_table() {
 
 void SymbolTable::set_properly_declared(SymbolRecord* record) {
 
+    string type = record->type_;
+    int location = type.find("[");
+    if (location!= string::npos) {
+        type = type.substr(0, location);
+    }
+
     if (!record->properly_declared_) {
-        record->properly_declared_ = search(record->type_) != NULL;
+        record->properly_declared_ = search(type) != NULL;
         if (!record->properly_declared_) {
-            record->symbol_table_->report_error_to_highest_symbol_table("Error:" + record->type_ + " is not a valid type:");
+            record->symbol_table_->report_error_to_highest_symbol_table("Error:" + type + " is not a valid type:");
         }
     }
 }
@@ -117,8 +100,12 @@ bool SymbolTable::create_function_entry_and_table(SymbolRecord** record) {
     return true;
 }
 
-void SymbolTable::print() {
-    print_table(this, "Global", 0);
+string SymbolTable::print(bool output_to_console) {
+    string result = generate_symbol_table_string(this, "Global", 0);
+    if (output_to_console)
+        cout << result;
+    return result;
+
 }
 
 
@@ -273,9 +260,9 @@ void SymbolTable::set_second_pass(bool second_pass) {
     }
 }
 
-void print_table(SymbolTable* table, string table_name, int indent_count) {
+string SymbolTable::generate_symbol_table_string(SymbolTable *table, string table_name, int indent_count) {
     if (table->symbol_records_.size() == 0)
-        return;
+        return "";
 
     int name_width_out = 20;
     int type_width_out = 20;
@@ -292,44 +279,36 @@ void print_table(SymbolTable* table, string table_name, int indent_count) {
         if (record->structure_.size() > structure_width_out)
             structure_width_out = record->structure_.size();
 
-//        if (record->kind_ == "function" && record->function_parameters.size() > 1) {
-//            record->type_ += " : ";
-//            bool first = true;
-//            for (string para: record->function_parameters) {
-//                if (first)
-//                    first = false;
-//                else
-//                    record->type_ += ", ";
-//                record->type_ += para;
-//            }
-//        }
         if (record->type_.size() > type_width_out)
             type_width_out = record->type_.size();
     }
 
     int horizontal_width_out = name_width_out + type_width_out + kind_width_out + structure_width_out + declared_width_out + 6;
+    std::stringstream buffer;
 
-    cout << string(indent_count, ' ') << "Symbol table name: " + table_name << endl;
-    cout << string(indent_count, ' ') << string(horizontal_width_out, '-') << endl;
-    cout << string(indent_count, ' ') << "|" << setw(name_width_out) << "Name" << std::right << std::setfill(' ') << "|";
-    cout << setw(kind_width_out) << "Kind" << std::right << std::setfill(' ') << "|";
-    cout << setw(structure_width_out) << "Structure" << std::right << std::setfill(' ') << "|";
-    cout << setw(type_width_out) << "Type" << std::right << std::setfill(' ') << "|";
-    cout << setw(declared_width_out) << "Declared" << std::right << std::setfill(' ') << "|" << endl;
-    cout <<  string(indent_count, ' ') << string(horizontal_width_out, '-') << endl;
+    buffer << string(indent_count, ' ') << "Symbol table name: " + table_name << endl;
+    buffer << string(indent_count, ' ') << string(horizontal_width_out, '-') << endl;
+    buffer << string(indent_count, ' ') << "|" << setw(name_width_out) << "Name" << std::right << std::setfill(' ') << "|";
+    buffer << setw(kind_width_out) << "Kind" << std::right << std::setfill(' ') << "|";
+    buffer << setw(structure_width_out) << "Structure" << std::right << std::setfill(' ') << "|";
+    buffer << setw(type_width_out) << "Type" << std::right << std::setfill(' ') << "|";
+    buffer << setw(declared_width_out) << "Declared" << std::right << std::setfill(' ') << "|" << endl;
+    buffer <<  string(indent_count, ' ') << string(horizontal_width_out, '-') << endl;
 
     for(SymbolRecord* record: table->symbol_records_) {
 
-        cout  << string(indent_count, ' ') << "|" << setw(name_width_out) << record->name_ << std::right << std::setfill(' ') << "|";
-        cout << setw(kind_width_out) << record->kind_ << std::right << std::setfill(' ') << "|";
-        cout << setw(structure_width_out) << record->structure_ << std::right << std::setfill(' ') << "|";
-        cout << setw(type_width_out) << record->type_ << std::right << std::setfill(' ') << "|";
-        cout << setw(declared_width_out) << record->properly_declared_ << std::right << std::setfill(' ') << "|" << endl;
+        buffer  << string(indent_count, ' ') << "|" << setw(name_width_out) << record->name_ << std::right << std::setfill(' ') << "|";
+        buffer << setw(kind_width_out) << record->kind_ << std::right << std::setfill(' ') << "|";
+        buffer << setw(structure_width_out) << record->structure_ << std::right << std::setfill(' ') << "|";
+        buffer << setw(type_width_out) << record->type_ << std::right << std::setfill(' ') << "|";
+        buffer << setw(declared_width_out) << record->properly_declared_ << std::right << std::setfill(' ') << "|" << endl;
     }
 
-    cout << string(indent_count, ' ') << string(horizontal_width_out, '-') << endl << endl;
+    buffer << string(indent_count, ' ') << string(horizontal_width_out, '-') << endl << endl;
     indent_count += 10;
+    string return_string = buffer.str();
     for(SymbolRecord* record: table->symbol_records_) {
-        print_table(record->symbol_table_, record->name_, indent_count);
+        return_string += generate_symbol_table_string(record->symbol_table_, record->name_, indent_count);
     }
+    return return_string;
 }

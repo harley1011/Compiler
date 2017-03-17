@@ -3,7 +3,7 @@ Scanner::Scanner(string token_output_path, string error_output_path) {
     init();
     output_to_file_ = true;
     token_output_path_ = token_output_path;
-    error_output_path_ = error_output_path;
+    syntax_error_output_path_ = error_output_path;
 }
 Scanner::Scanner() {
     init();
@@ -12,7 +12,7 @@ Scanner::Scanner() {
 void Scanner::init() {
     string temp[]   = {"and", "not", "or", "if", "then", "else", "for", "class", "int", "float", "get", "put", "return", "program"};
     token_output_path_ = "token_output.txt";
-    error_output_path_ = "error_output.txt";
+    syntax_error_output_path_ = "error_output.txt";
     vector<string> vec (temp, temp + sizeof(temp) / sizeof(temp[0]));
     reserved_words = vec;
     use_backup_ = false;
@@ -215,7 +215,7 @@ vector<Token*> Scanner::generate_tokens(string path, bool is_file) {
     ofstream error_output_file;
     ofstream token_output_file;
     if (output_to_file_) {
-        error_output_file.open(error_output_path_);
+        error_output_file.open(syntax_error_output_path_);
         token_output_file.open(token_output_path_);
     }
     while(true) {

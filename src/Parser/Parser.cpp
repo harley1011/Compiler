@@ -13,12 +13,24 @@ Parser::Parser() {
     enable_double_pass_parse_ = true;
 }
 
-Parser::Parser(string derivation_output_path, string error_output_path) {
+Parser::Parser(string derivation_output_path, string symbol_table_output_path,  string syntax_error_output_path, string semantic_error_output_path) {
+    current_rhs_derivation_ = "<classDeclLst> <progBody>";
+    derivations_.push_back(current_rhs_derivation_);
+    enable_derivation_output_ = false;
+    symbol_table_output_path_ = symbol_table_output_path;
+    derivation_output_path_ = derivation_output_path;
+    syntax_error_output_path_ = syntax_error_output_path;
+    semantic_error_output_path_ = semantic_error_output_path;
+    output_to_file_ = true;
+    global_symbol_table_ = new SymbolTable();
+    enable_double_pass_parse_ = true;
+}
+Parser::Parser(string derivation_output_path,  string syntax_error_output_path) {
     current_rhs_derivation_ = "<classDeclLst> <progBody>";
     derivations_.push_back(current_rhs_derivation_);
     enable_derivation_output_ = false;
     derivation_output_path_ = derivation_output_path;
-    error_output_path_ = error_output_path;
+    syntax_error_output_path_ = syntax_error_output_path;
     output_to_file_ = true;
     global_symbol_table_ = new SymbolTable();
     enable_double_pass_parse_ = true;
@@ -52,8 +64,12 @@ bool Parser::parse(vector<Token *> tokens) {
     next_token();
     global_symbol_table_->second_pass_ = false;
     if (output_to_file_) {
-        error_output_file_.open(error_output_path_);
+        syntax_error_output_file_.open(syntax_error_output_path_);
         derivation_output_file_.open(derivation_output_path_);
+        if (semantic_error_output_path_.size() > 0)
+            semantic_error_output_file_.open(semantic_error_output_path_);
+        if (symbol_table_output_path_.size() > 0)
+            symbol_table_output_file_.open(symbol_table_output_path_);
     }
 
     bool result = prog();
@@ -68,10 +84,21 @@ bool Parser::parse(vector<Token *> tokens) {
 
     semantic_errors_ = global_symbol_table_->errors_;
     if (output_to_file_) {
-        error_output_file_.close();
+
+        if (semantic_error_output_file_.is_open()) {
+            for (string error: semantic_errors_) {
+                semantic_error_output_file_ << error + "\n";
+            }
+        }
+
+        if (symbol_table_output_file_.is_open()) {
+            symbol_table_output_file_ << global_symbol_table_->print(false);
+        }
+
+        syntax_error_output_file_.close();
         derivation_output_file_.close();
     }
-    if (errors_.size() > 1) {
+    if (syntax_errors.size() > 1) {
         return false;
     }
 
@@ -775,9 +802,9 @@ void Parser::report_error(string expected_token, string actual_token) {
                         " received not in first or follow set of current production:" +
                         to_string(current_token_->row_location_) + ":" + to_string(current_token_->column_location_);;
     }
-    errors_.push_back(error_message);
+    syntax_errors.push_back(error_message);
     if (output_to_file_) {
-        error_output_file_ << error_message + "\n";
+        syntax_error_output_file_ << error_message + "\n";
     }
 }
 

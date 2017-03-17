@@ -47,7 +47,7 @@ TEST(SimpleClassTest, ParserTests)
     Parser parser;
 
     EXPECT_EQ(parser.parse(tokens), true);
-    EXPECT_EQ(parser.errors_.size(), 0);
+    EXPECT_EQ(parser.syntax_errors.size(), 0);
 }
 
 TEST(MultiRelClassErrorTest, ParserTests)
@@ -59,7 +59,7 @@ TEST(MultiRelClassErrorTest, ParserTests)
     Parser parser;
 
     EXPECT_EQ(parser.parse(tokens), false);
-    EXPECT_EQ(parser.errors_.size(), 5);
+    EXPECT_EQ(parser.syntax_errors.size(), 5);
 }
 
 TEST(SimpleClassTestError, ParserTests)
@@ -72,7 +72,7 @@ TEST(SimpleClassTestError, ParserTests)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.current_rhs_derivation_, "class id { } ; program { } ;");
-    EXPECT_EQ(parser.errors_.size(), 1);
+    EXPECT_EQ(parser.syntax_errors.size(), 1);
 
 }
 
@@ -80,20 +80,20 @@ TEST(SimpleClassTestError, ParserTests)
 TEST(errorOneTest, ParserTests) {
     Parser parser = common_setup("class nameHere { int int i; }; program { };", "<classDeclLst> <progBody>");
     EXPECT_TRUE(parser.prog());
-    EXPECT_EQ(parser.errors_.size(), 1);
+    EXPECT_EQ(parser.syntax_errors.size(), 1);
     EXPECT_EQ(parser.current_rhs_derivation_, "class id { int id ; } ; program { } ;");
 }
 TEST(errorTwoComInFuncTest, ParserTests) {
     Parser parser = common_setup("class nameHere { int vardecl( int var1,, int var2 ) { }; }; program { };", "<classDeclLst> <progBody>");
     EXPECT_TRUE(parser.prog());
-    EXPECT_EQ(parser.errors_.size(), 1);
+    EXPECT_EQ(parser.syntax_errors.size(), 1);
     EXPECT_EQ(parser.current_rhs_derivation_, "class id { int id ( int id , int id ) { } ; } ; program { } ;");
 }
 
 TEST(errorMissingSemiTest, ParserTests) {
     Parser parser = common_setup("class nameHere { int vardecl 0 int var2 }; program { };", "<classDeclLst> <progBody>");
     EXPECT_TRUE(parser.prog());
-    EXPECT_EQ(parser.errors_.size(), 2);
+    EXPECT_EQ(parser.syntax_errors.size(), 2);
     EXPECT_EQ(parser.current_rhs_derivation_, "class id { int id <errorMissingSemiColon> int id <errorMissingSemiColon> } ; program { } ;");
 }
 
@@ -107,7 +107,7 @@ TEST(VarDeclareClassTest, ParserTests)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.current_rhs_derivation_, "class id { int id ; float id ; int id [ integer ] ; id id ; } ; program { } ;");
-    EXPECT_EQ(parser.errors_.size(), 0);
+    EXPECT_EQ(parser.syntax_errors.size(), 0);
 }
 
 TEST(VarArrayDeclareClassTest, ParserTests)
@@ -120,7 +120,7 @@ TEST(VarArrayDeclareClassTest, ParserTests)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.current_rhs_derivation_, "class id { int id [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] ; } ; program { } ;");
-    EXPECT_EQ(parser.errors_.size(), 0);
+    EXPECT_EQ(parser.syntax_errors.size(), 0);
 }
 TEST(FuncDeclareClassTest, ParserTests)
 {
@@ -133,7 +133,7 @@ TEST(FuncDeclareClassTest, ParserTests)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.current_rhs_derivation_, "class id { int id ( int id [ integer ] ) { int id ; int id ; id = id [ integer ] ; for ( int id = integer ; id <= integer ; id = ( id ) + integer ) { if ( id [ id ] < id ) then { id = id [ id ] ; } else { } ; } ; return ( id ) ; } ; } ; program { } ;");
-    EXPECT_EQ(parser.errors_.size(), 0);
+    EXPECT_EQ(parser.syntax_errors.size(), 0);
 }
 
 TEST(FullDeclareClassTest, ParserTests)
@@ -147,7 +147,7 @@ TEST(FullDeclareClassTest, ParserTests)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.current_rhs_derivation_, "class id { int id [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] ; float id ; int id ( int id [ integer ] ) { int id ; int id ; id = id [ integer ] ; for ( int id = integer ; id > integer ; id = id - integer ) { if ( id [ id ] > id ) then { id = id [ id ] ; } else { } ; } ; return ( id ) ; } ; int id ( int id [ integer ] ) { int id ; int id ; id = id [ integer ] ; for ( int id = integer ; id <= integer ; id = ( id ) + integer ) { if ( id [ id ] < id ) then { id = id [ id ] ; } else { } ; } ; return ( id ) ; } ; } ; program { } ;");
-    EXPECT_EQ(parser.errors_.size(), 0);
+    EXPECT_EQ(parser.syntax_errors.size(), 0);
 
 }
 
@@ -161,7 +161,7 @@ TEST(SimpleProgramTest, ParserTests)
     Parser parser;
 
     EXPECT_EQ(parser.parse(tokens), true);
-    EXPECT_EQ(parser.errors_.size(), 0);
+    EXPECT_EQ(parser.syntax_errors.size(), 0);
 
 }
 
@@ -176,7 +176,7 @@ TEST(SmallProgramTest, ParserTests)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.current_rhs_derivation_, "class id { } ; program { int id [ integer ] ; int id ; int id ; int id ; id id ; id id [ integer ] [ integer ] [ integer ] [ integer ] ; for ( int id = integer ; id <= integer ; id = id + integer ) { get ( id [ id ] ) ; id [ id ] = ( id [ id ] * id ( ) ) ; } ; id = id . id ( id ) ; id = id . id ( id ) ; id . id [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] = integer ; id [ integer ] [ integer ] [ integer ] [ integer ] . id [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] = integer ; put ( id ) ; put ( id ) ; } ;");
-    EXPECT_EQ(parser.errors_.size(), 0);
+    EXPECT_EQ(parser.syntax_errors.size(), 0);
 
 }
 TEST(ProgramAndFuncTest, ParserTests) {
@@ -188,7 +188,7 @@ TEST(ProgramAndFuncTest, ParserTests) {
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.current_rhs_derivation_, "class id { } ; program { int id [ integer ] ; int id ; int id ; int id ; id id ; id id [ integer ] [ integer ] [ integer ] [ integer ] ; for ( int id = integer ; id <= integer ; id = id + integer ) { get ( id [ id ] ) ; id [ id ] = ( id [ id ] * id ( ) ) ; } ; id = id . id ( id ) ; id = id . id ( id ) ; id . id [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] = integer ; id [ integer ] [ integer ] [ integer ] [ integer ] . id [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] = integer ; put ( id ) ; put ( id ) ; } ; float id ( ) { float id ; id = integer * ( integer + float / float ) ; id = float + ( ( float * float ) - float ) + float ; return ( id ) ; } ;");
-    EXPECT_EQ(parser.errors_.size(), 0);
+    EXPECT_EQ(parser.syntax_errors.size(), 0);
 
 }
 
@@ -202,7 +202,7 @@ TEST(FullProgramTest, ParserTests)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.current_rhs_derivation_, "class id { int id [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] ; float id ; int id ( int id [ integer ] ) { int id ; int id ; id = id [ integer ] ; for ( int id = integer ; id > integer ; id = id - integer ) { if ( id [ id ] > id ) then { id = id [ id ] ; } else { } ; } ; return ( id ) ; } ; int id ( int id [ integer ] ) { int id ; int id ; id = id [ integer ] ; for ( int id = integer ; id <= integer ; id = ( id ) + integer ) { if ( id [ id ] < id ) then { id = id [ id ] ; } else { } ; } ; return ( id ) ; } ; } ; program { int id [ integer ] ; int id ; int id ; int id ; id id ; id id [ integer ] [ integer ] [ integer ] [ integer ] ; for ( int id = integer ; id <= integer ; id = id + integer ) { get ( id [ id ] ) ; id [ id ] = ( id [ id ] * id ( ) ) ; } ; id = id . id ( id ) ; id = id . id ( id ) ; id . id [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] = integer ; id [ integer ] [ integer ] [ integer ] [ integer ] . id [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] = integer ; put ( id ) ; put ( id ) ; } ; float id ( ) { float id ; id = integer * ( integer + float / float ) ; id = float + ( ( float * float ) - float ) + float ; return ( id ) ; } ;");
-    EXPECT_EQ(parser.errors_.size(), 0);
+    EXPECT_EQ(parser.syntax_errors.size(), 0);
 }
 
 
@@ -216,7 +216,7 @@ TEST(LargeFullProgramTest, ParserTests)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.current_rhs_derivation_, "class id { int id [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] ; float id ; int id ( int id [ integer ] ) { int id ; int id ; id = id [ integer ] ; for ( int id = integer ; id > integer ; id = id - integer ) { if ( id [ id ] > id ) then { id = id [ id ] ; } else { } ; } ; return ( id ) ; } ; int id ( int id [ integer ] ) { int id ; int id ; id = id [ integer ] ; for ( int id = integer ; id <= integer ; id = ( id ) + integer ) { if ( id [ id ] < id ) then { id = id [ id ] ; } else { } ; } ; return ( id ) ; } ; } ; class id { int id [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] ; float id ; int id ( int id [ integer ] ) { int id ; int id ; id = id [ integer ] ; for ( int id = integer ; id > integer ; id = id - integer ) { if ( id [ id ] > id ) then { id = id [ id ] ; } else { } ; } ; int id [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] ; float id ; return ( id ) ; } ; int id ( int id [ integer ] , float id ) { int id ; int id ; id = id [ integer ] ; for ( int id = integer ; id <= integer ; id = ( id ) + integer ) { if ( id [ id ] < id ) then { id = id [ id ] ; } else { } ; } ; return ( id ) ; } ; } ; program { int id [ integer ] ; int id ; int id ; int id ; id id ; id id [ integer ] [ integer ] [ integer ] [ integer ] ; for ( int id = integer ; id <= integer ; id = id + integer ) { get ( id [ id ] ) ; id [ id ] = ( id [ id ] * id ( ) ) ; } ; id = id . id ( id ) ; id = id . id ( id ) ; id . id [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] = integer ; id [ integer ] [ integer ] [ integer ] [ integer ] . id [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] [ integer ] = integer ; put ( id ) ; put ( id ) ; } ; float id ( ) { float id ; id = integer * ( integer + float / float ) ; id = float + ( ( float * float ) - float ) + float ; return ( id ) ; } ; id id ( int id , int id [ integer ] ) { float id ; id = integer * ( integer + float / float ) ; id = float + ( ( float * float ) - float ) + float ; return ( id ) ; } ;");
-    EXPECT_EQ(parser.errors_.size(), 0);
+    EXPECT_EQ(parser.syntax_errors.size(), 0);
 }
 TEST(NumIntTest, ParserTests) {
     Parser parser = common_setup("200", "<num>");
@@ -502,7 +502,7 @@ TEST(factorNestedFuncTest, ParserTests) {
 TEST(factorNestedInvalidFuncTest, ParserTests) {
     Parser parser = common_setup("var1[5](10) <", "<factor>");
     EXPECT_TRUE(parser.factor());
-    EXPECT_EQ(parser.errors_.size(), 1);
+    EXPECT_EQ(parser.syntax_errors.size(), 1);
     EXPECT_EQ(parser.current_rhs_derivation_, "id [ integer ]");
 }
 TEST(factorIntegerTest, ParserTests) {

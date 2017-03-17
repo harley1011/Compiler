@@ -20,7 +20,7 @@ public:
     bool create_class_entry_and_table(string kind, string type, string name);
     bool create_program_entry_and_table();
     bool create_function_entry_and_table(SymbolRecord** record);
-    void print();
+    string print(bool output_to_console);
     bool create_variable_entry(SymbolRecord* record);
     bool create_function_class_entry_and_function_table(SymbolRecord **record);
     bool create_parameter_entry(SymbolRecord* record);
@@ -29,6 +29,8 @@ public:
     SymbolRecord* search(string name);
     void set_second_pass(bool second_pass);
     void set_properly_declared(SymbolRecord *record);
+
+    string generate_symbol_table_string(SymbolTable *table, string table_name, int indent_count);
 };
 
 
