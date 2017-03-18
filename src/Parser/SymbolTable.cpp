@@ -247,7 +247,7 @@ SymbolRecord* SymbolTable::search(string name) {
 void SymbolTable::report_error_to_highest_symbol_table(string error_message) {
 
     if (parent_symbol_table_ == NULL)
-        errors_.push_back(error_message + to_string(current_token->row_location_) + ":" + to_string(current_token->column_location_));
+        errors_.push_back(error_message + to_string(current_token->row_location_ + 1) + ":" + to_string(current_token->column_location_ + 1));
     else
         parent_symbol_table_->report_error_to_highest_symbol_table(error_message);
 }

@@ -85,10 +85,12 @@ bool Parser::parse(vector<Token*> tokens) {
             for (string error: semantic_errors_) {
                 semantic_error_output_file_ << error + "\n";
             }
+            semantic_error_output_file_.close();
         }
 
         if (symbol_table_output_file_.is_open()) {
             symbol_table_output_file_ << global_symbol_table_->print(false);
+            symbol_table_output_file_.close();
         }
 
         syntax_error_output_file_.close();

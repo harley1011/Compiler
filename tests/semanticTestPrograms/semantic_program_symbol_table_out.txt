@@ -23,7 +23,7 @@ Symbol table name: Global
                     ------------------------------------------------------------------------------------------------
                     |               array|           parameter|               array|            int[100]|         1|
                     |            maxValue|            variable|              simple|                 int|         1|
-                    |                 idp|            variable|              simple|                 int|         1|
+                    |                 idc|            variable|              simple|                 int|         1|
                     |                 idx|            variable|              simple|                 int|         1|
                     ------------------------------------------------------------------------------------------------
 
@@ -33,7 +33,7 @@ Symbol table name: Global
                     ------------------------------------------------------------------------------------------------
                     |               array|           parameter|               array|            int[100]|         1|
                     |            minValue|            variable|              simple|                 int|         1|
-                    |                 idp|            variable|              simple|                 int|         1|
+                    |                 idc|            variable|              simple|                 int|         1|
                     |                 idx|            variable|              simple|                 int|         1|
                     ------------------------------------------------------------------------------------------------
 

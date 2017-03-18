@@ -782,7 +782,6 @@ TEST(FullProgramTest, SemanticTests)
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_[1]->symbol_table_->symbol_records_.size(), 7);
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_[2]->symbol_table_->symbol_records_.size(), 1);
 
-    compare_files("built_full_program_symbol_table_out.txt", "full_program_symbol_table_out.txt");
     parser.global_symbol_table_->print(true);
 }
 
@@ -792,7 +791,7 @@ TEST(FullProgramFromFileTest, SemanticTests)
     Scanner scanner;
     tokens = scanner.generate_tokens("semantic_program.txt", true);
 
-    Parser parser("der_out.txt", "built_full_program_symbol_table_out.txt", "syntax_error_output.txt", "built_full_program_semantic_error_output.txt");
+    Parser parser("der_out.txt", "built_semantic_program_symbol_table_out.txt", "syntax_error_output.txt", "built_semantic_program_error_output.txt");
 
     parser.enable_double_pass_parse_ = true;
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
@@ -804,7 +803,7 @@ TEST(FullProgramFromFileTest, SemanticTests)
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_[1]->symbol_table_->symbol_records_.size(), 7);
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_[2]->symbol_table_->symbol_records_.size(), 1);
 
-    compare_files("built_full_program_symbol_table_out.txt", "full_program_symbol_table_out.txt");
+    EXPECT_TRUE(compare_files("built_semantic_program_symbol_table_out.txt", "semantic_program_symbol_table_out.txt"));
     parser.global_symbol_table_->print(true);
 }
 
@@ -814,7 +813,7 @@ TEST(FullProgramFromFileWithErrorsTest, SemanticTests)
     Scanner scanner;
     tokens = scanner.generate_tokens("semantic_program_with_errors.txt", true);
 
-    Parser parser("der_out.txt", "built_full_program_symbol_table_out.txt", "syntax_error_output.txt", "built_full_program_semantic_error_output.txt");
+    Parser parser("der_out.txt", "built_semantic_program_with_errors_symbol_table_out.txt", "syntax_error_output.txt", "built_semantic_program_with_errors_error_out.txt");
 
     parser.enable_double_pass_parse_ = true;
     EXPECT_EQ(parser.parse(tokens), true);
@@ -828,7 +827,7 @@ TEST(FullProgramFromFileWithErrorsTest, SemanticTests)
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_[2]->symbol_table_->symbol_records_.size(), 1);
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_[3]->symbol_table_->symbol_records_.size(), 1);
 
-    compare_files("built_full_program_symbol_table_out.txt", "full_program_symbol_table_out.txt");
-    compare_files("built_full_program_semantic_error_output.txt", "full_program_semantic_error_output.txt");
+    EXPECT_TRUE(compare_files("built_semantic_program_with_errors_symbol_table_out.txt", "semantic_program_with_errors_symbol_table_out.txt"));
+    EXPECT_TRUE(compare_files("built_semantic_program_with_errors_error_out.txt", "semantic_program_with_errors_error_out.txt"));
     parser.global_symbol_table_->print(true);
 }

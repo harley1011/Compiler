@@ -1,6 +1,0 @@
-Error: A variable with the name idx already exists within this scope:9:21
-Error: A variable with the name idx already exists within this scope:22:21
-Error: A variable with the name findMin already exists within this scope:31:15
-Error: A variable with the name idx already exists within this scope:36:25
-Error: A variable with the name randomize already exists within this scope:73:15
-Error: A variable with the name value already exists within this scope:84:15
