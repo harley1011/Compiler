@@ -82,7 +82,7 @@ int main(int argc, char *argv[] ) {
             cout << "Program is semantically valid" << endl;
         } else {
             cout << "Program is semantically invalid, errors are below:" << endl;
-            for (int i = 0; i < syntaxParser.syntax_errors.size(); i++) {
+            for (int i = 0; i < syntaxParser.semantic_errors_.size(); i++) {
                 cout << syntaxParser.semantic_errors_[i] << endl;
             }
         }
