@@ -29,9 +29,7 @@ public:
     bool set_structure(string structure);
     bool append_to_type(string type);
     bool add_function_parameter(string type);
-
     bool generate_function_type();
-
     bool add_array_size(IntegerToken integer_token);
 };
 
