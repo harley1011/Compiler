@@ -1,133 +1,58 @@
-class Position
+class Utility
 {
-    float x;
-    float y;
-    float z;
-};
-
-class Animal
-{
-    int numberOfLegs;
-    int age;
-    float height;
-    float width;
-    float length;
-    float maxSpeed;
-    float currentSpeed;
-    float maxJump;
-    Position currentPosition;
-
-    int increaseSpeed(int speed) {
-        if ( currentSpeed + speed < maxSpeed) then {
-            currentSpeed = currentSpeed + speed;
-        } else {
-            currentSpeed = maxSpeed;
+    int var1[4][5][7][8][9][1][0];
+    float var2;
+    int findMax(int array[100])
+    {
+        int maxValue;
+        int idc;
+        maxValue = array[100];
+        for( int idx = 99; idx > 0; idx = idx - 1 )
+        {
+            if(array[idx] > maxValue) then {
+            maxValue = array[idx];
+        }else{};
         };
-        return (currentSpeed);
+        return (maxValue);
     };
-
-    int decreaseSpeed(int speed) {
-        if ( currentSpeed - speed > 0 ) then {
-            currentSpeed = currentSpeed - speed;
-        } else {
-            currentSpeed = 0;
+    int findMin(int array[100])
+    {
+        int minValue;
+        int idc;
+        minValue = array[100];
+        for( int idx = 1; idx <= 99; idx = ( idx ) + 1)
+        {
+            if(array[idx] < maxValue) then {
+                maxValue = array[idx];
+        }else{};
         };
-        return (currentSpeed);
+    return (minValue);
     };
-
-    Position moveX() {
-        currentPosition.x = currentPosition.x + currentSpeed;
-        return (currentPosition);
-    };
-
-    Position moveY() {
-        currentPosition.y = currentPosition.y + currentSpeed;
-        return (currentPosition);
-    };
-
-    Position jump() {
-        currentPosition.z = currentPosition.z + maxJump;
-        currentPosition.z = currentPosition.z - maxJump;
-        return (currentPosition);
-    };
-
-    Position moveDiagonally() {
-        currentPosition.x = currentPosition.x + currentSpeed / 2;
-        currentPosition.y = currentPosition.y + currentSpeed / 2;
-        return (currentPosition);
-    };
-
-};
-class Dog
-{
-    Animal animal;
-
-    int bark() {
-
-        return (0);
-    };
-
-};
-class Cat
-{
-    Animal animal;
-
-    int meow() {
-
-        return (0);
-    };
-
-};
-class Bird
-{
-    Animal animal;
-
-    int fly() {
-
-        return (0);
-    };
-
 };
 program
 {
-    Animal dogAnimal;
-    animal.age = 10;
-    animal.height = 50;
-    animal.maxSpeed = 20;
-    animal.width = 50;
-    animal.length = 20;
-    animal.currentPosition.x = 0;
-    animal.currentPosition.y = 0;
-    animal.currentPosition.z = 0;
-    animal.currentSpeed = 0;
-
-    Dog dog;
-    dog = createDog(animal);
-    dog.animal.moveX();
-    dog.animal.moveY();
-
-    Cat cat;
-    cat = createCat(animal);
-    cat.animal.moveX();
-    cat.animal.moveY();
+    int sample[100];
+    int idx;
+    int maxValue;
+    int minValue;
+    Utility utility;
+    Utility arrayUtility[2][3][6][7];
+    for(int t = 0; t<=100 ; t = t + 1)
+    {
+        get(sample[t]);
+        sample[t] = (sample[t] * randomize());
+    };
+    maxValue = utility.findMax(sample);
+    minValue = utility.findMin(sample);
+    utility. var1[4][1][0][0][0][0][0] = 10;
+    arrayUtility[1][1][1][1].var1[4][1][0][0][0][0][0] = 2;
+    put(maxValue);
+    put(minValue);
 };
-
-Dog createDog(Animal passedAnimal) {
-    Dog dog;
-    dog.animal = passedAnimal;
-    dog.animal.numberOfLegs = 4;
-    return (dog);
-};
-
-Cat createDog(Animal passedAnimal) {
-    Cat cat;
-    cat.animal = passedAnimal;
-    cat.animal.numberOfLegs = 4;
-    return (cat);
-};
-Bird createBird(Animal passedAnimal) {
-    Bird bird;
-    bird.animal = passedAnimal;
-    bird.animal.numberOfLegs = 2;
-    return (bird);
+float randomize()
+{
+    float value;
+    value = 100 * (2 + 3.0 / 7.0006);
+    value = 1.05 + ((2.04 * 2.47) - 3.0) + 7.0006 ;
+    return (value);
 };
