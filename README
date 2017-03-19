@@ -17,7 +17,7 @@ FOR MAC
 
 4. src/bin contains the executable exe which launches the program
 
-5. cd to src
+5. cd to src/bin
 
 6. enter "./exe"
 
@@ -31,6 +31,6 @@ An example below is, the program file has to be in the same folder as exe or you
 
 The tests can also be ran by:
 
-1. cd to tests
+1. cd to tests/bin
 
 2. enter "./runUnitTes"

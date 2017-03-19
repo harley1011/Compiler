@@ -1,0 +1,123 @@
+class Position
+{
+    float x;
+    float y;
+    float z;
+};
+
+class Animal
+{
+    int numberOfLegs;
+    int age;
+    float height;
+    float width;
+    float length;
+    float maxSpeed;
+    float currentSpeed;
+    float maxJump;
+    Position currentPosition;
+
+    int increaseSpeed(int speed) {
+        if (currentSpeed + speed < maxSpeed) then {
+            currentSpeed = currentSpeed + speed;
+        } else {
+            currentSpeed = maxSpeed;
+        };
+        return (currentSpeed);
+    };
+
+    int decreaseSpeed(int speed) {
+        if ( currentSpeed - speed > 0 ) then {
+            currentSpeed = currentSpeed - speed;
+        } else {
+            currentSpeed = 0;
+        };
+        return (currentSpeed);
+    };
+
+    Position moveX() {
+        currentPosition.x = currentPosition.x + currentSpeed;
+        return (currentPosition);
+    };
+
+    Position moveY() {
+        currentPosition.y = currentPosition.y + currentSpeed;
+        return (currentPosition);
+    };
+
+    Position jump() {
+        currentPosition.z = currentPosition.z + maxJump;
+        currentPosition.z = currentPosition.z - maxJump;
+        return (currentPosition);
+    };
+
+    Position moveDiagonally() {
+        currentPosition.x = currentPosition.x + currentSpeed / 2;
+        currentPosition.y = currentPosition.y + currentSpeed / 2;
+        return (currentPosition);
+    };
+
+};
+class Dog
+{
+    Animal animal;
+
+    int bark() {
+
+        return (0);
+    };
+
+};
+class Cat
+{
+    Animal animal;
+
+    int meow() {
+
+        return (0);
+    };
+
+};
+class Bird
+{
+    Animal animal;
+
+    int fly() {
+
+        return (0);
+    };
+
+};
+program
+{
+    Animal animal;
+    Dog dog;
+    Cat cat;
+    Bird bird;
+
+    animal.numberOfLegs = 4;
+    animal.age = 10;
+    dog = createDog(animal);
+
+
+};
+
+Dog createDog(Animal passedAnimal) {
+    Dog dog;
+    dog.animal = passedAnimal;
+    dog.animal.numberOfLegs = 4;
+    return (dog);
+};
+
+Cat createCat(Animal passedAnimal) {
+    Cat cat;
+    cat.animal = passedAnimal;
+    cat.animal.numberOfLegs = 4;
+    return (cat);
+};
+Bird createBird(Animal passedAnimal) {
+    Bird bird;
+    bird.animal = passedAnimal;
+    bird.animal.numberOfLegs = 2;
+    return (bird);
+};
