@@ -1,9 +1,9 @@
 Test cases can be found in the ParserTests.cpp and ScannerTest.cpp file.
 
-The example program files and their associated outputs are found in syntaxTestPrograms
-- given_program.txt -> given_program_parser_deriv_out.txt
-- large_program_syntax.txt -> large_program_parser_deriv_out.txt
-- given_program_with_errors.txt -> given_program_parser_deriv_out.txt, syntax_with_errors_error_report_out.txt
+The example program files and their associated outputs are found in semanticTestPrograms
+- semantic_program.txt -> semantic_program_symbol_table.txt
+- semantic_program_with_errors.txt -> semantic_program_with_errors_symbol_table.txt, semantic_program_with_errors_error_out.txt
+- semantic_program_complex.txt -> semantic_program_complex_symbol_table.txt
 
 COMPILATION AND EXECUTION INSTRUCTIONS
 
