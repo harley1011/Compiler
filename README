@@ -15,7 +15,7 @@ FOR MAC
 
 3. Run the command "make"
 
-4. src contains the executable exe which launches the program
+4. src/bin contains the executable exe which launches the program
 
 5. cd to src
 

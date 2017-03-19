@@ -29,10 +29,10 @@ int main(int argc, char *argv[] ) {
 
         }
 
-        cout << "Enter token syntax_output location: ";
+        cout << "Enter token output path location: ";
         getline(cin, token_output);
 
-        cout << "Enter error syntax_output location: ";
+        cout << "Enter error output path location: ";
         getline(cin, token_error);
     }
     else {
@@ -52,16 +52,16 @@ int main(int argc, char *argv[] ) {
 
     if (answer == "Y" || answer == "y") {
 
-        std::cout << "Enter derivation syntax output location:";
+        std::cout << "Enter derivation syntax output path location:";
         getline(cin, syntax_output);
 
-        cout << "Enter syntax error syntax_output location: ";
+        cout << "Enter syntax error output path location: ";
         getline(cin, syntax_error_output);
 
-        std::cout << "Enter symbol table syntax_output location:";
+        std::cout << "Enter symbol table output path location:";
         getline(cin, semantic_output);
 
-        cout << "Enter semantic error syntax_output location: ";
+        cout << "Enter semantic error output path location: ";
         getline(cin, semantic_error_output);
 
         Parser syntaxParser(syntax_output, semantic_output, syntax_error_output, semantic_error_output);
