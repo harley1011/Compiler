@@ -252,6 +252,26 @@ TEST(varDeclareFuncTest, SemanticTests)
     check_record_properties("Util", "util", "variable", "class", parser.global_symbol_table_->symbol_records_[1]->symbol_table_->symbol_records_[2]);
 }
 
+TEST(varDeclareFunc2Test, SemanticTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("program { int x; x = funcTest();}; int funcTest() { int x; float y; Util util; };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = false;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_[1]->symbol_table_->symbol_records_.size(), 3);
+    parser.global_symbol_table_->print(true);
+    check_record_properties("int", "x", "variable", "simple", parser.global_symbol_table_->symbol_records_[1]->symbol_table_->symbol_records_[0]);
+    check_record_properties("float", "y", "variable", "simple", parser.global_symbol_table_->symbol_records_[1]->symbol_table_->symbol_records_[1]);
+    check_record_properties("Util", "util", "variable", "class", parser.global_symbol_table_->symbol_records_[1]->symbol_table_->symbol_records_[2]);
+}
+
 
 
 TEST(arrayDeclareInProgramTest, SemanticTests)
@@ -804,6 +824,23 @@ TEST(FullProgramFromFileTest, SemanticTests)
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_[2]->symbol_table_->symbol_records_.size(), 1);
 
     EXPECT_TRUE(compare_files("built_semantic_program_symbol_table_out.txt", "semantic_program_symbol_table_out.txt"));
+    parser.global_symbol_table_->print(true);
+}
+
+
+TEST(FullComplexProgramFromFileTest, SemanticTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("semantic_program_complex.txt", true);
+
+    Parser parser("der_out.txt", "built_semantic_program_complex_symbol_table_out.txt", "syntax_error_output.txt", "built_semantic_program_complex_error_output.txt");
+
+    parser.enable_double_pass_parse_ = true;
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+
+    EXPECT_TRUE(compare_files("built_semantic_program_complex_symbol_table_out.txt", "semantic_program_complex_symbol_table_out.txt"));
     parser.global_symbol_table_->print(true);
 }
 
