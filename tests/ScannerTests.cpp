@@ -471,7 +471,8 @@ bool compare_files(string first_path, string second_path) {
     ifstream s_file;
     f_file.open(first_path);
     s_file.open(second_path);
-
+    int row_count = 0;
+    int column_count = 0;
     while(true) {
         char f;
         char s;

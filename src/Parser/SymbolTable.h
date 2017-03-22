@@ -21,7 +21,7 @@ public:
     bool create_program_entry_and_table();
     bool create_function_entry_and_table(SymbolRecord** record);
     string print(bool output_to_console);
-    bool create_variable_entry(SymbolRecord* record);
+    bool create_variable_entry(SymbolRecord** record);
     bool create_function_class_entry_and_function_table(SymbolRecord **record);
     bool create_parameter_entry(SymbolRecord* record);
     bool insert(SymbolRecord *record);
@@ -31,6 +31,10 @@ public:
     void set_properly_declared(SymbolRecord *record);
 
     string generate_symbol_table_string(SymbolTable *table, string table_name, int indent_count);
+
+    bool check_if_assign_variable_exist();
+
+    bool check_if_assign_variable_exist(string name);
 };
 
 

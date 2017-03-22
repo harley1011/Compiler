@@ -12,6 +12,16 @@ SymbolTable::SymbolTable() {
     parent_symbol_table_ = NULL;
 }
 
+bool SymbolTable::check_if_assign_variable_exist(string name) {
+    if (second_pass_) {
+        SymbolRecord* record = search(name);
+        if (record == NULL) {
+            report_error_to_highest_symbol_table("Error: " + name + " variable is being used without being declared");
+        }
+    }
+    return true;
+}
+
 bool SymbolTable::create_class_entry_and_table(string kind, string type, string name) {
     SymbolRecord* record;
 
@@ -109,43 +119,43 @@ string SymbolTable::print(bool output_to_console) {
 }
 
 
-bool SymbolTable::create_variable_entry(SymbolRecord* record) {
+bool SymbolTable::create_variable_entry(SymbolRecord** record) {
     if (second_pass_) {
-        string name = record->name_;
-        SymbolRecord* found_record = search(record->name_);
-        delete record;
-        record = found_record;
-        set_properly_declared(record);
+        string name = (*record)->name_;
+        SymbolRecord* found_record = search((*record)->name_);
+        delete (*record);
+        (*record) = found_record;
+        set_properly_declared((*record));
         return true;
     }
-    record->kind_ = "variable";
-    if (record->type_.substr(0,3) == "int" || record->type_.substr(0, 5) == "float") {
-        if ((record->type_.size() > 3 && (record ->type_.substr(3,1) == "[" || record ->type_.substr(3,1) == " "))
-            || record->type_.size() > 5 && (record->type_.substr(5,1) == "[" || record->type_.substr(5,1) == " " )) {
-            record->properly_declared_ = true;
-            record->set_structure("array");
+    (*record)->kind_ = "variable";
+    if ((*record)->type_.substr(0,3) == "int" || (*record)->type_.substr(0, 5) == "float") {
+        if (((*record)->type_.size() > 3 && ((*record) ->type_.substr(3,1) == "[" || (*record) ->type_.substr(3,1) == " "))
+            || (*record)->type_.size() > 5 && ((*record)->type_.substr(5,1) == "[" || (*record)->type_.substr(5,1) == " " )) {
+            (*record)->properly_declared_ = true;
+            (*record)->set_structure("array");
         }
-        else if (record->type_.size() == 3 || record->type_.size() == 5) {
-            record->properly_declared_ = true;
-            record->set_structure("simple");
+        else if ((*record)->type_.size() == 3 || (*record)->type_.size() == 5) {
+            (*record)->properly_declared_ = true;
+            (*record)->set_structure("simple");
         }
         else {
-            record->set_structure("class");
+            (*record)->set_structure("class");
 
-            if (record->type_.find("[") != string::npos) {
-                record->structure_ += " array";
+            if ((*record)->type_.find("[") != string::npos) {
+                (*record)->structure_ += " array";
             }
         }
     }
     else {
-        record->properly_declared_ = false;
-        record->set_structure("class");
+        (*record)->properly_declared_ = false;
+        (*record)->set_structure("class");
 
-        if (record->type_.find("[") != string::npos) {
-            record->structure_ += " array";
+        if ((*record)->type_.find("[") != string::npos) {
+            (*record)->structure_ += " array";
         }
     }
-    insert(record);
+    insert(*record);
     return true;
 }
 
@@ -158,7 +168,7 @@ bool SymbolTable::create_function_class_entry_and_function_table(SymbolRecord **
         return true;
     }
     (*record)->kind_ = "function";
-
+    (*record)->symbol_table_->parent_symbol_table_ = this;
     if ((*record)->type_.substr(0,3) == "int" || (*record)->type_.substr(0, 5) == "float") {
         if (((*record)->type_.size() > 3 && (*record) ->type_.substr(3,1) == "[") || (*record)->type_.size() > 5 && (*record)->type_.substr(5,1) == "[" ) {
             (*record)->properly_declared_ = true;
@@ -311,4 +321,8 @@ string SymbolTable::generate_symbol_table_string(SymbolTable *table, string tabl
         return_string += generate_symbol_table_string(record->symbol_table_, record->name_, indent_count);
     }
     return return_string;
+}
+
+bool SymbolTable::check_if_assign_variable_exist() {
+    return false;
 }

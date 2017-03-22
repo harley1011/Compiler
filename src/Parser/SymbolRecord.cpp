@@ -21,6 +21,14 @@ SymbolRecord::SymbolRecord() {
     symbol_table_ = new SymbolTable();
 }
 
+SymbolRecord::SymbolRecord(bool second_pass) {
+    kind_ ="";
+    type_ = "";
+    name_ ="";
+    symbol_table_ = new SymbolTable();
+    symbol_table_->second_pass_ = second_pass;
+}
+
 bool SymbolRecord::set_kind(string kind) {
     kind_ = kind;
     return true;

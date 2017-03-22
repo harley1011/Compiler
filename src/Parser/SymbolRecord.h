@@ -12,6 +12,7 @@ class SymbolTable;
 class SymbolRecord {
 public:
     SymbolRecord(string kind, string type, string name);
+    SymbolRecord(bool second_pass);
     SymbolRecord();
     string kind_;
     string type_;

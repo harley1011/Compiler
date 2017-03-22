@@ -361,7 +361,7 @@ TEST(FuncDeclareTest, SemanticTests)
 {
     vector<Token*> tokens;
     Scanner scanner;
-    string find_min_func_string = "int findMin(int array[100]) { int minValue; int idxc; minValue = array[100]; for( int idx = 1; idx <= 99; idx = ( idx ) + 1) { if(array[idx] < maxValue) then { maxValue = array[idx]; }else{}; }; return (minValue); }; ";
+    string find_min_func_string = "int findMin(int array[100]) { int minValue; int maxValue; int idxc; minValue = array[100]; for( int idx = 1; idx <= 99; idx = ( idx ) + 1) { if(array[idx] < maxValue) then { maxValue = array[idx]; }else{}; }; return (minValue); }; ";
     tokens = scanner.generate_tokens("program { }; " + find_min_func_string, false);
 
     Parser parser;
@@ -370,18 +370,19 @@ TEST(FuncDeclareTest, SemanticTests)
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_[1]->symbol_table_->symbol_records_.size(), 4);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_[1]->symbol_table_->symbol_records_.size(), 5);
     check_record_properties("int", "findMin", "function", "simple", parser.global_symbol_table_->symbol_records_[1]);
     check_record_properties("int[100]", "array", "parameter", "array", parser.global_symbol_table_->symbol_records_[1]->symbol_table_->symbol_records_[0]);
     check_record_properties("int", "minValue", "variable", "simple", parser.global_symbol_table_->symbol_records_[1]->symbol_table_->symbol_records_[1]);
-    check_record_properties("int", "idxc", "variable", "simple", parser.global_symbol_table_->symbol_records_[1]->symbol_table_->symbol_records_[2]);
-    check_record_properties("int", "idx", "variable", "simple", parser.global_symbol_table_->symbol_records_[1]->symbol_table_->symbol_records_[3]);
+    check_record_properties("int", "maxValue", "variable", "simple", parser.global_symbol_table_->symbol_records_[1]->symbol_table_->symbol_records_[2]);
+    check_record_properties("int", "idxc", "variable", "simple", parser.global_symbol_table_->symbol_records_[1]->symbol_table_->symbol_records_[3]);
+    check_record_properties("int", "idx", "variable", "simple", parser.global_symbol_table_->symbol_records_[1]->symbol_table_->symbol_records_[4]);
     parser.global_symbol_table_->print(true);
 }
 
 TEST(FuncDeclareClassTest, SemanticTests)
 {
-    string find_min_func_string = "int findMin(int array[100]) { int minValue; int idxc; minValue = array[100]; for( int idx = 1; idx <= 99; idx = ( idx ) + 1) { if(array[idx] < maxValue) then { maxValue = array[idx]; }else{}; }; return (minValue); }; ";
+    string find_min_func_string = "int findMin(int array[100]) { int minValue; int maxValue; int idxc; minValue = array[100]; for( int idx = 1; idx <= 99; idx = ( idx ) + 1) { if(array[idx] < maxValue) then { maxValue = array[idx]; }else{}; }; return (minValue); }; ";
     vector<Token*> tokens;
     Scanner scanner;
     tokens = scanner.generate_tokens("class nameHere { " + find_min_func_string + "}; program { };", false);
@@ -392,12 +393,13 @@ TEST(FuncDeclareClassTest, SemanticTests)
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_.size(), 4);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_.size(), 5);
     check_record_properties("int", "findMin", "function", "simple", parser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[0]);
     check_record_properties("int[100]", "array", "parameter", "array", parser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[0]);
     check_record_properties("int", "minValue", "variable", "simple", parser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[1]);
-    check_record_properties("int", "idxc", "variable", "simple", parser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[2]);
-    check_record_properties("int", "idx", "variable", "simple", parser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[3]);
+    check_record_properties("int", "maxValue", "variable", "simple", parser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[2]);
+    check_record_properties("int", "idxc", "variable", "simple", parser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[3]);
+    check_record_properties("int", "idx", "variable", "simple", parser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[4]);
     parser.global_symbol_table_->print(true);
 }
 
@@ -413,7 +415,7 @@ TEST(FuncDeclareClassWithDuplicateVariablesTest, SemanticTests)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.syntax_errors.size(), 0);
-    EXPECT_EQ(parser.semantic_errors_.size(), 2);
+    EXPECT_EQ(parser.semantic_errors_.size(), 3);
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_.size(), 4);
@@ -854,7 +856,7 @@ TEST(FullProgramFromFileWithErrorsTest, SemanticTests)
 
     parser.enable_double_pass_parse_ = true;
     EXPECT_EQ(parser.parse(tokens), true);
-    EXPECT_EQ(parser.semantic_errors_.size(), 7);
+    EXPECT_EQ(parser.semantic_errors_.size(), 9);
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 4);
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_.size(), 4);
