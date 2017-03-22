@@ -58,6 +58,12 @@ bool SymbolRecord::set_structure(string structure) {
     return true;
 }
 
+bool SymbolRecord::add_function_record(SymbolRecord* record) {
+    function_parameters_record.push_back(*record);
+    return true;
+}
+
+
 bool SymbolRecord::add_array_size(IntegerToken integer_token) {
     append_to_type("[" + integer_token.lexeme_);
     array_sizes.push_back(integer_token.converted_lexeme_);

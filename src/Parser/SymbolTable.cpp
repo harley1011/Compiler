@@ -22,6 +22,16 @@ bool SymbolTable::check_if_assign_variable_exist(string name) {
     return true;
 }
 
+bool SymbolTable::check_if_func_exists(SymbolRecord* func_record) {
+    if (second_pass_) {
+        SymbolRecord* record = search(func_record->name_);
+        if (record == NULL) {
+            report_error_to_highest_symbol_table("Error: " + func_record->name_ + " variable is being used without being declared");
+        }
+    }
+    return true;
+}
+
 bool SymbolTable::create_class_entry_and_table(string kind, string type, string name) {
     SymbolRecord* record;
 

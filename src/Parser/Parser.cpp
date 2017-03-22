@@ -1,4 +1,5 @@
 #include "Parser.h"
+#include "../FloatToken.h"
 
 Parser::Parser() {
     current_rhs_derivation_ = "<classDeclLst> <progBody>";
@@ -635,7 +636,7 @@ bool Parser::factorVarOrFunc(SymbolRecord* func_record, SymbolRecord* record) {
         return false;
     if (lookahead_ == "OPENBRA") {
         form_derivation_string("<factorVarOrFunc>", "<factorVarArray>");
-        if (factorVarArray(func_record, record))
+        if (func_record->symbol_table_->check_if_assign_variable_exist(record->name_) && factorVarArray(func_record, record))
             return true;
     } else if (lookahead_ == "DOT" || lookahead_ == "OPENPARA") {
         form_derivation_string("<factorVarOrFunc>", "<varOrFuncIdNest>");
@@ -644,6 +645,7 @@ bool Parser::factorVarOrFunc(SymbolRecord* func_record, SymbolRecord* record) {
     } else if (check_if_lookahead_is_in_set(
             {"MULT", "DASH", "AND", "ADD", "SUB", "OR", "EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ", "CLOSEBRA",
              "CLOSEPARA", "DELI", "COM", "DOT"})) { // follow set
+        func_record->symbol_table_->check_if_assign_variable_exist(record->name_);
         form_derivation_string("<factorVarOrFunc>", "");
         return true;
     }
@@ -856,7 +858,7 @@ bool Parser::fParams(SymbolRecord* record) {
         form_derivation_string("<fParams>", "<type> id <arraySize> <fParamsTail>");
         SymbolRecord* fParam_record = new SymbolRecord();
         fParam_record->symbol_table_->parent_symbol_table_ = global_symbol_table_;
-        if (type(fParam_record) && match("ID") && fParam_record->set_name(get_last_token().lexeme_) && arraySize(fParam_record) && record->symbol_table_->create_parameter_entry(fParam_record) && fParamsTail(record))
+        if (type(fParam_record) && match("ID") && fParam_record->set_name(get_last_token().lexeme_) && arraySize(fParam_record) && record->symbol_table_->create_parameter_entry(fParam_record) && record->add_function_record(fParam_record) && fParamsTail(record))
             if (!global_symbol_table_->second_pass_)
                 record->generate_function_type();
             return true;
@@ -872,10 +874,13 @@ bool Parser::aParams(SymbolRecord* func_record, SymbolRecord* record) {
         return false;
     if (is_lookahead_a_value() || lookahead_ == "OPENPARA" || lookahead_ == "NOT" || lookahead_ == "ADD" ||
         lookahead_ == "SUB") {
+        record->type_ = "function";
         form_derivation_string("<aParams>", "<expr> <aParamsTail>");
-        if (expr(func_record, record) && aParamsTail(func_record, record))
+        SymbolRecord* aParam_record = new SymbolRecord();
+        if (expr(func_record, aParam_record) && record->add_function_record(aParam_record) && aParamsTail(func_record, record))
             return true;
     } else if (lookahead_ == "CLOSEPARA") {
+        func_record->symbol_table_->check_if_func_exists(record);
         form_derivation_string("<aParams>", "");
         return true;
     }
@@ -889,7 +894,7 @@ bool Parser::fParamsTail(SymbolRecord* record) {
         form_derivation_string("<fParamsTail>", ", <type> id <arraySize> <fParamsTail>");
         SymbolRecord* fParam_record = new SymbolRecord();
         fParam_record->symbol_table_->parent_symbol_table_ = global_symbol_table_;
-        if (match("COM") && type(fParam_record) && match("ID") && fParam_record->set_name(get_last_token().lexeme_) && arraySize(fParam_record) && record->symbol_table_->create_parameter_entry(fParam_record) && fParamsTail(record))
+        if (match("COM") && type(fParam_record) && match("ID") && fParam_record->set_name(get_last_token().lexeme_) && arraySize(fParam_record) && record->symbol_table_->create_parameter_entry(fParam_record) && record->add_function_record(fParam_record) && fParamsTail(record))
             return true;
     } else if (lookahead_ == "CLOSEPARA") { // Follow set
         form_derivation_string("<fParamsTail>", "");
@@ -903,9 +908,11 @@ bool Parser::aParamsTail(SymbolRecord* func_record, SymbolRecord* record) {
         return false;
     if (lookahead_ == "COM") {
         form_derivation_string("<aParamsTail>", ", <expr> <aParamsTail>");
-        if (match("COM") && expr(func_record, record) && aParamsTail(func_record, record))
+        SymbolRecord* aParam_record = new SymbolRecord();
+        if (match("COM") && expr(func_record, aParam_record) && record->add_function_record(aParam_record) && aParamsTail(func_record, record))
             return true;
     } else if (lookahead_ == "CLOSEPARA") { // Follow set
+        func_record->symbol_table_->check_if_func_exists(record);
         form_derivation_string("<aParamsTail>", "");
         return true;
     }
@@ -1002,6 +1009,8 @@ bool Parser::num(SymbolRecord* record) {
         return false;
     if (lookahead_ == "INUM") {
         form_derivation_string("<num>", "integer");
+        record->type_ = "integer";
+
         if (match("INUM"))
             return true;
     } else if (lookahead_ == "FNUM") {
@@ -1124,6 +1133,12 @@ Token Parser::get_last_token() {
 
 IntegerToken Parser::get_last_integer_token() {
     IntegerToken token = static_cast<IntegerToken&>(*tokens_[current_token_position_ - 2]);
+    return token;
+
+}
+
+FloatToken Parser::get_last_float_token() {
+    FloatToken token = static_cast<FloatToken&>(*tokens_[current_token_position_ - 2]);
     return token;
 
 }

@@ -35,6 +35,8 @@ public:
     bool check_if_assign_variable_exist();
 
     bool check_if_assign_variable_exist(string name);
+
+    bool check_if_func_exists(SymbolRecord *func_record);
 };
 
 

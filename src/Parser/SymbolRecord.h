@@ -22,7 +22,10 @@ public:
     SymbolTable* symbol_table_;
     bool properly_declared_;
     vector<int> array_sizes;
+    vector<SymbolRecord> function_parameters_record;
     string address;
+    int integer_value_;
+    float float_value_;
 
     bool set_kind(string kind);
     bool set_type(string type);
@@ -32,6 +35,8 @@ public:
     bool add_function_parameter(string type);
     bool generate_function_type();
     bool add_array_size(IntegerToken integer_token);
+
+    bool add_function_record(SymbolRecord *record);
 };
 
 

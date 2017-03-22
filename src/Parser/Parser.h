@@ -12,6 +12,7 @@
 #include "../Parser/SymbolRecord.h"
 #include "../IntegerToken.h"
 #include "../Token.h"
+#include "../FloatToken.h"
 
 class Parser {
 
@@ -128,6 +129,7 @@ public:
 
     IntegerToken get_last_integer_token();
 
+    FloatToken get_last_float_token();
 };
 
 
