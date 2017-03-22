@@ -54,6 +54,9 @@ TEST(AssignNonDeclaredVariableForLoopProgFuncTest, SemanticVerificationTests)
 //
 //    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
 //    parser.global_symbol_table_->print(true);
+
+    int i = 1.21;
+    i++;
 }
 
 

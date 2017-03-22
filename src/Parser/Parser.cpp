@@ -605,7 +605,8 @@ bool Parser::factor(SymbolRecord* func_record, SymbolRecord* record) {
         return false;
     if (lookahead_ == "ID") {
         form_derivation_string("<factor>", "id <factorVarOrFunc>");
-        if (match("ID") && factorVarOrFunc(func_record, record))
+        SymbolRecord* local_record = new SymbolRecord();
+        if (match("ID") && local_record->set_name(get_last_token().lexeme_) && factorVarOrFunc(func_record, local_record))
             return true;
     } else if (lookahead_ == "INUM" || lookahead_ == "FNUM") {
         form_derivation_string("<factor>", "<num>");
