@@ -71,29 +71,29 @@ public:
     bool statementRes(SymbolRecord* func_record);
     bool assignStat(SymbolRecord* func_record, SymbolRecord* record);
     bool statBlock(SymbolRecord* func_record);
-    bool expr(SymbolRecord* record);
-    bool relOrAri(SymbolRecord* record);
-    bool arithExpr(SymbolRecord* record);
-    bool arithExprD(SymbolRecord* record);
+    bool expr(SymbolRecord* func_record, SymbolRecord* record);
+    bool relOrAri(SymbolRecord* func_record, SymbolRecord* record);
+    bool arithExpr(SymbolRecord* func_record, SymbolRecord* record);
+    bool arithExprD(SymbolRecord* func_record, SymbolRecord* record);
     bool sign(SymbolRecord* record);
-    bool term(SymbolRecord* record);
-    bool termD(SymbolRecord* record);
-    bool factor(SymbolRecord* record);
-    bool factorVarOrFunc(SymbolRecord* record);
-    bool varOrFuncIdNest(SymbolRecord* record);
-    bool variable(SymbolRecord* record);
-    bool variableIndice(SymbolRecord* record);
-    bool idnest(SymbolRecord* record);
-    bool indice(SymbolRecord* record);
-    bool indiceLst(SymbolRecord* record);
+    bool term(SymbolRecord* func_record, SymbolRecord* record);
+    bool termD(SymbolRecord* func_record, SymbolRecord* record);
+    bool factor(SymbolRecord* func_record, SymbolRecord* record);
+    bool factorVarOrFunc(SymbolRecord* func_record, SymbolRecord* record);
+    bool varOrFuncIdNest(SymbolRecord* func_record, SymbolRecord* record);
+    bool variable(SymbolRecord* func_record, SymbolRecord* record);
+    bool variableIndice(SymbolRecord* func_record, SymbolRecord* record);
+    bool idnest(SymbolRecord* func_record, SymbolRecord* record);
+    bool indice(SymbolRecord* func_record, SymbolRecord* record);
+    bool indiceLst(SymbolRecord* func_record, SymbolRecord* record);
     bool arraySize(SymbolRecord* record);
     bool type(SymbolRecord* record);
     bool numType(SymbolRecord* record);
     bool fParams(SymbolRecord* record);
-    bool aParams(SymbolRecord* record);
+    bool aParams(SymbolRecord* func_record, SymbolRecord* record);
     bool fParamsTail(SymbolRecord* record);
-    bool aParamsTail(SymbolRecord* record);
-    bool assignOp(SymbolRecord* func_record, SymbolRecord* record);
+    bool aParamsTail(SymbolRecord* func_record, SymbolRecord* record);
+    bool assignOp();
     bool relOp(SymbolRecord* record);
     bool addOp(SymbolRecord* record);
     bool multOp(SymbolRecord* record);
@@ -103,14 +103,14 @@ public:
 
     bool is_lookahead_a_statement();
 
-    bool relExpr(SymbolRecord* record);
+    bool relExpr(SymbolRecord* func_record, SymbolRecord* record);
 
     bool is_lookahead_a_value();
     bool check_if_lookahead_is_in_set(set<string> values);
 
-    bool factorVarArray(SymbolRecord* record);
+    bool factorVarArray(SymbolRecord* func_record, SymbolRecord* record);
 
-    bool factorVarArrayNestId(SymbolRecord* record);
+    bool factorVarArrayNestId(SymbolRecord* func_record, SymbolRecord* record);
 
     bool statThenBlock(SymbolRecord* func_record);
 

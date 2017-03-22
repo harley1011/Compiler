@@ -322,7 +322,7 @@ bool Parser::varOrStat(SymbolRecord* func_record, SymbolRecord** record) {
     } else if (lookahead_ == "OPENBRA" || lookahead_ == "EQUAL" || lookahead_ == "DOT") {
         form_derivation_string("<varOrStat>", "<indiceLst> <idnest> <assignOp> <expr> ;");
         (*record)->set_name((*record)->type_);
-        if (indiceLst(*record) && idnest(*record) && assignOp(func_record, *record) && expr(*record) && match("DELI", {"INT", "ID", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN", "CLOSECURL"}, ";", "<missingSemiColon>")) {
+        if (indiceLst(func_record, *record) && idnest(func_record, *record) && func_record->symbol_table_->check_if_assign_variable_exist((*record)->name_) && assignOp() && expr(func_record, *record) && match("DELI", {"INT", "ID", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN", "CLOSECURL"}, ";", "<missingSemiColon>")) {
             return true;
         }
     }
@@ -368,30 +368,30 @@ bool Parser::statementRes(SymbolRecord* func_record) {
     (*local_record)->symbol_table_->second_pass_ = global_symbol_table_->second_pass_;
     if (lookahead_ == "IF") {
         form_derivation_string("<statementRes>", "if ( <expr> ) then <statThenBlock>");
-        if (match("IF") && match("OPENPARA") && expr(*local_record) && match("CLOSEPARA") && match("THEN") && statThenBlock(func_record)) {
+        if (match("IF") && match("OPENPARA") && expr(func_record, *local_record) && match("CLOSEPARA") && match("THEN") && statThenBlock(func_record)) {
             return true;
         }
     } else if (lookahead_ == "FOR") {
         form_derivation_string("<statementRes>", "for ( <type> id <assignOp> <expr> ; <relExpr> ; <assignStat> ) <statBlock>");
         SymbolRecord* assign_record = new SymbolRecord(global_symbol_table_->second_pass_);
         SymbolRecord* rel_record = new SymbolRecord(global_symbol_table_->second_pass_);
-        if (match("FOR") && match("OPENPARA") && type(*local_record) && match("ID") && (*local_record)->set_name(get_last_token().lexeme_) && func_record->symbol_table_->create_variable_entry(local_record) && assignOp(func_record, *local_record) && expr(*local_record) && match("DELI") &&
-            relExpr(rel_record) && match("DELI") && assignStat(func_record, assign_record) && match("CLOSEPARA") && statBlock(func_record)) {
+        if (match("FOR") && match("OPENPARA") && type(*local_record) && match("ID") && (*local_record)->set_name(get_last_token().lexeme_) && func_record->symbol_table_->create_variable_entry(local_record) && assignOp() && expr(func_record, *local_record) && match("DELI") &&
+            relExpr(func_record, rel_record) && match("DELI") && assignStat(func_record, assign_record) && match("CLOSEPARA") && statBlock(func_record)) {
             return true;
         }
     } else if (lookahead_ == "GET") {
         form_derivation_string("<statementRes>", "get ( <variable> ) ;");
-        if (match("GET") && match("OPENPARA") && variable(*local_record) && match("CLOSEPARA") && match("DELI")) {
+        if (match("GET") && match("OPENPARA") && variable(func_record, *local_record) && match("CLOSEPARA") && match("DELI")) {
             return true;
         }
     } else if (lookahead_ == "PUT") {
         form_derivation_string("<statementRes>", "put ( <expr> ) ;");
-        if (match("PUT") && match("OPENPARA") && expr(*local_record) && match("CLOSEPARA") && match("DELI")) {
+        if (match("PUT") && match("OPENPARA") && expr(func_record, *local_record) && match("CLOSEPARA") && match("DELI")) {
             return true;
         }
     } else if (lookahead_ == "RETURN") {
         form_derivation_string("<statementRes>", "return ( <expr> ) ;");
-        if (match("RETURN") && match("OPENPARA") && expr(*local_record) && match("CLOSEPARA") && match("DELI")) {
+        if (match("RETURN") && match("OPENPARA") && expr(func_record, *local_record) && match("CLOSEPARA") && match("DELI")) {
             return true;
         }
     }
@@ -434,7 +434,7 @@ bool Parser::assignStat(SymbolRecord* func_record, SymbolRecord* record) {
         return false;
     if (lookahead_ == "ID") {
         form_derivation_string("<assignStat>", "<variable> <assignOp> <expr>");
-        if (variable(record) && assignOp(func_record, record) && expr(record))
+        if (variable(func_record, record) && assignOp() && expr(func_record, record))
             return true;
     }
     return false;
@@ -473,30 +473,30 @@ bool Parser::statThenBlock(SymbolRecord* func_record) {
     return false;
 }
 
-bool Parser::expr(SymbolRecord* record) {
+bool Parser::expr(SymbolRecord* func_record, SymbolRecord* record) {
     if (!skip_errors({"ID", "INUM", "FNUM", "OPENPARA", "NOT", "ADD", "SUB"}, {"COM", "CLOSEPARA", "DELI"}, false))
         return false;
     if (is_lookahead_a_value() || lookahead_ == "OPENPARA" || lookahead_ == "NOT" || lookahead_ == "ADD" || lookahead_ == "SUB") {
         form_derivation_string("<expr>", "<arithExpr> <relOrAri>");
-        if (arithExpr(record) && relOrAri(record)) {
+        if (arithExpr(func_record, record) && relOrAri(func_record, record)) {
             return true;
         }
     }
     return false;
 }
 
-bool Parser::relOrAri(SymbolRecord* record) {
+bool Parser::relOrAri(SymbolRecord* func_record, SymbolRecord* record) {
     if (!skip_errors({"EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ", "ADD", "SUB", "OR"}, {"COM", "CLOSEPARA", "DELI"},
                      true))
         return false;
     if (lookahead_ == "EQUIV" || lookahead_ == "NOTEQ" || lookahead_ == "LT" || lookahead_ == "GT" ||
         lookahead_ == "LTEQ" || lookahead_ == "GTEQ") {
         form_derivation_string("<relOrAri>", "<relOp> <arithExpr>");
-        if (relOp(record) && arithExpr(record))
+        if (relOp(record) && arithExpr(func_record, record))
             return true;
     } else if (lookahead_ == "ADD" || lookahead_ == "SUB" || lookahead_ == "OR") {
         form_derivation_string("<relOrAri>", "<arithExprD>");
-        if (arithExprD(record))
+        if (arithExprD(func_record, record))
             return true;
     } else if (lookahead_ == "COM" || lookahead_ == "CLOSEPARA" || lookahead_ == "DELI") {
         form_derivation_string("<relOrAri>", "");
@@ -507,39 +507,39 @@ bool Parser::relOrAri(SymbolRecord* record) {
 }
 
 
-bool Parser::relExpr(SymbolRecord* record) {
+bool Parser::relExpr(SymbolRecord* func_record, SymbolRecord* record) {
     if (!skip_errors({"OPENPARA", "ID", "INUM", "FNUM", "NOT", "ADD", "SUB"}, {"DELI"}, false))
         return false;
     if (is_lookahead_a_value() || lookahead_ == "OPENPARA" || lookahead_ == "NOT" || lookahead_ == "ADD" ||
         lookahead_ == "SUB") {
         form_derivation_string("<relExpr>", "<arithExpr> <relOp> <arithExpr>");
-        if (arithExpr(record) && relOp(record) && arithExpr(record))
+        if (arithExpr(func_record, record) && relOp(record) && arithExpr(func_record, record))
             return true;
     }
     return false;
 
 }
 
-bool Parser::arithExpr(SymbolRecord* record) {
+bool Parser::arithExpr(SymbolRecord* func_record, SymbolRecord* record) {
     if (!skip_errors({"OPENPARA", "ID", "INUM", "FNUM", "NOT", "ADD", "SUB"},
                      {"CLOSEBRA", "CLOSEPARA", "EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ", "DELI", "COM"}, false))
         return false;
     if (is_lookahead_a_value() || lookahead_ == "OPENPARA" || lookahead_ == "NOT" || lookahead_ == "ADD" ||
         lookahead_ == "SUB") {
         form_derivation_string("<arithExpr>", "<term> <arithExprD>");
-        if (term(record) && arithExprD(record))
+        if (term(func_record, record) && arithExprD(func_record, record))
             return true;
     }
     return false;
 }
 
-bool Parser::arithExprD(SymbolRecord* record) {
+bool Parser::arithExprD(SymbolRecord* func_record, SymbolRecord* record) {
     if (!skip_errors({"ADD", "SUB", "OR"},
                      {"CLOSEBRA", "CLOSEPARA", "EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ", "DELI", "COM"}, true))
         return false;
     if (lookahead_ == "ADD" || lookahead_ == "SUB" || lookahead_ == "OR") {
         form_derivation_string("<arithExprD>", "<addOp> <term> <arithExprD>");
-        if (addOp(record) && term(record) && arithExprD(record))
+        if (addOp(record) && term(func_record, record) && arithExprD(func_record, record))
             return true;
     } else if (check_if_lookahead_is_in_set(
             {"EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ", "CLOSEBRA", "CLOSEPARA", "DELI", "COM"})) { // follow set
@@ -565,7 +565,7 @@ bool Parser::sign(SymbolRecord* record) {
     return false;
 }
 
-bool Parser::term(SymbolRecord* record) {
+bool Parser::term(SymbolRecord* func_record, SymbolRecord* record) {
     if (!skip_errors({"OPENPARA", "ID", "INUM", "FNUM", "NOT", "ADD", "SUB"},
                      {"ADD", "SUB", "OR", "CLOSEBRA", "CLOSEPARA", "EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ", "DELI",
                       "COM"}, false))
@@ -573,21 +573,21 @@ bool Parser::term(SymbolRecord* record) {
     if (is_lookahead_a_value() || lookahead_ == "OPENPARA" || lookahead_ == "NOT" || lookahead_ == "ADD" ||
         lookahead_ == "SUB") {
         form_derivation_string("<term>", "<factor> <termD>");
-        if (factor(record) && termD(record)) {
+        if (factor(func_record ,record) && termD(func_record, record)) {
             return true;
         }
     }
     return false;
 }
 
-bool Parser::termD(SymbolRecord* record) {
+bool Parser::termD(SymbolRecord* func_record, SymbolRecord* record) {
     if (!skip_errors({"MULT", "DASH", "AND"},
                      {"ADD", "SUB", "OR", "CLOSEBRA", "CLOSEPARA", "EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ", "DELI",
                       "COM"}, true))
         return false;
     if (lookahead_ == "MULT" || lookahead_ == "DASH" || lookahead_ == "AND") {
         form_derivation_string("<termD>", "<multOp> <factor> <termD>");
-        if (multOp(record) && factor(record) && termD(record))
+        if (multOp(record) && factor(func_record, record) && termD(func_record, record))
             return true;
     } else if (check_if_lookahead_is_in_set(
             {"ADD", "SUB", "OR", "EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ", "CLOSEBRA", "CLOSEPARA", "DELI", "COM",
@@ -598,14 +598,14 @@ bool Parser::termD(SymbolRecord* record) {
     return false;
 }
 
-bool Parser::factor(SymbolRecord* record) {
+bool Parser::factor(SymbolRecord* func_record, SymbolRecord* record) {
     if (!skip_errors({"OPENPARA", "ID", "INUM", "FNUM", "NOT", "ADD", "SUB"},
                      {"MULT", "DASH", "AND", "ADD", "SUB", "OR", "CLOSEBRA", "CLOSEPARA", "EQUIV", "NOTEQ", "LT", "GT",
                       "LTEQ", "GTEQ", "DELI", "COM"}, false))
         return false;
     if (lookahead_ == "ID") {
         form_derivation_string("<factor>", "id <factorVarOrFunc>");
-        if (match("ID") && factorVarOrFunc(record))
+        if (match("ID") && factorVarOrFunc(func_record, record))
             return true;
     } else if (lookahead_ == "INUM" || lookahead_ == "FNUM") {
         form_derivation_string("<factor>", "<num>");
@@ -613,32 +613,32 @@ bool Parser::factor(SymbolRecord* record) {
             return true;
     } else if (lookahead_ == "OPENPARA") {
         form_derivation_string("<factor>", "( <arithExpr> )");
-        if (match("OPENPARA") && arithExpr(record) && match("CLOSEPARA"))
+        if (match("OPENPARA") && arithExpr(func_record, record) && match("CLOSEPARA"))
             return true;
     } else if (lookahead_ == "NOT") {
         form_derivation_string("<factor>", "not <factor>");
-        if (match("NOT") && factor(record))
+        if (match("NOT") && factor(func_record, record))
             return true;
     } else if (lookahead_ == "ADD" || lookahead_ == "SUB") {
         form_derivation_string("<factor>", "<sign> <factor>");
-        if (sign(record) && factor(record))
+        if (sign(record) && factor(func_record, record))
             return true;
     }
     return false;
 }
 
-bool Parser::factorVarOrFunc(SymbolRecord* record) {
+bool Parser::factorVarOrFunc(SymbolRecord* func_record, SymbolRecord* record) {
     if (!skip_errors({"OPENPARA", "OPENBRA", "DOT"},
                      {"MULT", "DASH", "AND", "ADD", "SUB", "OR", "CLOSEBRA", "CLOSEPARA", "EQUIV", "NOTEQ", "LT", "GT",
                       "LTEQ", "GTEQ", "DELI", "COM"}, true))
         return false;
     if (lookahead_ == "OPENBRA") {
         form_derivation_string("<factorVarOrFunc>", "<factorVarArray>");
-        if (factorVarArray(record))
+        if (factorVarArray(func_record, record))
             return true;
     } else if (lookahead_ == "DOT" || lookahead_ == "OPENPARA") {
         form_derivation_string("<factorVarOrFunc>", "<varOrFuncIdNest>");
-        if (varOrFuncIdNest(record))
+        if (varOrFuncIdNest(func_record, record))
             return true;
     } else if (check_if_lookahead_is_in_set(
             {"MULT", "DASH", "AND", "ADD", "SUB", "OR", "EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ", "CLOSEBRA",
@@ -649,26 +649,26 @@ bool Parser::factorVarOrFunc(SymbolRecord* record) {
     return false;
 }
 
-bool Parser::factorVarArray(SymbolRecord* record) {
+bool Parser::factorVarArray(SymbolRecord* func_record, SymbolRecord* record) {
     if (!skip_errors({"OPENBRA"},
                      {"MULT", "DASH", "AND", "ADD", "SUB", "OR", "CLOSEBRA", "CLOSEPARA", "EQUIV", "NOTEQ", "LT", "GT",
                       "LTEQ", "GTEQ", "DELI", "COM"}, false))
         return false;
     if (lookahead_ == "OPENBRA") {
         form_derivation_string("<factorVarArray>", "<indice> <indiceLst> <factorVarArrayNestId>");
-        if (indice(record) && indiceLst(record) && factorVarArrayNestId(record))
+        if (indice(func_record, record) && indiceLst(func_record, record) && factorVarArrayNestId(func_record, record))
             return true;
     }
 }
 
-bool Parser::factorVarArrayNestId(SymbolRecord* record) {
+bool Parser::factorVarArrayNestId(SymbolRecord* func_record, SymbolRecord* record) {
     if (!skip_errors({"DOT"},
                      {"MULT", "DASH", "AND", "ADD", "SUB", "OR", "CLOSEBRA", "CLOSEPARA", "EQUIV", "NOTEQ", "LT", "GT",
                       "LTEQ", "GTEQ", "DELI", "COM"}, true))
         return false;
     if (lookahead_ == "DOT") {
         form_derivation_string("<factorVarArrayNestId>", ". id <factorVarOrFunc>");
-        if (match("DOT") && match("ID") && factorVarOrFunc(record))
+        if (match("DOT") && match("ID") && factorVarOrFunc(func_record, record))
             return true;
     } else if (check_if_lookahead_is_in_set(
             {"MULT", "DASH", "AND", "ADD", "SUB", "OR", "EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ", "CLOSEBRA",
@@ -679,40 +679,40 @@ bool Parser::factorVarArrayNestId(SymbolRecord* record) {
     return false;
 }
 
-bool Parser::varOrFuncIdNest(SymbolRecord* record) {
+bool Parser::varOrFuncIdNest(SymbolRecord* func_record, SymbolRecord* record) {
     if (!skip_errors({"OPENPARA", "DOT"},
                      {"MULT", "DASH", "AND", "ADD", "SUB", "OR", "CLOSEBRA", "CLOSEPARA", "EQUIV", "NOTEQ", "LT", "GT",
                       "LTEQ", "GTEQ", "DELI", "COM"}, true))
         return false;
     if (lookahead_ == "OPENPARA") {
         form_derivation_string("<varOrFuncIdNest>", "( <aParams> )");
-        if (match("OPENPARA") && aParams(record) && match("CLOSEPARA"))
+        if (match("OPENPARA") && aParams(func_record, record) && match("CLOSEPARA"))
             return true;
     } else if (lookahead_ == "DOT") {
         form_derivation_string("<varOrFuncIdNest>", ". id <factorVarOrFunc>");
-        if (match("DOT") && match("ID") && factorVarOrFunc(record))
+        if (match("DOT") && match("ID") && factorVarOrFunc(func_record, record))
             return true;
     }
     return false;
 }
 
-bool Parser::variable(SymbolRecord* record) {
+bool Parser::variable(SymbolRecord* func_record, SymbolRecord* record) {
     if (!skip_errors({"ID"}, {"EQUAL", "CLOSEPARA"}, false))
         return false;
     if (lookahead_ == "ID") {
         form_derivation_string("<variable>", "id <variableIndice>");
-        if (match("ID") && record->set_name(get_last_token().lexeme_) && variableIndice(record))
+        if (match("ID") && record->set_name(get_last_token().lexeme_) && func_record->symbol_table_->check_if_assign_variable_exist(record->name_) && variableIndice(func_record, record))
             return true;
     }
     return false;
 }
 
-bool Parser::variableIndice(SymbolRecord* record) {
+bool Parser::variableIndice(SymbolRecord* func_record, SymbolRecord* record) {
     if (!skip_errors({"OPENBRA", "DOT"}, {"EQUAL", "CLOSEPARA"}, true))
         return false;
     if (lookahead_ == "OPENBRA" || lookahead_ == "DOT") {
         form_derivation_string("<variableIndice>", "<indiceLst> <idnest>");
-        if (indiceLst(record) && idnest(record))
+        if (indiceLst(func_record, record) && idnest(func_record, record))
             return true;
     } else if (lookahead_ == "EQUAL" || lookahead_ == "CLOSEPARA") {
         form_derivation_string("<variableIndice>", "");
@@ -725,12 +725,12 @@ bool Parser::check_if_lookahead_is_in_set(set<string> values) {
     return values.find(lookahead_) != values.end();
 }
 
-bool Parser::idnest(SymbolRecord* record) {
+bool Parser::idnest(SymbolRecord* func_record, SymbolRecord* record) {
     if (!skip_errors({"DOT"}, {"EQUAL", "CLOSEPARA"}, true))
         return false;
     if (lookahead_ == "DOT") {
         form_derivation_string("<idnest>", ". id <indiceLst> <idnest>");
-        if (match("DOT") && match("ID") && indiceLst(record) && idnest(record)) {
+        if (match("DOT") && match("ID") && indiceLst(func_record, record) && idnest(func_record, record)) {
             return true;
         }
     } else if (lookahead_ == "EQUAL" || lookahead_ == "CLOSEPARA") {
@@ -740,28 +740,28 @@ bool Parser::idnest(SymbolRecord* record) {
     return false;
 }
 
-bool Parser::indice(SymbolRecord* record) {
+bool Parser::indice(SymbolRecord* func_record, SymbolRecord* record) {
     if (!skip_errors({"OPENBRA"},
                      {"OPENBRA", "DOT", "EQUAL", "MULT", "DASH", "AND", "ADD", "SUB", "OR", "CLOSEBRA", "CLOSEPARA",
                       "EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ", "DELI", "COM"}, false))
         return false;
     if (lookahead_ == "OPENBRA") {
         form_derivation_string("<indice>", "[ <arithExpr> ]");
-        if (match("OPENBRA") && arithExpr(record) && match("CLOSEBRA")) {
+        if (match("OPENBRA") && arithExpr(func_record, record) && match("CLOSEBRA")) {
             return true;
         }
     }
     return false;
 }
 
-bool Parser::indiceLst(SymbolRecord* record) {
+bool Parser::indiceLst(SymbolRecord* func_record, SymbolRecord* record) {
     if (!skip_errors({"OPENBRA"},
                      {"OPENBRA", "DOT", "EQUAL", "MULT", "DASH", "AND", "ADD", "SUB", "OR", "CLOSEBRA", "CLOSEPARA",
                       "EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ", "DELI", "COM"}, true))
         return false;
     if (lookahead_ == "OPENBRA") {
         form_derivation_string("<indiceLst>", "<indice> <indiceLst>");
-        if (indice(record) && indiceLst(record)) {
+        if (indice(func_record, record) && indiceLst(func_record, record)) {
             return true;
         }
     } else if (lookahead_ == "DOT" || lookahead_ == "EQUAL" || lookahead_ == "CLOSEPARA") { // Follow set
@@ -866,13 +866,13 @@ bool Parser::fParams(SymbolRecord* record) {
     return false;
 }
 
-bool Parser::aParams(SymbolRecord* record) {
+bool Parser::aParams(SymbolRecord* func_record, SymbolRecord* record) {
     if (!skip_errors({"ID", "INUM", "FNUM", "OPENPARA", "NOT", "ADD", "SUB"}, {"CLOSEPARA"}, true))
         return false;
     if (is_lookahead_a_value() || lookahead_ == "OPENPARA" || lookahead_ == "NOT" || lookahead_ == "ADD" ||
         lookahead_ == "SUB") {
         form_derivation_string("<aParams>", "<expr> <aParamsTail>");
-        if (expr(record) && aParamsTail(record))
+        if (expr(func_record, record) && aParamsTail(func_record, record))
             return true;
     } else if (lookahead_ == "CLOSEPARA") {
         form_derivation_string("<aParams>", "");
@@ -897,12 +897,12 @@ bool Parser::fParamsTail(SymbolRecord* record) {
     return false;
 }
 
-bool Parser::aParamsTail(SymbolRecord* record) {
+bool Parser::aParamsTail(SymbolRecord* func_record, SymbolRecord* record) {
     if (!skip_errors({"COM"}, {"CLOSEPARA"}, true))
         return false;
     if (lookahead_ == "COM") {
         form_derivation_string("<aParamsTail>", ", <expr> <aParamsTail>");
-        if (match("COM") && expr(record) && aParamsTail(record))
+        if (match("COM") && expr(func_record, record) && aParamsTail(func_record, record))
             return true;
     } else if (lookahead_ == "CLOSEPARA") { // Follow set
         form_derivation_string("<aParamsTail>", "");
@@ -911,12 +911,12 @@ bool Parser::aParamsTail(SymbolRecord* record) {
     return false;
 }
 
-bool Parser::assignOp(SymbolRecord* func_record, SymbolRecord* record) {
+bool Parser::assignOp() {
     if (!skip_errors({"EQUAL"},
                      {"ID", "OPENPARA", "NOT", "INUM", "FNUM", "ADD", "SUB", "IF", "FOR", "GET", "PUT", "RETURN", "INT",
                       "CLOSECURL"}, false))
         return false;
-    if (lookahead_ == "EQUAL" && match("EQUAL") && func_record->symbol_table_->check_if_assign_variable_exist(record->name_)) {
+    if (lookahead_ == "EQUAL" && match("EQUAL")) {
         form_derivation_string("<assignOp>", "=");
         return true;
     }
