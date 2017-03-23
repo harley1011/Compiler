@@ -1011,7 +1011,7 @@ bool Parser::num(SymbolRecord* record) {
         form_derivation_string("<num>", "integer");
         if (match("INUM")) {
             record->type_ = "int";
-            record->float_value_ = get_last_integer_token().converted_lexeme_;
+            record->integer_value_ = get_last_integer_token().converted_lexeme_;
             return true;
         }
     } else if (lookahead_ == "FNUM") {
@@ -1118,6 +1118,7 @@ string Parser::next_token() {
             global_symbol_table_->current_token = current_token_;
             lookahead_ = current_token_->token_identifier_;
         } else {
+            current_token_position_++;
             lookahead_ = "END";
         }
     } while (lookahead_ == "CMT");
