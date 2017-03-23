@@ -1009,14 +1009,18 @@ bool Parser::num(SymbolRecord* record) {
         return false;
     if (lookahead_ == "INUM") {
         form_derivation_string("<num>", "integer");
-        record->type_ = "integer";
-
-        if (match("INUM"))
+        if (match("INUM")) {
+            record->type_ = "integer";
+            record->float_value_ = get_last_integer_token().converted_lexeme_;
             return true;
+        }
     } else if (lookahead_ == "FNUM") {
         form_derivation_string("<num>", "float");
-        if (match("FNUM"))
+        if (match("FNUM")) {
+            record->type_ = "float";
+            record->float_value_ = get_last_float_token().converted_lexeme_;
             return true;
+        }
     }
     return false;
 }
