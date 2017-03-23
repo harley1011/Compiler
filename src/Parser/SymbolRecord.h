@@ -22,7 +22,7 @@ public:
     SymbolTable* symbol_table_;
     bool properly_declared_;
     vector<int> array_sizes;
-    vector<SymbolRecord> function_parameters_record;
+    vector<SymbolRecord*> function_parameters_record_;
     string address;
     int integer_value_;
     float float_value_;

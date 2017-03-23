@@ -1010,7 +1010,7 @@ bool Parser::num(SymbolRecord* record) {
     if (lookahead_ == "INUM") {
         form_derivation_string("<num>", "integer");
         if (match("INUM")) {
-            record->type_ = "integer";
+            record->type_ = "int";
             record->float_value_ = get_last_integer_token().converted_lexeme_;
             return true;
         }

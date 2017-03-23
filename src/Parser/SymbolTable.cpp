@@ -26,7 +26,20 @@ bool SymbolTable::check_if_func_exists(SymbolRecord* func_record) {
     if (second_pass_) {
         SymbolRecord* record = search(func_record->name_);
         if (record == NULL) {
-            report_error_to_highest_symbol_table("Error: " + func_record->name_ + " variable is being used without being declared");
+            report_error_to_highest_symbol_table("Error: " + func_record->name_ + " function is being used without being declared");
+        } else {
+            for (int i = 0; i < record->function_parameters.size(); i++) {
+                if (i == func_record->function_parameters_record_.size()) {
+                    report_error_to_highest_symbol_table("Error: " + func_record->name_ + " is being invoked with only " + to_string(i) + " parameters but needs" + to_string(record->function_parameters.size()));
+                    break;
+                }
+                string actual_type = record->function_parameters[i];
+                string received_type = func_record->function_parameters_record_[i]->type_;
+                if (actual_type != received_type) {
+                    report_error_to_highest_symbol_table("Error: " + func_record->name_ + " " + to_string(i) + " parameter is of type " + actual_type + " but " + received_type + " is being passed");
+                }
+
+            }
         }
     }
     return true;

@@ -59,7 +59,7 @@ bool SymbolRecord::set_structure(string structure) {
 }
 
 bool SymbolRecord::add_function_record(SymbolRecord* record) {
-    function_parameters_record.push_back(*record);
+    function_parameters_record_.push_back(record);
     return true;
 }
 

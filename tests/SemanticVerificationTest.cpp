@@ -144,7 +144,23 @@ TEST(AssignNonDeclaredFuncClassFuncTest, SemanticVerificationTests)
 {
     vector<Token*> tokens;
     Scanner scanner;
-    tokens = scanner.generate_tokens("class nameHere { int findMin() { int idx; idx = funcTest(21, 22.20, idx); }; }; program { };", false);
+    tokens = scanner.generate_tokens("class nameHere { int findMin() { int idx; idx = funcTest(21,idx); }; }; program { };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
+
+TEST(AssignDeclaredInvalidParameterFuncClassFuncTest, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("program { int idx; idx = funcTest(10);}; int funcTest(int id, int idc) { return (id); };", false);
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
