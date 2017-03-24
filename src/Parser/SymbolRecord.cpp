@@ -63,6 +63,11 @@ bool SymbolRecord::add_function_record(SymbolRecord* record) {
     return true;
 }
 
+bool SymbolRecord::add_nested_porperty(string property) {
+    nested_properties_.push_back(property);
+    return true;
+}
+
 
 bool SymbolRecord::add_array_size(IntegerToken integer_token) {
     append_to_type("[" + integer_token.lexeme_);

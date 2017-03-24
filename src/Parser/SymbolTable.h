@@ -34,9 +34,17 @@ public:
 
     bool check_if_assign_variable_exist();
 
-    bool check_if_assign_variable_exist(string name);
+    bool check_if_assign_variable_exist(SymbolRecord *record);
 
     bool check_if_func_exists(SymbolRecord *func_record);
+
+    bool check_if_correct_assign_type(SymbolRecord *id_record, SymbolRecord *assign_record);
+
+    bool check_if_assign_variable_exist_and_correct_assign_type(SymbolRecord *variable_record, SymbolRecord *assign_record);
+
+    bool check_if_assign_variable_exist_and_nested_fields(SymbolRecord *func_record, SymbolRecord *record);
+
+    SymbolRecord *search_type(string type);
 };
 
 

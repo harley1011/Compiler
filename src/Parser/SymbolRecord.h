@@ -17,6 +17,7 @@ public:
     string kind_;
     string type_;
     vector<string> function_parameters;
+    vector<string> nested_properties_;
     string name_;
     string structure_;
     SymbolTable* symbol_table_;
@@ -37,6 +38,8 @@ public:
     bool add_array_size(IntegerToken integer_token);
 
     bool add_function_record(SymbolRecord *record);
+
+    bool add_nested_porperty(string property);
 };
 
 

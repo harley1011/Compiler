@@ -156,11 +156,11 @@ TEST(AssignNonDeclaredFuncClassFuncTest, SemanticVerificationTests)
     parser.global_symbol_table_->print(true);
 }
 
-TEST(AssignDeclaredInvalidParameterFuncClassFuncTest, SemanticVerificationTests)
+TEST(AssignDeclaredInvalidNoParameterFuncClassFuncTest, SemanticVerificationTests)
 {
     vector<Token*> tokens;
     Scanner scanner;
-    tokens = scanner.generate_tokens("program { int idx; idx = funcTest(10);}; int funcTest(int id, int idc) { return (id); };", false);
+    tokens = scanner.generate_tokens("program { int idx; idx = funcTest(10, idx);}; int funcTest(int id, int idc, int idk) { return (id); };", false);
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
@@ -171,3 +171,69 @@ TEST(AssignDeclaredInvalidParameterFuncClassFuncTest, SemanticVerificationTests)
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
     parser.global_symbol_table_->print(true);
 }
+
+TEST(AssignDeclaredValidFloatNumParameterFuncClassFuncTest, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("program { int idx; idx = funcTest(10, 10.11);}; int funcTest(int id, int idc) { return (id); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
+
+TEST(AssignDeclareValidFloatVarParameterFuncClassFuncTest, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("program { int idx; float idf; idx = funcTest(idf, 10);}; int funcTest(int id, int idc) { return (id); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
+
+TEST(AssignDeclaredClassVarIntFuncTest, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class Util { }; program { Util idx; idx = funcTest(10, 10);}; int funcTest(int id, int idc) { return (id); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
+    parser.global_symbol_table_->print(true);
+}
+
+
+TEST(AssignDeclaredClassVarIntClassFuncTest, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class Util { }; class Func { Util funcTest(int id, int idc) { return (id); }; }; program { Util idx; Func func; idx = func.funcTest(10, 10);}; ", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
+    parser.global_symbol_table_->print(true);
+}
+

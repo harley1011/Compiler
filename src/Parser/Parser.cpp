@@ -323,7 +323,8 @@ bool Parser::varOrStat(SymbolRecord* func_record, SymbolRecord** record) {
     } else if (lookahead_ == "OPENBRA" || lookahead_ == "EQUAL" || lookahead_ == "DOT") {
         form_derivation_string("<varOrStat>", "<indiceLst> <idnest> <assignOp> <expr> ;");
         (*record)->set_name((*record)->type_);
-        if (indiceLst(func_record, *record) && idnest(func_record, *record) && func_record->symbol_table_->check_if_assign_variable_exist((*record)->name_) && assignOp() && expr(func_record, *record) && match("DELI", {"INT", "ID", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN", "CLOSECURL"}, ";", "<missingSemiColon>")) {
+        SymbolRecord* assign_record = new SymbolRecord();
+        if (indiceLst(func_record, *record) && idnest(func_record, *record) && assignOp() && expr(func_record, assign_record) && func_record->symbol_table_->check_if_assign_variable_exist_and_correct_assign_type(*record, assign_record) && match("DELI", {"INT", "ID", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN", "CLOSECURL"}, ";", "<missingSemiColon>")) {
             return true;
         }
     }
@@ -606,8 +607,8 @@ bool Parser::factor(SymbolRecord* func_record, SymbolRecord* record) {
         return false;
     if (lookahead_ == "ID") {
         form_derivation_string("<factor>", "id <factorVarOrFunc>");
-        SymbolRecord* local_record = new SymbolRecord();
-        if (match("ID") && local_record->set_name(get_last_token().lexeme_) && factorVarOrFunc(func_record, local_record))
+        record->kind_ = "id";
+        if (match("ID") && record->set_name(get_last_token().lexeme_) && factorVarOrFunc(func_record, record))
             return true;
     } else if (lookahead_ == "INUM" || lookahead_ == "FNUM") {
         form_derivation_string("<factor>", "<num>");
@@ -636,7 +637,7 @@ bool Parser::factorVarOrFunc(SymbolRecord* func_record, SymbolRecord* record) {
         return false;
     if (lookahead_ == "OPENBRA") {
         form_derivation_string("<factorVarOrFunc>", "<factorVarArray>");
-        if (func_record->symbol_table_->check_if_assign_variable_exist(record->name_) && factorVarArray(func_record, record))
+        if (factorVarArray(func_record, record))
             return true;
     } else if (lookahead_ == "DOT" || lookahead_ == "OPENPARA") {
         form_derivation_string("<factorVarOrFunc>", "<varOrFuncIdNest>");
@@ -645,7 +646,7 @@ bool Parser::factorVarOrFunc(SymbolRecord* func_record, SymbolRecord* record) {
     } else if (check_if_lookahead_is_in_set(
             {"MULT", "DASH", "AND", "ADD", "SUB", "OR", "EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ", "CLOSEBRA",
              "CLOSEPARA", "DELI", "COM", "DOT"})) { // follow set
-        func_record->symbol_table_->check_if_assign_variable_exist(record->name_);
+        func_record->symbol_table_->check_if_assign_variable_exist(record);
         form_derivation_string("<factorVarOrFunc>", "");
         return true;
     }
@@ -677,6 +678,7 @@ bool Parser::factorVarArrayNestId(SymbolRecord* func_record, SymbolRecord* recor
             {"MULT", "DASH", "AND", "ADD", "SUB", "OR", "EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ", "CLOSEBRA",
              "CLOSEPARA", "DELI", "COM", "DOT"})) { // follow set
         form_derivation_string("<factorVarArrayNestId>", "");
+        func_record->symbol_table_->check_if_assign_variable_exist(record);
         return true;
     }
     return false;
@@ -689,11 +691,12 @@ bool Parser::varOrFuncIdNest(SymbolRecord* func_record, SymbolRecord* record) {
         return false;
     if (lookahead_ == "OPENPARA") {
         form_derivation_string("<varOrFuncIdNest>", "( <aParams> )");
+        record->kind_ = "function";
         if (match("OPENPARA") && aParams(func_record, record) && match("CLOSEPARA"))
             return true;
     } else if (lookahead_ == "DOT") {
         form_derivation_string("<varOrFuncIdNest>", ". id <factorVarOrFunc>");
-        if (match("DOT") && match("ID") && factorVarOrFunc(func_record, record))
+        if (match("DOT") && match("ID") && record->add_nested_porperty(get_last_token().lexeme_) && factorVarOrFunc(func_record, record))
             return true;
     }
     return false;
@@ -704,7 +707,7 @@ bool Parser::variable(SymbolRecord* func_record, SymbolRecord* record) {
         return false;
     if (lookahead_ == "ID") {
         form_derivation_string("<variable>", "id <variableIndice>");
-        if (match("ID") && record->set_name(get_last_token().lexeme_) && func_record->symbol_table_->check_if_assign_variable_exist(record->name_) && variableIndice(func_record, record))
+        if (match("ID") && record->set_name(get_last_token().lexeme_) && func_record->symbol_table_->check_if_assign_variable_exist(record) && variableIndice(func_record, record))
             return true;
     }
     return false;
@@ -874,7 +877,7 @@ bool Parser::aParams(SymbolRecord* func_record, SymbolRecord* record) {
         return false;
     if (is_lookahead_a_value() || lookahead_ == "OPENPARA" || lookahead_ == "NOT" || lookahead_ == "ADD" ||
         lookahead_ == "SUB") {
-        record->type_ = "function";
+        record->kind_ = "function";
         form_derivation_string("<aParams>", "<expr> <aParamsTail>");
         SymbolRecord* aParam_record = new SymbolRecord();
         if (expr(func_record, aParam_record) && record->add_function_record(aParam_record) && aParamsTail(func_record, record))

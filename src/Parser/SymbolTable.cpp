@@ -6,36 +6,137 @@
 #include <sstream>
 #include "SymbolTable.h"
 
-
+SymbolRecord* find_nested_record(SymbolRecord* record);
 SymbolTable::SymbolTable() {
     second_pass_ = false;
     parent_symbol_table_ = NULL;
 }
 
-bool SymbolTable::check_if_assign_variable_exist(string name) {
+bool SymbolTable::check_if_assign_variable_exist(SymbolRecord *record) {
     if (second_pass_) {
-        SymbolRecord* record = search(name);
-        if (record == NULL) {
-            report_error_to_highest_symbol_table("Error: " + name + " variable is being used without being declared");
+        SymbolRecord* found_record = search(record->name_);
+        if (found_record == NULL) {
+            report_error_to_highest_symbol_table("Error: " + record->name_ + " variable is being used without being declared");
+        } else if (record->nested_properties_.size() > 0 ) {
+            if (record->type_ == "int")
+                report_error_to_highest_symbol_table("Error: " + record->name_ + " is of type int and doesn't have any properties to access");
+            else if (record->type_ == "float")
+                report_error_to_highest_symbol_table("Error: " + record->name_ + " is of type float and doesn't have any properties to access");
+            else {
+                SymbolRecord* current_record = found_record;
+                SymbolTable* top_symbol_table = found_record->symbol_table_->parent_symbol_table_;
+                if (top_symbol_table->parent_symbol_table_ != NULL)
+                    top_symbol_table = top_symbol_table->parent_symbol_table_;
+                for (int i = 0; i < record->nested_properties_.size(); i++) {
+                    string property = record->nested_properties_[i];
+                    current_record = top_symbol_table->search(current_record->type_);
+                    SymbolRecord* found_var_record = current_record->symbol_table_->search(property);
+
+                    if (found_var_record == NULL) {
+                        report_error_to_highest_symbol_table("Error: invalid nested property " + property + " on variable " + record->name_);
+                        return true;
+                    }
+
+
+                }
+            }
         }
     }
     return true;
 }
 
+bool SymbolTable::check_if_assign_variable_exist_and_correct_assign_type(SymbolRecord* variable_record, SymbolRecord* assign_record) {
+    if (!second_pass_) {
+        return true;
+    }
+    SymbolRecord* record = search(variable_record->name_);
+    if (record == NULL) {
+        report_error_to_highest_symbol_table("Error: " + variable_record->name_ + " variable is being used without being declared");
+    } else {
+        if (assign_record->kind_ == "id" || assign_record->kind_ == "function") {
+            SymbolRecord* found_assign_record;
+            found_assign_record = search(assign_record->name_);
+
+            if (assign_record->nested_properties_.size() > 0)
+                found_assign_record = find_nested_record(found_assign_record);
+
+
+            if (found_assign_record != NULL) {
+                string assign_type = found_assign_record->type_;
+                if (record->type_ != found_assign_record->type_ &&( record->structure_ == "class" || found_assign_record->structure_ == "class" || record->type_ != "float" && record->type_ != "int" && found_assign_record->type_ != "float" && found_assign_record->type_ != "int" ))
+                    report_error_to_highest_symbol_table("Error: can't assign variable " + record->name_ + " a value of type " + found_assign_record->type_ + " it needs type " + record->type_);
+            }
+
+        }
+    }
+    return true;
+}
+
+SymbolRecord* find_nested_record(SymbolRecord* record) {
+    SymbolRecord* current_record = record;
+    SymbolTable* top_symbol_table = record->symbol_table_->parent_symbol_table_;
+    if (top_symbol_table->parent_symbol_table_ != NULL)
+        top_symbol_table = top_symbol_table->parent_symbol_table_;
+    for (int i = 0; i < record->nested_properties_.size(); i++) {
+        string property = record->nested_properties_[i];
+        current_record = top_symbol_table->search(current_record->type_);
+        SymbolRecord* found_var_record = current_record->symbol_table_->search(property);
+
+        if (found_var_record == NULL) {
+            return NULL;
+        }
+
+    }
+}
+
 bool SymbolTable::check_if_func_exists(SymbolRecord* func_record) {
     if (second_pass_) {
-        SymbolRecord* record = search(func_record->name_);
-        if (record == NULL) {
+        SymbolRecord* local_record = search(func_record->name_);
+        if (local_record == NULL) {
             report_error_to_highest_symbol_table("Error: " + func_record->name_ + " function is being used without being declared");
-        } else {
-            for (int i = 0; i < record->function_parameters.size(); i++) {
+        } else if (func_record->nested_properties_.size() > 0 ) {
+            if (func_record->type_ == "int")
+                report_error_to_highest_symbol_table("Error: " + func_record->name_ + " is of type int and doesn't have any properties to access");
+            else if (func_record->type_ == "float")
+                report_error_to_highest_symbol_table("Error: " + func_record->name_ + " is of type float and doesn't have any properties to access");
+            else {
+                SymbolRecord* current_record = local_record;
+                SymbolTable* top_symbol_table = local_record->symbol_table_->parent_symbol_table_;
+                if (top_symbol_table->parent_symbol_table_ != NULL)
+                    top_symbol_table = top_symbol_table->parent_symbol_table_;
+                for (int i = 0; i < func_record->nested_properties_.size(); i++) {
+                    string property = func_record->nested_properties_[i];
+                    current_record = top_symbol_table->search(current_record->type_);
+                    SymbolRecord* found_var_record = current_record->symbol_table_->search(property);
+
+                    if (found_var_record == NULL) {
+                        report_error_to_highest_symbol_table("Error: invalid nested function " + property + " on variable " + func_record->name_);
+                        return true;
+                    }
+
+                }
+            }
+        }
+        else {
+            for (int i = 0; i < local_record->function_parameters.size(); i++) {
                 if (i == func_record->function_parameters_record_.size()) {
-                    report_error_to_highest_symbol_table("Error: " + func_record->name_ + " is being invoked with only " + to_string(i) + " parameters but needs" + to_string(record->function_parameters.size()));
+                    report_error_to_highest_symbol_table("Error: " + func_record->name_ + " is being invoked with only " + to_string(i) + " parameters but needs " + to_string(local_record->function_parameters.size()) + ":");
                     break;
                 }
-                string actual_type = record->function_parameters[i];
-                string received_type = func_record->function_parameters_record_[i]->type_;
-                if (actual_type != received_type) {
+                string actual_type = local_record->function_parameters[i];
+                string received_type = "";
+                if (func_record->function_parameters_record_[i]->kind_ == "id") {
+                    SymbolRecord* found_record = search(func_record->function_parameters_record_[i]->name_);
+                    if (found_record != NULL) {
+                        received_type = found_record->type_;
+                    }
+                    else {
+                        received_type = actual_type;
+                    }
+                } else
+                    received_type = func_record->function_parameters_record_[i]->type_;
+
+                if (actual_type != received_type && actual_type != "int" && actual_type != "float" && received_type != "int" && received_type != "float") {
                     report_error_to_highest_symbol_table("Error: " + func_record->name_ + " " + to_string(i) + " parameter is of type " + actual_type + " but " + received_type + " is being passed");
                 }
 
@@ -273,6 +374,19 @@ SymbolRecord* SymbolTable::search(string name) {
 
     if (parent_symbol_table_ != NULL) {
         return parent_symbol_table_->search(name);
+    }
+    return NULL;
+}
+
+SymbolRecord* SymbolTable::search_type(string type) {
+
+    for (int i = 0; i < symbol_records_.size(); i++) {
+        if (symbol_records_[i]->type_ == type)
+            return symbol_records_[i];
+    }
+
+    if (parent_symbol_table_ != NULL) {
+        return parent_symbol_table_->search_type(type);
     }
     return NULL;
 }
