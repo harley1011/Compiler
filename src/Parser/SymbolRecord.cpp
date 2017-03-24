@@ -50,7 +50,7 @@ bool SymbolRecord::append_to_type(string type) {
 }
 
 bool SymbolRecord::add_function_parameter(string type) {
-    function_parameters.push_back(type);
+    function_parameters_.push_back(type);
     return true;
 }
 bool SymbolRecord::set_structure(string structure) {
@@ -63,7 +63,7 @@ bool SymbolRecord::add_function_record(SymbolRecord* record) {
     return true;
 }
 
-bool SymbolRecord::add_nested_porperty(string property) {
+bool SymbolRecord::add_nested_property(string property) {
     nested_properties_.push_back(property);
     return true;
 }
@@ -79,7 +79,7 @@ bool SymbolRecord::add_array_size(IntegerToken integer_token) {
 bool SymbolRecord::generate_function_type() {
     bool first = true;
     for(SymbolRecord* record: symbol_table_->symbol_records_) {
-        function_parameters.push_back(record->type_);
+        function_parameters_.push_back(record->type_);
 //        if (first){
 //            first = false;
 //            type_ += " : ";
@@ -88,5 +88,13 @@ bool SymbolRecord::generate_function_type() {
 //            type_ += ", ";
 //        type_ += record->type_;
     }
+    return true;
+}
+
+bool SymbolRecord::add_nested_properties_dimension_to_last_porperty() {
+    string property = name_;
+    if (nested_properties_.size() > 1)
+        property = nested_properties_[nested_properties_.size() - 1];
+    nested_properties_dimensions_[property] += 1;
     return true;
 }

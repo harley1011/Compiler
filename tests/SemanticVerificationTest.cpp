@@ -6,7 +6,7 @@
 #include "gtest/gtest.h"
 #include "../src/Parser/Parser.h"
 
-
+// ----------------------------------------------------------------------------------------------------------------
 // undefined id: variable, class, function tests
 // undefined member: data member, method, including deeply nested
     // undefined variable tests
@@ -295,7 +295,7 @@ TEST(ReturnUnDefinedClassInFuncTest, SemanticTests)
     parser.global_symbol_table_->print(true);
 }
 
-// data member test
+    // data member test
 TEST(UseNonDeclaredDataMember, SemanticVerificationTests)
 {
     vector<Token*> tokens;
@@ -314,7 +314,7 @@ TEST(UseNonDeclaredDataMember, SemanticVerificationTests)
 }
 
 
-// deeply nested
+    // deeply nested
 
 TEST(UseNonDeclaredNestedDataMember, SemanticVerificationTests)
 {
@@ -350,7 +350,7 @@ TEST(UseNonDeclaredNestedFunc, SemanticVerificationTests)
     parser.global_symbol_table_->print(true);
 }
 
-
+// ----------------------------------------------------------------------------------------------------------------
 // forward/circular references: implementation of two passes
 
 TEST(CircularClassReferenceTest, SemanticVerificationTests)
@@ -404,146 +404,277 @@ TEST(CircularClassReferenceWithoutOneTest, SemanticVerificationTests)
     parser.global_symbol_table_->print(true);
 }
 
-// function calls: right number and types of parameters upon call
-
-    // function right number parameter tests
-TEST(FuncWithWrongNoOfParametersInProg, SemanticVerificationTests)
+// ----------------------------------------------------------------------------------------------------------------
+// multiply defined id: variable, class, function, class member
+    // duplicates variables
+TEST(DeclareDuplicateIntInProgram, SemanticVerificationTests)
 {
     vector<Token*> tokens;
     Scanner scanner;
-    tokens = scanner.generate_tokens("program { int idx; idx = funcTest(10, idx);}; int funcTest(int id, int idc, int idk) { return (id); };", false);
+    tokens = scanner.generate_tokens("program { int idx; int idx; };", false);
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
-    EXPECT_EQ(parser.print_semantic_errors(), "Error: funcTest is being invoked with only 2 parameters but needs 3:1:42\n");
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: A variable with the name idx already exists within this scope:1:27\n");
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
 }
 
-TEST(FuncWithWrongNoOfParametersInClassFunc, SemanticVerificationTests)
+
+
+TEST(DeclareDuplicateFloatInProgram, SemanticVerificationTests)
 {
     vector<Token*> tokens;
     Scanner scanner;
-    tokens = scanner.generate_tokens("class Cord { int func() { int idx; idx = funcTest(10, idx); return(0);}; };  program {}; int funcTest(int id, int idc, int idk) { return (id); };", false);
+    tokens = scanner.generate_tokens("program { float idx; int idx; };", false);
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
-    EXPECT_EQ(parser.print_semantic_errors(), "Error: funcTest is being invoked with only 2 parameters but needs 3:1:58\n");
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: A variable with the name idx already exists within this scope:1:29\n");
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
 }
 
 
-    // function type checks
-TEST(FuncWithCorrectParametersOfTypeIntAndFloatInProg, SemanticVerificationTests)
+TEST(DeclareDuplicateClassInProgram, SemanticVerificationTests)
 {
     vector<Token*> tokens;
     Scanner scanner;
-    tokens = scanner.generate_tokens("program { int idx; idx = funcTest(10, 10.11);}; int funcTest(int id, int idc) { return (id); };", false);
-
-    Parser parser;
-    parser.enable_double_pass_parse_ = true;
-
-    EXPECT_EQ(parser.parse(tokens), true);
-    EXPECT_EQ(parser.semantic_errors_.size(), 0);
-
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
-    parser.global_symbol_table_->print(true);
-}
-
-TEST(FuncWithCorrectParametersOfTypeIntAndIdFloatInProg, SemanticVerificationTests)
-{
-    vector<Token*> tokens;
-    Scanner scanner;
-    tokens = scanner.generate_tokens("program { int idx; float idf; idx = funcTest(idf, 10);}; int funcTest(int id, int idc) { return (id); };", false);
-
-    Parser parser;
-    parser.enable_double_pass_parse_ = true;
-
-    EXPECT_EQ(parser.parse(tokens), true);
-    EXPECT_EQ(parser.semantic_errors_.size(), 0);
-
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
-    parser.global_symbol_table_->print(true);
-}
-
-TEST(FuncWithCorrectParametersOfTypeIntAndFloatInClassFunc, SemanticVerificationTests)
-{
-    vector<Token*> tokens;
-    Scanner scanner;
-    tokens = scanner.generate_tokens("class Cord { int funcTest2() {int idx; idx = funcTest(10, 10.11); return (idx); }; }; program { }; int funcTest(int id, int idc) { return (id); };", false);
-
-    Parser parser;
-    parser.enable_double_pass_parse_ = true;
-
-    EXPECT_EQ(parser.parse(tokens), true);
-    EXPECT_EQ(parser.semantic_errors_.size(), 0);
-
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
-    parser.global_symbol_table_->print(true);
-}
-
-TEST(ClassFuncWithCorrectParametersOfTypeAndIdFloatInClassFunc, SemanticVerificationTests)
-{
-    vector<Token*> tokens;
-    Scanner scanner;
-    tokens = scanner.generate_tokens("class Cord { int funcTest2(int idx, float idf) { idx = funcTest(idf, 10); return (idx); }; }; program { Cord cord; float y; int x; x = cord.funcTest2(x, y); }; int funcTest(int id, int idc) { return (id); };", false);
-
-    Parser parser;
-    parser.enable_double_pass_parse_ = true;
-
-    EXPECT_EQ(parser.parse(tokens), true);
-    EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
-    parser.global_symbol_table_->print(true);
-}
-
-TEST(FuncWithCorrectParametersOfTypeCordAndIntInProg, SemanticVerificationTests)
-{
-    vector<Token*> tokens;
-    Scanner scanner;
-    tokens = scanner.generate_tokens("class Cord { int idc; }; program { Cord cord; float y; int x; x = funcTest(cord, y); }; int funcTest(Cord cord, int idc) { return (cord.idc); };", false);
-
-    Parser parser;
-    parser.enable_double_pass_parse_ = true;
-
-    EXPECT_EQ(parser.parse(tokens), true);
-    EXPECT_EQ(parser.semantic_errors_.size(), 0);
-
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
-    parser.global_symbol_table_->print(true);
-}
-
-TEST(FuncWithWrongParametersOfTypeCordAndIntInProg, SemanticVerificationTests)
-{
-    vector<Token*> tokens;
-    Scanner scanner;
-    tokens = scanner.generate_tokens("class Cord { int idc; }; program { Cord cord; float y; int x; x = funcTest(x, y); }; int funcTest(Cord cord, int idc) { return (cord.idc); };", false);
+    tokens = scanner.generate_tokens("class A { }; program { A a; A a; };", false);
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
-    EXPECT_EQ(parser.print_semantic_errors(), "Error: funcTest 1 parameter is of type Cord but int is being passed:1:80\n");
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: A variable with the name a already exists within this scope:1:34\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
+
+    // duplicate class member variables
+
+TEST(DeclareDuplicateIntInClass, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class A { int idx; int idx;}; program { A a; };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: A variable with the name idx already exists within this scope:1:28\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
+
+TEST(DeclareDuplicateFloatInClass, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class A { float idx; float idx;}; program { A a; };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: A variable with the name idx already exists within this scope:1:32\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
+TEST(DeclareDuplicateClassInClass, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class C { }; class A { C c; C c;}; program { A a; };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: A variable with the name c already exists within this scope:1:33\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
     parser.global_symbol_table_->print(true);
 }
 
 
+TEST(DeclareDuplicateIntInClassFunc, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class A { int func(int idx) { int idx; return (idx); }; }; program { A a; };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: A variable with the name idx already exists within this scope:1:38\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
+
+TEST(DeclareDuplicateIntInClassFuncParams, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class A { int func(int idx, int idx) { return (0); }; }; program { A a; };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: A variable with the name idx already exists within this scope:1:36\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
 
 
+TEST(DeclareDuplicateClassVarInClassFuncParams, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class B { int idx; }; class A { int func(B b, B b) { return (b.idx); }; }; program { A a; };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: A variable with the name b already exists within this scope:1:50\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
+    parser.global_symbol_table_->print(true);
+}
 
 
+    // duplicate class definition
+
+TEST(DeclareDuplicateClassDefinition, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class A { }; class A { }; class B { }; program { };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: A class definition with the name A already exists:1:22\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
+    parser.global_symbol_table_->print(true);
+}
+
+    // duplicate func definition
+
+TEST(DeclareDuplicateClassFuncDefinition, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class A { int testFunc() { return (0);}; int testFunc() { return (0);}; }; program { };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: A function with the name testFunc already exists within this scope:1:54\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
+
+TEST(DeclareDuplicateFuncDefinition, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("program { }; int testFunc() { return (0);}; int testFunc() { return (0);};", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: A function with the name testFunc already exists within this scope:1:57\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
+
+TEST(DeclareThreeDuplicateFuncDefinition, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("program { }; int testFunc() { return (0);}; int testFunc() { return (0);}; float testFunc() { return (0);};", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 2);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: A function with the name testFunc already exists within this scope:1:57\\nError: A function with the name testFunc already exists within this scope:1:90\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
+
+// ----------------------------------------------------------------------------------------------------------------
+// arrays: using right number of dimensions
+TEST(UseDeclareVarAsArrayInProg, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("program { int p[5][5]; int x; int y; x = y[5]; };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: can't assign variable idx a value of type int it needs type Util:1:59\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
+    parser.global_symbol_table_->print(true);
+}
+TEST(AssignDeclareVarAsArrayInProg, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("program { int x; int y; x[5] = y; };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: can't assign variable idx a value of type int it needs type Util:1:59\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
+    parser.global_symbol_table_->print(true);
+}
+
+// ----------------------------------------------------------------------------------------------------------------
 // type checking of an assignment statement
 
 TEST(AssignDeclaredClassVarIntFuncTest, SemanticVerificationTests)
@@ -665,5 +796,146 @@ TEST(AssignDeclaredClassVarNestedClassVarWrongFuncTypeTest, SemanticVerification
     EXPECT_EQ(parser.print_semantic_errors(), "Error: can't assign variable util2 a value of type Util2 it needs type Util2:1:145\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 4);
+    parser.global_symbol_table_->print(true);
+}
+
+
+
+
+
+
+// ----------------------------------------------------------------------------------------------------------------
+// function calls: right number and types of parameters upon call
+
+// function right number parameter tests
+TEST(FuncWithWrongNoOfParametersInProg, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("program { int idx; idx = funcTest(10, idx);}; int funcTest(int id, int idc, int idk) { return (id); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: funcTest is being invoked with only 2 parameters but needs 3:1:42\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
+
+TEST(FuncWithWrongNoOfParametersInClassFunc, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class Cord { int func() { int idx; idx = funcTest(10, idx); return(0);}; };  program {}; int funcTest(int id, int idc, int idk) { return (id); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: funcTest is being invoked with only 2 parameters but needs 3:1:58\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
+    parser.global_symbol_table_->print(true);
+}
+
+
+// function type checks
+TEST(FuncWithCorrectParametersOfTypeIntAndFloatInProg, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("program { int idx; idx = funcTest(10, 10.11);}; int funcTest(int id, int idc) { return (id); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
+
+TEST(FuncWithCorrectParametersOfTypeIntAndIdFloatInProg, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("program { int idx; float idf; idx = funcTest(idf, 10);}; int funcTest(int id, int idc) { return (id); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
+
+TEST(FuncWithCorrectParametersOfTypeIntAndFloatInClassFunc, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class Cord { int funcTest2() {int idx; idx = funcTest(10, 10.11); return (idx); }; }; program { }; int funcTest(int id, int idc) { return (id); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
+    parser.global_symbol_table_->print(true);
+}
+
+TEST(ClassFuncWithCorrectParametersOfTypeAndIdFloatInClassFunc, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class Cord { int funcTest2(int idx, float idf) { idx = funcTest(idf, 10); return (idx); }; }; program { Cord cord; float y; int x; x = cord.funcTest2(x, y); }; int funcTest(int id, int idc) { return (id); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
+    parser.global_symbol_table_->print(true);
+}
+
+TEST(FuncWithCorrectParametersOfTypeCordAndIntInProg, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class Cord { int idc; }; program { Cord cord; float y; int x; x = funcTest(cord, y); }; int funcTest(Cord cord, int idc) { return (cord.idc); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
+    parser.global_symbol_table_->print(true);
+}
+
+TEST(FuncWithWrongParametersOfTypeCordAndIntInProg, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class Cord { int idc; }; program { Cord cord; float y; int x; x = funcTest(x, y); }; int funcTest(Cord cord, int idc) { return (cord.idc); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: funcTest 1 parameter is of type Cord but int is being passed:1:80\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
     parser.global_symbol_table_->print(true);
 }

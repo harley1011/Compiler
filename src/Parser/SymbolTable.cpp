@@ -87,6 +87,10 @@ bool SymbolTable::check_if_assign_variable_exist_and_correct_assign_type(SymbolR
     return true;
 }
 
+bool SymbolTable::check_correct_number_of_array_dimensions(SymbolRecord* record) {
+
+}
+
 SymbolRecord* find_nested_record(SymbolRecord* record, SymbolRecord* found_record) {
     SymbolRecord* current_record = found_record;
     SymbolTable* top_symbol_table = found_record->symbol_table_->parent_symbol_table_;
@@ -135,12 +139,12 @@ bool SymbolTable::check_if_func_exists(SymbolRecord* func_record) {
             }
         }
         else {
-            for (int i = 0; i < local_record->function_parameters.size(); i++) {
+            for (int i = 0; i < local_record->function_parameters_.size(); i++) {
                 if (i == func_record->function_parameters_record_.size()) {
-                    report_error_to_highest_symbol_table("Error: " + func_record->name_ + " is being invoked with only " + to_string(i) + " parameters but needs " + to_string(local_record->function_parameters.size()) + ":");
+                    report_error_to_highest_symbol_table("Error: " + func_record->name_ + " is being invoked with only " + to_string(i) + " parameters but needs " + to_string(local_record->function_parameters_.size()) + ":");
                     break;
                 }
-                string actual_type = local_record->function_parameters[i];
+                string actual_type = local_record->function_parameters_[i];
                 string received_type = "";
                 if (func_record->function_parameters_record_[i]->kind_ == "id") {
                     SymbolRecord* found_record = search(func_record->function_parameters_record_[i]->name_);
@@ -178,10 +182,7 @@ bool SymbolTable::create_class_entry_and_table(string kind, string type, string 
         return true;
     }
 
-    record = new SymbolRecord();
-    record->name_ = name;
-    record->kind_ = kind;
-    record->type_ = type;
+    record = new SymbolRecord(kind, type, name);
     record->structure_ = "class";
     current_symbol_record_ = record;
     record->properly_declared_ = false;
@@ -221,6 +222,7 @@ void SymbolTable::set_properly_declared(SymbolRecord* record) {
         }
     }
 }
+
 bool SymbolTable::create_function_entry_and_table(SymbolRecord** record) {
     if (second_pass_) {
         string name = (*record)->name_;
@@ -260,8 +262,7 @@ string SymbolTable::print(bool output_to_console) {
 }
 
 
-void SymbolTable::check_for_circular_references(SymbolRecord *record, SymbolRecord *member_record,
-                                                vector<string> already_checked_types) {
+void SymbolTable::check_for_circular_references(SymbolRecord *record, SymbolRecord *member_record, vector<string> already_checked_types) {
 
     if (find(already_checked_types.begin(), already_checked_types.end(), member_record->type_) != already_checked_types.end())
         return;
@@ -304,6 +305,7 @@ bool SymbolTable::create_variable_entry(SymbolRecord** record) {
         set_properly_declared((*record));
         return true;
     }
+
     (*record)->kind_ = "variable";
     if ((*record)->type_.substr(0,3) == "int" || (*record)->type_.substr(0, 5) == "float") {
         if (((*record)->type_.size() > 3 && ((*record) ->type_.substr(3,1) == "[" || (*record) ->type_.substr(3,1) == " "))
@@ -409,7 +411,12 @@ bool SymbolTable::insert(SymbolRecord *record) {
     if (record->symbol_table_->parent_symbol_table_ == NULL)
         record->symbol_table_->parent_symbol_table_ = this;
     if (search(record->name_) != NULL) {
-        report_error_to_highest_symbol_table("Error: A variable with the name " + record->name_ + " already exists within this scope:");
+        if (record->kind_ == "class")
+            report_error_to_highest_symbol_table("Error: A class definition with the name " + record->name_ + " already exists:");
+        else if (record->kind_ == "function")
+            report_error_to_highest_symbol_table("Error: A function with the name " + record->name_ + " already exists within this scope:");
+        else
+            report_error_to_highest_symbol_table("Error: A variable with the name " + record->name_ + " already exists within this scope:");
         return true;
     }
 
@@ -524,10 +531,3 @@ string SymbolTable::generate_symbol_table_string(SymbolTable *table, string tabl
     return return_string;
 }
 
-bool SymbolTable::check_if_assign_variable_exist() {
-    return false;
-}
-
-bool SymbolTable::check_for_circular_references() {
-    return false;
-}

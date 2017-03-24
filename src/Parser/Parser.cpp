@@ -696,7 +696,7 @@ bool Parser::varOrFuncIdNest(SymbolRecord* func_record, SymbolRecord* record) {
             return true;
     } else if (lookahead_ == "DOT") {
         form_derivation_string("<varOrFuncIdNest>", ". id <factorVarOrFunc>");
-        if (match("DOT") && match("ID") && record->add_nested_porperty(get_last_token().lexeme_) && factorVarOrFunc(func_record, record))
+        if (match("DOT") && match("ID") && record->add_nested_property(get_last_token().lexeme_) && factorVarOrFunc(func_record, record))
             return true;
     }
     return false;
@@ -736,7 +736,7 @@ bool Parser::idnest(SymbolRecord* func_record, SymbolRecord* record) {
         return false;
     if (lookahead_ == "DOT") {
         form_derivation_string("<idnest>", ". id <indiceLst> <idnest>");
-        if (match("DOT") && match("ID") && record->add_nested_porperty(get_last_token().lexeme_) && indiceLst(func_record, record) && idnest(func_record, record)) {
+        if (match("DOT") && match("ID") && record->add_nested_property(get_last_token().lexeme_) && indiceLst(func_record, record) && idnest(func_record, record)) {
             return true;
         }
     } else if (lookahead_ == "EQUAL" || lookahead_ == "CLOSEPARA") {
@@ -753,7 +753,7 @@ bool Parser::indice(SymbolRecord* func_record, SymbolRecord* record) {
         return false;
     if (lookahead_ == "OPENBRA") {
         form_derivation_string("<indice>", "[ <arithExpr> ]");
-        if (match("OPENBRA") && arithExpr(func_record, record) && match("CLOSEBRA")) {
+        if (match("OPENBRA") && record->add_nested_properties_dimension_to_last_porperty() && arithExpr(func_record, record) && match("CLOSEBRA")) {
             return true;
         }
     }
