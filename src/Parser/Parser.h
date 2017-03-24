@@ -45,6 +45,7 @@ public:
     ofstream symbol_table_output_file_;
     bool enable_derivation_output_;
     string previous_token_;
+    string print_semantic_errors();
 
     string next_token();
     bool form_derivation_string(string non_terminal, string rhs);

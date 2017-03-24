@@ -1174,3 +1174,10 @@ void Parser::report_error(string expected_token, string actual_token) {
         syntax_error_output_file_ << error_message + "\n";
     }
 }
+
+string Parser::print_semantic_errors() {
+    string result = "";
+    for (string error : semantic_errors_)
+        result += error + "\n";
+    return result;
+}

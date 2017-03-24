@@ -15,8 +15,11 @@ TEST(AssignNonDeclaredVariableClassFuncTest, SemanticVerificationTests)
     Parser parser;
     parser.enable_double_pass_parse_ = true;
 
+
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    cout << parser.print_semantic_errors();
+
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
     parser.global_symbol_table_->print(true);
@@ -34,6 +37,7 @@ TEST(AssignNonDeclaredVariableProgFuncTest, SemanticVerificationTests)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    cout << parser.print_semantic_errors();
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
@@ -51,6 +55,7 @@ TEST(AssignNonDeclaredArrayVariableProgFuncTest, SemanticVerificationTests)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    cout << parser.print_semantic_errors();
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
@@ -68,6 +73,7 @@ TEST(AssignNonDeclaredVariableForLoopProgFuncTest, SemanticVerificationTests)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    cout << parser.print_semantic_errors();
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
@@ -85,6 +91,7 @@ TEST(AssignNonDeclaredVariableFuncTest, SemanticVerificationTests)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    cout << parser.print_semantic_errors();
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
     parser.global_symbol_table_->print(true);
@@ -103,6 +110,7 @@ TEST(GetNonDeclaredVariableProgFuncTest, SemanticVerificationTests)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    cout << parser.print_semantic_errors();
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
@@ -119,6 +127,7 @@ TEST(PutNonDeclaredVariableProgFuncTest, SemanticVerificationTests)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    cout << parser.print_semantic_errors();
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
@@ -135,6 +144,7 @@ TEST(ReturnNonDeclaredVariableProgFuncTest, SemanticVerificationTests)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    cout << parser.print_semantic_errors();
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
@@ -151,6 +161,7 @@ TEST(AssignNonDeclaredFuncClassFuncTest, SemanticVerificationTests)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    cout << parser.print_semantic_errors();
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
     parser.global_symbol_table_->print(true);
@@ -167,6 +178,7 @@ TEST(AssignDeclaredInvalidNoParameterFuncClassFuncTest, SemanticVerificationTest
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    cout << parser.print_semantic_errors();
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
     parser.global_symbol_table_->print(true);
@@ -183,6 +195,7 @@ TEST(AssignDeclaredValidFloatNumParameterFuncClassFuncTest, SemanticVerification
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
+    cout << parser.print_semantic_errors();
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
     parser.global_symbol_table_->print(true);
@@ -199,6 +212,7 @@ TEST(AssignDeclareValidFloatVarParameterFuncClassFuncTest, SemanticVerificationT
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
+    cout << parser.print_semantic_errors();
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
     parser.global_symbol_table_->print(true);
@@ -215,13 +229,14 @@ TEST(AssignDeclaredClassVarIntFuncTest, SemanticVerificationTests)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    cout << parser.print_semantic_errors();
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
     parser.global_symbol_table_->print(true);
 }
 
 
-TEST(AssignDeclaredClassVarIntClassFuncTest, SemanticVerificationTests)
+TEST(AssignDeclaredClassVarIdClassFuncTest, SemanticVerificationTests)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -232,6 +247,24 @@ TEST(AssignDeclaredClassVarIntClassFuncTest, SemanticVerificationTests)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
+    cout << parser.print_semantic_errors();
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
+    parser.global_symbol_table_->print(true);
+}
+
+TEST(AssignDeclaredClassVarIntClassFuncTest, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class Util { }; class Func { int funcTest(int id, int idc) { return (id); }; }; program { Util idx; Func func; idx = func.funcTest(10, 10);}; ", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    cout << parser.print_semantic_errors();
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
     parser.global_symbol_table_->print(true);
