@@ -47,6 +47,15 @@ public:
     SymbolRecord *search_type(string type);
 
     SymbolRecord * check_nested_property(SymbolRecord *record, SymbolRecord *found_record);
+
+    bool check_for_circular_references();
+
+    bool check_for_circular_references(SymbolRecord *record);
+
+    void check_for_circular_references(SymbolRecord *record, SymbolRecord *member_record,
+                                           vector<string> already_checked_types);
+
+    SymbolRecord *search_top_table(string name);
 };
 
 

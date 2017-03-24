@@ -5,6 +5,7 @@
 #include <iomanip>
 #include <sstream>
 #include "SymbolTable.h"
+#include <algorithm>
 
 SymbolRecord* find_nested_record(SymbolRecord* record, SymbolRecord* found_record);
 SymbolTable::SymbolTable() {
@@ -173,7 +174,7 @@ bool SymbolTable::create_class_entry_and_table(string kind, string type, string 
         else
             record->properly_declared_ = true;
         current_symbol_record_ = record;
-
+        check_for_circular_references(record);
         return true;
     }
 
@@ -259,6 +260,41 @@ string SymbolTable::print(bool output_to_console) {
 }
 
 
+void SymbolTable::check_for_circular_references(SymbolRecord *record, SymbolRecord *member_record,
+                                                vector<string> already_checked_types) {
+
+    if (find(already_checked_types.begin(), already_checked_types.end(), member_record->type_) != already_checked_types.end())
+        return;
+    SymbolRecord* member_type_record = search_top_table(member_record->type_);
+    if (member_type_record == NULL)
+        return;
+
+    for (int i = 0; i < member_type_record->symbol_table_->symbol_records_.size(); i ++) {
+        SymbolRecord* current_record = member_type_record->symbol_table_->symbol_records_[i];
+        if (current_record->kind_ == "variable" && current_record->structure_ == "class" && current_record->type_ == record->name_) {
+            already_checked_types.push_back(member_type_record->name_);
+            report_error_to_highest_symbol_table("Error: circular reference in class " + record->name_ + " variable " + member_record->name_  + " is of type " + member_type_record->name_ + " which also has one or more variables or nested variables of type " + record->name_);
+        } else {
+            already_checked_types.push_back(member_type_record->name_);
+            check_for_circular_references(record, current_record, already_checked_types);
+        }
+    }
+}
+
+
+bool SymbolTable::check_for_circular_references(SymbolRecord *record) {
+    vector<string> already_checked_types;
+    for (int i = 0; i < record->symbol_table_->symbol_records_.size(); i ++) {
+        SymbolRecord* member_record = record->symbol_table_->symbol_records_[i];
+        if (member_record->kind_ == "variable" && member_record->structure_ == "class") {
+            if (member_record != NULL) {
+                check_for_circular_references(record, member_record, vector<string>());
+            }
+
+        }
+    }
+}
+
 bool SymbolTable::create_variable_entry(SymbolRecord** record) {
     if (second_pass_) {
         string name = (*record)->name_;
@@ -305,6 +341,7 @@ bool SymbolTable::create_function_class_entry_and_function_table(SymbolRecord **
         //delete record;
         *record = search(name);
         set_properly_declared(*record);
+        check_for_circular_references(*record);
         return true;
     }
     (*record)->kind_ = "function";
@@ -319,7 +356,6 @@ bool SymbolTable::create_function_class_entry_and_function_table(SymbolRecord **
         else {
             (*record)->set_structure("class");
         }
-
     }
     else {
         (*record)->properly_declared_ = false;
@@ -390,6 +426,18 @@ SymbolRecord* SymbolTable::search(string name) {
 
     if (parent_symbol_table_ != NULL) {
         return parent_symbol_table_->search(name);
+    }
+    return NULL;
+}
+
+SymbolRecord* SymbolTable::search_top_table(string name) {
+    if (parent_symbol_table_ != NULL) {
+        return parent_symbol_table_->search(name);
+    } else {
+        for (int i = 0; i < symbol_records_.size(); i++) {
+            if (symbol_records_[i]->name_ == name)
+                return symbol_records_[i];
+        }
     }
     return NULL;
 }
@@ -477,5 +525,9 @@ string SymbolTable::generate_symbol_table_string(SymbolTable *table, string tabl
 }
 
 bool SymbolTable::check_if_assign_variable_exist() {
+    return false;
+}
+
+bool SymbolTable::check_for_circular_references() {
     return false;
 }

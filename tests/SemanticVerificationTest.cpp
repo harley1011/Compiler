@@ -296,7 +296,7 @@ TEST(ReturnUnDefinedClassInFuncTest, SemanticTests)
 }
 
 // data member test
-TEST(AssignDeclaredClassNonDeclaredDataMember, SemanticVerificationTests)
+TEST(UseNonDeclaredDataMember, SemanticVerificationTests)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -316,7 +316,7 @@ TEST(AssignDeclaredClassNonDeclaredDataMember, SemanticVerificationTests)
 
 // deeply nested
 
-TEST(AssignDeclaredClassNonDeclaredNestedDataMember, SemanticVerificationTests)
+TEST(UseNonDeclaredNestedDataMember, SemanticVerificationTests)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -333,7 +333,7 @@ TEST(AssignDeclaredClassNonDeclaredNestedDataMember, SemanticVerificationTests)
     parser.global_symbol_table_->print(true);
 }
 
-TEST(AssignDeclaredClassNonDeclaredNestedFunc, SemanticVerificationTests)
+TEST(UseNonDeclaredNestedFunc, SemanticVerificationTests)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -351,17 +351,63 @@ TEST(AssignDeclaredClassNonDeclaredNestedFunc, SemanticVerificationTests)
 }
 
 
+// forward/circular references: implementation of two passes
 
+TEST(CircularClassReferenceTest, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class A { B b;}; class B { A a;}; program { };", false);
 
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
 
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 2);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: circular reference in class A variable b is of type B which also has one or more variables or nested variables of type A1:9\nError: circular reference in class B variable a is of type A which also has one or more variables or nested variables of type B1:26\n");
 
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
+    parser.global_symbol_table_->print(true);
+}
 
+TEST(CircularClassNestedReferenceTest, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class A { B b;}; class B { C c;}; class C {  A a;}; program { };", false);
 
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 3);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: circular reference in class A variable c is of type C which also has one or more variables or nested variables of type A1:9\nError: circular reference in class B variable a is of type A which also has one or more variables or nested variables of type B1:26\nError: circular reference in class C variable b is of type B which also has one or more variables or nested variables of type C1:43\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 4);
+    parser.global_symbol_table_->print(true);
+}
+
+TEST(CircularClassReferenceWithoutOneTest, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class A { B b;}; class B { C c;}; class C {  B b;}; program { };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 2);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: circular reference in class B variable c is of type C which also has one or more variables or nested variables of type B1:26\nError: circular reference in class C variable b is of type B which also has one or more variables or nested variables of type C1:43\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 4);
+    parser.global_symbol_table_->print(true);
+}
 
 // function calls: right number and types of parameters upon call
 
     // function right number parameter tests
-TEST(AssignVarFuncWithWrongNoOfParametersInProg, SemanticVerificationTests)
+TEST(FuncWithWrongNoOfParametersInProg, SemanticVerificationTests)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -378,7 +424,7 @@ TEST(AssignVarFuncWithWrongNoOfParametersInProg, SemanticVerificationTests)
     parser.global_symbol_table_->print(true);
 }
 
-TEST(AssignVarFuncWithWrongNoOfParametersInClassFunc, SemanticVerificationTests)
+TEST(FuncWithWrongNoOfParametersInClassFunc, SemanticVerificationTests)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -397,7 +443,7 @@ TEST(AssignVarFuncWithWrongNoOfParametersInClassFunc, SemanticVerificationTests)
 
 
     // function type checks
-TEST(AssignVarWithFuncWithCorrectParametersOfTypeIntAndFloatInProg, SemanticVerificationTests)
+TEST(FuncWithCorrectParametersOfTypeIntAndFloatInProg, SemanticVerificationTests)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -413,7 +459,7 @@ TEST(AssignVarWithFuncWithCorrectParametersOfTypeIntAndFloatInProg, SemanticVeri
     parser.global_symbol_table_->print(true);
 }
 
-TEST(AssignVarWithFuncWithCorrectParametersOfTypeIntAndIdFloatInProg, SemanticVerificationTests)
+TEST(FuncWithCorrectParametersOfTypeIntAndIdFloatInProg, SemanticVerificationTests)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -429,7 +475,7 @@ TEST(AssignVarWithFuncWithCorrectParametersOfTypeIntAndIdFloatInProg, SemanticVe
     parser.global_symbol_table_->print(true);
 }
 
-TEST(AssignVarWithFuncWithCorrectParametersOfTypeIntAndFloatInClassFunc, SemanticVerificationTests)
+TEST(FuncWithCorrectParametersOfTypeIntAndFloatInClassFunc, SemanticVerificationTests)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -445,7 +491,7 @@ TEST(AssignVarWithFuncWithCorrectParametersOfTypeIntAndFloatInClassFunc, Semanti
     parser.global_symbol_table_->print(true);
 }
 
-TEST(AssignVarWithClassFuncWithCorrectParametersOfTypeAndIdFloatInClassFunc, SemanticVerificationTests)
+TEST(ClassFuncWithCorrectParametersOfTypeAndIdFloatInClassFunc, SemanticVerificationTests)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -460,7 +506,7 @@ TEST(AssignVarWithClassFuncWithCorrectParametersOfTypeAndIdFloatInClassFunc, Sem
     parser.global_symbol_table_->print(true);
 }
 
-TEST(AssignVarWithFuncWithCorrectParametersOfTypeCordAndIntInProg, SemanticVerificationTests)
+TEST(FuncWithCorrectParametersOfTypeCordAndIntInProg, SemanticVerificationTests)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -476,7 +522,7 @@ TEST(AssignVarWithFuncWithCorrectParametersOfTypeCordAndIntInProg, SemanticVerif
     parser.global_symbol_table_->print(true);
 }
 
-TEST(AssignVarWithFuncWithWrongParametersOfTypeCordAndIntInProg, SemanticVerificationTests)
+TEST(FuncWithWrongParametersOfTypeCordAndIntInProg, SemanticVerificationTests)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -492,6 +538,7 @@ TEST(AssignVarWithFuncWithWrongParametersOfTypeCordAndIntInProg, SemanticVerific
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
     parser.global_symbol_table_->print(true);
 }
+
 
 
 
