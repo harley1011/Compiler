@@ -6,7 +6,7 @@
 #include <sstream>
 #include "SymbolTable.h"
 
-SymbolRecord* find_nested_record(SymbolRecord* record);
+SymbolRecord* find_nested_record(SymbolRecord* record, SymbolRecord* found_record);
 SymbolTable::SymbolTable() {
     second_pass_ = false;
     parent_symbol_table_ = NULL;
@@ -18,31 +18,37 @@ bool SymbolTable::check_if_assign_variable_exist(SymbolRecord *record) {
         if (found_record == NULL) {
             report_error_to_highest_symbol_table("Error: " + record->name_ + " variable is being used without being declared:");
         } else if (record->nested_properties_.size() > 0 ) {
-            if (record->type_ == "int")
-                report_error_to_highest_symbol_table("Error: " + record->name_ + " is of type int and doesn't have any properties to access:");
-            else if (record->type_ == "float")
-                report_error_to_highest_symbol_table("Error: " + record->name_ + " is of type float and doesn't have any properties to access:");
-            else {
-                SymbolRecord* current_record = found_record;
-                SymbolTable* top_symbol_table = found_record->symbol_table_->parent_symbol_table_;
-                if (top_symbol_table->parent_symbol_table_ != NULL)
-                    top_symbol_table = top_symbol_table->parent_symbol_table_;
-                for (int i = 0; i < record->nested_properties_.size(); i++) {
-                    string property = record->nested_properties_[i];
-                    current_record = top_symbol_table->search(current_record->type_);
-                    SymbolRecord* found_var_record = current_record->symbol_table_->search(property);
-
-                    if (found_var_record == NULL) {
-                        report_error_to_highest_symbol_table("Error: invalid nested property " + property + " on variable " + record->name_ + ":");
-                        return true;
-                    }
-
-
-                }
-            }
+            check_nested_property(record, found_record);
         }
     }
     return true;
+}
+
+SymbolRecord * SymbolTable::check_nested_property(SymbolRecord *record, SymbolRecord *found_record) {
+    if (record->type_ == "int")
+        report_error_to_highest_symbol_table("Error: " + record->name_ + " is of type int and doesn't have any properties to access:");
+    else if (record->type_ == "float")
+        report_error_to_highest_symbol_table("Error: " + record->name_ + " is of type float and doesn't have any properties to access:");
+    else {
+        SymbolRecord* current_record = found_record;
+        SymbolTable* top_symbol_table = found_record->symbol_table_->parent_symbol_table_;
+        if (top_symbol_table->parent_symbol_table_ != NULL)
+            top_symbol_table = top_symbol_table->parent_symbol_table_;
+        for (int i = 0; i < record->nested_properties_.size(); i++) {
+            string property = record->nested_properties_[i];
+            current_record = top_symbol_table->search(current_record->type_);
+            current_record = current_record->symbol_table_->search(property);
+
+            if (current_record == NULL) {
+                report_error_to_highest_symbol_table("Error: invalid nested property " + property + " on variable " + record->name_ + ":");
+                return current_record;
+            }
+
+
+        }
+        return current_record;
+    }
+    return NULL;
 }
 
 bool SymbolTable::check_if_assign_variable_exist_and_correct_assign_type(SymbolRecord* variable_record, SymbolRecord* assign_record) {
@@ -53,17 +59,25 @@ bool SymbolTable::check_if_assign_variable_exist_and_correct_assign_type(SymbolR
     if (record == NULL) {
         report_error_to_highest_symbol_table("Error: " + variable_record->name_ + " variable is being used without being declared:");
     } else {
+        string variable_property = record->type_;
+        if (variable_record->nested_properties_.size() > 0) {
+            SymbolRecord* nested_variable = check_nested_property(variable_record, record);
+            if (nested_variable == NULL)
+                return true;
+            else
+                variable_property = nested_variable->type_;
+        }
+
         if (assign_record->kind_ == "id" || assign_record->kind_ == "function") {
             SymbolRecord* found_assign_record;
             found_assign_record = search(assign_record->name_);
 
             if (assign_record->nested_properties_.size() > 0)
-                found_assign_record = find_nested_record(found_assign_record);
-
+                found_assign_record = find_nested_record(assign_record, found_assign_record);
 
             if (found_assign_record != NULL) {
                 string assign_type = found_assign_record->type_;
-                if (record->type_ != found_assign_record->type_ &&( record->structure_ == "class" || found_assign_record->structure_ == "class" || record->type_ != "float" && record->type_ != "int" && found_assign_record->type_ != "float" && found_assign_record->type_ != "int" ))
+                if (variable_property!= found_assign_record->type_ && (variable_property != "int" || assign_type != "float") && (variable_property != "float" || assign_type != "int"))
                     report_error_to_highest_symbol_table("Error: can't assign variable " + record->name_ + " a value of type " + found_assign_record->type_ + " it needs type " + record->type_ + ":");
             }
 
@@ -72,21 +86,23 @@ bool SymbolTable::check_if_assign_variable_exist_and_correct_assign_type(SymbolR
     return true;
 }
 
-SymbolRecord* find_nested_record(SymbolRecord* record) {
-    SymbolRecord* current_record = record;
-    SymbolTable* top_symbol_table = record->symbol_table_->parent_symbol_table_;
+SymbolRecord* find_nested_record(SymbolRecord* record, SymbolRecord* found_record) {
+    SymbolRecord* current_record = found_record;
+    SymbolTable* top_symbol_table = found_record->symbol_table_->parent_symbol_table_;
+    SymbolRecord* found_var_record;
     if (top_symbol_table->parent_symbol_table_ != NULL)
         top_symbol_table = top_symbol_table->parent_symbol_table_;
     for (int i = 0; i < record->nested_properties_.size(); i++) {
         string property = record->nested_properties_[i];
         current_record = top_symbol_table->search(current_record->type_);
-        SymbolRecord* found_var_record = current_record->symbol_table_->search(property);
+        current_record = current_record->symbol_table_->search(property);
 
-        if (found_var_record == NULL) {
+        if (current_record == NULL) {
             return NULL;
         }
 
     }
+    return  current_record;
 }
 
 bool SymbolTable::check_if_func_exists(SymbolRecord* func_record) {
@@ -107,9 +123,9 @@ bool SymbolTable::check_if_func_exists(SymbolRecord* func_record) {
                 for (int i = 0; i < func_record->nested_properties_.size(); i++) {
                     string property = func_record->nested_properties_[i];
                     current_record = top_symbol_table->search(current_record->type_);
-                    SymbolRecord* found_var_record = current_record->symbol_table_->search(property);
+                    current_record = current_record->symbol_table_->search(property);
 
-                    if (found_var_record == NULL) {
+                    if (current_record == NULL) {
                         report_error_to_highest_symbol_table("Error: invalid nested function " + property + " on variable " + func_record->name_ + ":");
                         return true;
                     }
@@ -136,8 +152,8 @@ bool SymbolTable::check_if_func_exists(SymbolRecord* func_record) {
                 } else
                     received_type = func_record->function_parameters_record_[i]->type_;
 
-                if (actual_type != received_type && actual_type != "int" && actual_type != "float" && received_type != "int" && received_type != "float") {
-                    report_error_to_highest_symbol_table("Error: " + func_record->name_ + " " + to_string(i) + " parameter is of type " + actual_type + " but " + received_type + " is being passed:");
+                if (actual_type != received_type && (actual_type != "int" || received_type != "float") && (actual_type != "float" || received_type != "int")) {
+                    report_error_to_highest_symbol_table("Error: " + func_record->name_ + " " + to_string(i + 1) + " parameter is of type " + actual_type + " but " + received_type + " is being passed:");
                 }
 
             }
@@ -200,7 +216,7 @@ void SymbolTable::set_properly_declared(SymbolRecord* record) {
     if (!record->properly_declared_) {
         record->properly_declared_ = search(type) != NULL;
         if (!record->properly_declared_) {
-            record->symbol_table_->report_error_to_highest_symbol_table("Error:" + type + " is not a valid type:");
+            record->symbol_table_->report_error_to_highest_symbol_table("Error: " + type + " is not a valid type:");
         }
     }
 }

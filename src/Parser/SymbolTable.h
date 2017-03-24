@@ -45,6 +45,8 @@ public:
     bool check_if_assign_variable_exist_and_nested_fields(SymbolRecord *func_record, SymbolRecord *record);
 
     SymbolRecord *search_type(string type);
+
+    SymbolRecord * check_nested_property(SymbolRecord *record, SymbolRecord *found_record);
 };
 
 

@@ -6,11 +6,15 @@
 #include "gtest/gtest.h"
 #include "../src/Parser/Parser.h"
 
-TEST(AssignNonDeclaredVariableClassFuncTest, SemanticVerificationTests)
+
+// undefined id: variable, class, function tests
+// undefined member: data member, method, including deeply nested
+    // undefined variable tests
+TEST(AssignNonDeclardedVarInClassFuncTest, SemanticVerificationTests)
 {
     vector<Token*> tokens;
     Scanner scanner;
-    tokens = scanner.generate_tokens("class nameHere { int findMin() { idx = 0; }; }; program { };", false);
+    tokens = scanner.generate_tokens("class nameHere { int findMin() { idx = 0; return (0);}; }; program { };", false);
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
@@ -18,15 +22,14 @@ TEST(AssignNonDeclaredVariableClassFuncTest, SemanticVerificationTests)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
-    cout << parser.print_semantic_errors();
-
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: idx variable is being used without being declared:1:41\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
     parser.global_symbol_table_->print(true);
 }
 
 
-TEST(AssignNonDeclaredVariableProgFuncTest, SemanticVerificationTests)
+TEST(AssignNonDeclardedVarInProgTest, SemanticVerificationTests)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -37,14 +40,14 @@ TEST(AssignNonDeclaredVariableProgFuncTest, SemanticVerificationTests)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
-    cout << parser.print_semantic_errors();
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: idx variable is being used without being declared:1:18\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
 }
 
 
-TEST(AssignNonDeclaredArrayVariableProgFuncTest, SemanticVerificationTests)
+TEST(AssignNonDeclardedArrayInProgTest, SemanticVerificationTests)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -55,14 +58,14 @@ TEST(AssignNonDeclaredArrayVariableProgFuncTest, SemanticVerificationTests)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
-    cout << parser.print_semantic_errors();
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: idx variable is being used without being declared:1:24\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
 }
 
 
-TEST(AssignNonDeclaredVariableForLoopProgFuncTest, SemanticVerificationTests)
+TEST(UseNonDeclaredVarInForLoopConditionTest, SemanticVerificationTests)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -73,25 +76,25 @@ TEST(AssignNonDeclaredVariableForLoopProgFuncTest, SemanticVerificationTests)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
-    cout << parser.print_semantic_errors();
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: idc variable is being used without being declared:1:37\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
 }
 
 
-TEST(AssignNonDeclaredVariableFuncTest, SemanticVerificationTests)
+TEST(AssignNonDeclardedVarInFuncTest, SemanticVerificationTests)
 {
     vector<Token*> tokens;
     Scanner scanner;
-    tokens = scanner.generate_tokens("program { }; int funcTest() { idx = 0; };", false);
+    tokens = scanner.generate_tokens("program { }; int funcTest() { idx = 0; return (0); };", false);
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
-    cout << parser.print_semantic_errors();
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: idx variable is being used without being declared:1:38\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
     parser.global_symbol_table_->print(true);
@@ -99,7 +102,7 @@ TEST(AssignNonDeclaredVariableFuncTest, SemanticVerificationTests)
 
 
 
-TEST(GetNonDeclaredVariableProgFuncTest, SemanticVerificationTests)
+TEST(UseNonDeclaredVarInGetTest, SemanticVerificationTests)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -110,13 +113,13 @@ TEST(GetNonDeclaredVariableProgFuncTest, SemanticVerificationTests)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
-    cout << parser.print_semantic_errors();
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: idc variable is being used without being declared:1:36\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
 }
 
-TEST(PutNonDeclaredVariableProgFuncTest, SemanticVerificationTests)
+TEST(UseNonDeclaredVarInPutTest, SemanticVerificationTests)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -127,13 +130,13 @@ TEST(PutNonDeclaredVariableProgFuncTest, SemanticVerificationTests)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
-    cout << parser.print_semantic_errors();
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: idc variable is being used without being declared:1:36\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
 }
 
-TEST(ReturnNonDeclaredVariableProgFuncTest, SemanticVerificationTests)
+TEST(UseNonDeclaredVarInReturnTest, SemanticVerificationTests)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -144,30 +147,221 @@ TEST(ReturnNonDeclaredVariableProgFuncTest, SemanticVerificationTests)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
-    cout << parser.print_semantic_errors();
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: idc variable is being used without being declared:1:39\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
 }
 
-TEST(AssignNonDeclaredFuncClassFuncTest, SemanticVerificationTests)
+    // undefined function test
+TEST(AssignVarNonDeclaredFuncInClassFuncTest, SemanticVerificationTests)
 {
     vector<Token*> tokens;
     Scanner scanner;
-    tokens = scanner.generate_tokens("class nameHere { int findMin() { int idx; idx = funcTest(21,idx); }; }; program { };", false);
+    tokens = scanner.generate_tokens("class nameHere { int findMin() { int idx; idx = funcTest(21,idx); return (idx);}; }; program { };", false);
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
-    cout << parser.print_semantic_errors();
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: funcTest function is being used without being declared:1:64\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
     parser.global_symbol_table_->print(true);
 }
 
-TEST(AssignDeclaredInvalidNoParameterFuncClassFuncTest, SemanticVerificationTests)
+TEST(AssignVarNonDeclaredFuncInProgTest, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("program { int idx; idx = funcTest(21,idx); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: funcTest function is being used without being declared:1:41\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
+    parser.global_symbol_table_->print(true);
+}
+
+
+TEST(AssignVarNonDeclaredFuncInFuncTest, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("program { }; int funcTest2() {  int idx; idx = funcTest(21,idx); return (0); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: funcTest function is being used without being declared:1:63\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
+
+    // undefined class test
+
+TEST(DeclaredUnDefinedClassInClassFuncTest, SemanticTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class Cord { int funcClass(){ Cordz cord; return(0); }; }; program { };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: Cordz is not a valid type:1:43\n");
+
+    parser.global_symbol_table_->print(true);
+}
+
+TEST(DeclaredUnDefinedClassInProgTest, SemanticTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class Cord { int funcClass(){ return (0); }; }; program { Cordz cord; };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: Cordz is not a valid type:1:71\n");
+
+
+    parser.global_symbol_table_->print(true);
+}
+
+TEST(DeclaredUnDefinedClassInFuncTest, SemanticTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class Cord { int funcClass(){ return (0); }; }; program { }; int funcClass(){ Cordz cord; return (0); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: Cordz is not a valid type:1:91\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
+
+    parser.global_symbol_table_->print(true);
+}
+
+TEST(ReturnUnDefinedClassInClassFuncTest, SemanticTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class Cord { Cordz funcClass(){ return (0); }; }; program { };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: Cordz is not a valid type:1:29\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+
+    parser.global_symbol_table_->print(true);
+}
+
+TEST(ReturnUnDefinedClassInFuncTest, SemanticTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class Cord { }; program { }; Cordz funcClass(){ return (0); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: Cordz is not a valid type:1:45\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
+
+    parser.global_symbol_table_->print(true);
+}
+
+// data member test
+TEST(AssignDeclaredClassNonDeclaredDataMember, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class Util { }; program { Util util; util.idx = 0; }; ", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: invalid nested property idx on variable util:1:50\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
+
+
+// deeply nested
+
+TEST(AssignDeclaredClassNonDeclaredNestedDataMember, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class Util { }; class Util1 { Util util; }; class Util2 { Util1 util1; }; program { Util2 util2; util2.util1.idx = 0; }; ", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: invalid nested property idx on variable util2:1:117\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 4);
+    parser.global_symbol_table_->print(true);
+}
+
+TEST(AssignDeclaredClassNonDeclaredNestedFunc, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class Util { int idx;}; class Util1 { Util util; }; class Util2 { Util1 util1; }; program { Util2 util2; Util2 util3; util2.util1.util.idx = util3.util1.testFunc(1); }; ", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: invalid nested function testFunc on variable util3:1:164\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 4);
+    parser.global_symbol_table_->print(true);
+}
+
+
+
+
+
+
+
+
+
+// function calls: right number and types of parameters upon call
+
+    // function right number parameter tests
+TEST(AssignVarFuncWithWrongNoOfParametersInProg, SemanticVerificationTests)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -178,13 +372,32 @@ TEST(AssignDeclaredInvalidNoParameterFuncClassFuncTest, SemanticVerificationTest
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
-    cout << parser.print_semantic_errors();
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: funcTest is being invoked with only 2 parameters but needs 3:1:42\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
     parser.global_symbol_table_->print(true);
 }
 
-TEST(AssignDeclaredValidFloatNumParameterFuncClassFuncTest, SemanticVerificationTests)
+TEST(AssignVarFuncWithWrongNoOfParametersInClassFunc, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class Cord { int func() { int idx; idx = funcTest(10, idx); return(0);}; };  program {}; int funcTest(int id, int idc, int idk) { return (id); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: funcTest is being invoked with only 2 parameters but needs 3:1:58\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
+    parser.global_symbol_table_->print(true);
+}
+
+
+    // function type checks
+TEST(AssignVarWithFuncWithCorrectParametersOfTypeIntAndFloatInProg, SemanticVerificationTests)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -195,13 +408,12 @@ TEST(AssignDeclaredValidFloatNumParameterFuncClassFuncTest, SemanticVerification
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    cout << parser.print_semantic_errors();
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
     parser.global_symbol_table_->print(true);
 }
 
-TEST(AssignDeclareValidFloatVarParameterFuncClassFuncTest, SemanticVerificationTests)
+TEST(AssignVarWithFuncWithCorrectParametersOfTypeIntAndIdFloatInProg, SemanticVerificationTests)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -212,11 +424,80 @@ TEST(AssignDeclareValidFloatVarParameterFuncClassFuncTest, SemanticVerificationT
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    cout << parser.print_semantic_errors();
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
     parser.global_symbol_table_->print(true);
 }
+
+TEST(AssignVarWithFuncWithCorrectParametersOfTypeIntAndFloatInClassFunc, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class Cord { int funcTest2() {int idx; idx = funcTest(10, 10.11); return (idx); }; }; program { }; int funcTest(int id, int idc) { return (id); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
+    parser.global_symbol_table_->print(true);
+}
+
+TEST(AssignVarWithClassFuncWithCorrectParametersOfTypeAndIdFloatInClassFunc, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class Cord { int funcTest2(int idx, float idf) { idx = funcTest(idf, 10); return (idx); }; }; program { Cord cord; float y; int x; x = cord.funcTest2(x, y); }; int funcTest(int id, int idc) { return (id); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
+    parser.global_symbol_table_->print(true);
+}
+
+TEST(AssignVarWithFuncWithCorrectParametersOfTypeCordAndIntInProg, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class Cord { int idc; }; program { Cord cord; float y; int x; x = funcTest(cord, y); }; int funcTest(Cord cord, int idc) { return (cord.idc); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
+    parser.global_symbol_table_->print(true);
+}
+
+TEST(AssignVarWithFuncWithWrongParametersOfTypeCordAndIntInProg, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class Cord { int idc; }; program { Cord cord; float y; int x; x = funcTest(x, y); }; int funcTest(Cord cord, int idc) { return (cord.idc); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: funcTest 1 parameter is of type Cord but int is being passed:1:80\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
+    parser.global_symbol_table_->print(true);
+}
+
+
+
+
+
+// type checking of an assignment statement
 
 TEST(AssignDeclaredClassVarIntFuncTest, SemanticVerificationTests)
 {
@@ -229,7 +510,7 @@ TEST(AssignDeclaredClassVarIntFuncTest, SemanticVerificationTests)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
-    cout << parser.print_semantic_errors();
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: can't assign variable idx a value of type int it needs type Util:1:59\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
     parser.global_symbol_table_->print(true);
@@ -247,11 +528,11 @@ TEST(AssignDeclaredClassVarIdClassFuncTest, SemanticVerificationTests)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    cout << parser.print_semantic_errors();
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
     parser.global_symbol_table_->print(true);
 }
+
 
 TEST(AssignDeclaredClassVarIntClassFuncTest, SemanticVerificationTests)
 {
@@ -264,9 +545,78 @@ TEST(AssignDeclaredClassVarIntClassFuncTest, SemanticVerificationTests)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
-    cout << parser.print_semantic_errors();
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: can't assign variable idx a value of type int it needs type Util:1:139\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
     parser.global_symbol_table_->print(true);
 }
 
+TEST(AssignDeclaredClassDataMember, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class Util { int idx; }; program { Util util; util.idx = 0; }; ", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
+
+
+TEST(AssignDeclaredClassVarNestedClassVarToAnotherDeclaredClassVar, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class Util { }; class Util1 { Util util; }; class Util2 { Util1 util1; }; program { Util util; Util util1; Util2 util2; util2.util1.util = util; }; ", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 4);
+    parser.global_symbol_table_->print(true);
+}
+
+
+TEST(AssignDeclaredClassVarNestedClassVarWrongVarTypeTest, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class Util { }; class Util1 { Util util; }; class Util2 { Util1 util1; }; program { Util util; Util util1; Util2 util2; util2.util1.util = util2; }; ", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: can't assign variable util2 a value of type Util2 it needs type Util2:1:145\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 4);
+    parser.global_symbol_table_->print(true);
+}
+
+TEST(AssignDeclaredClassVarNestedClassVarWrongFuncTypeTest, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class Util { }; class Util1 { Util util; }; class Util2 { Util1 util1; }; program { Util util; Util util1; Util2 util2; util2.util1.util = util2; }; ", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: can't assign variable util2 a value of type Util2 it needs type Util2:1:145\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 4);
+    parser.global_symbol_table_->print(true);
+}

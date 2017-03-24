@@ -736,7 +736,7 @@ bool Parser::idnest(SymbolRecord* func_record, SymbolRecord* record) {
         return false;
     if (lookahead_ == "DOT") {
         form_derivation_string("<idnest>", ". id <indiceLst> <idnest>");
-        if (match("DOT") && match("ID") && indiceLst(func_record, record) && idnest(func_record, record)) {
+        if (match("DOT") && match("ID") && record->add_nested_porperty(get_last_token().lexeme_) && indiceLst(func_record, record) && idnest(func_record, record)) {
             return true;
         }
     } else if (lookahead_ == "EQUAL" || lookahead_ == "CLOSEPARA") {
