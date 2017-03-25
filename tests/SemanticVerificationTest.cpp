@@ -633,7 +633,7 @@ TEST(DeclareThreeDuplicateFuncDefinition, SemanticVerificationTests)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 2);
-    EXPECT_EQ(parser.print_semantic_errors(), "Error: A function with the name testFunc already exists within this scope:1:57\\nError: A function with the name testFunc already exists within this scope:1:90\n");
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: A function with the name testFunc already exists within this scope:1:57\nError: A function with the name testFunc already exists within this scope:1:90\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
     parser.global_symbol_table_->print(true);

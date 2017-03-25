@@ -20,6 +20,8 @@ bool SymbolTable::check_if_assign_variable_exist(SymbolRecord *record) {
             report_error_to_highest_symbol_table("Error: " + record->name_ + " variable is being used without being declared:");
         } else if (record->nested_properties_.size() > 0 ) {
             check_nested_property(record, found_record);
+        } else {
+            check_correct_number_of_array_dimensions(record, 0);
         }
     }
     return true;
@@ -87,8 +89,16 @@ bool SymbolTable::check_if_assign_variable_exist_and_correct_assign_type(SymbolR
     return true;
 }
 
-bool SymbolTable::check_correct_number_of_array_dimensions(SymbolRecord* record) {
+bool SymbolTable::check_correct_number_of_array_dimensions(SymbolRecord *record, int number_of_accessed_dimensions) {
+    SymbolRecord* found_record = search(record->name_);
+    if (found_record->structure_ != "array" && record->nested_properties_dimensions_.size() > number_of_accessed_dimensions) {
+        report_error_to_highest_symbol_table("Error: " + record->name_ + " is not an array but is being accessed as one");
+    } else if (found_record->structure_ == "array") {
 
+
+    }
+
+    return true;
 }
 
 SymbolRecord* find_nested_record(SymbolRecord* record, SymbolRecord* found_record) {
