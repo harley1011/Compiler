@@ -801,7 +801,7 @@ bool Parser::arraySize(SymbolRecord* record) {
         return false;
     if (lookahead_ == "OPENBRA") {
         form_derivation_string("<arraySize>", "[ integer ] <arraySize>");
-        if (match("OPENBRA") && match("INUM") && record->add_array_size(get_last_integer_token()) && match("CLOSEBRA") && record->append_to_type("]") && arraySize(record)) {
+        if (match("OPENBRA") && match("INUM") && record->add_array_size(get_last_integer_token()) && match("CLOSEBRA") && arraySize(record)) {
             return true;
         }
     } else if (lookahead_ == "COM" || lookahead_ == "DELI" || lookahead_ == "CLOSEPARA") {// Follow set

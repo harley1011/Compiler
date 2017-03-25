@@ -54,7 +54,7 @@ public:
 
     SymbolRecord *search_top_table(string name);
 
-    bool check_correct_number_of_array_dimensions(SymbolRecord *record, int number_of_accessed_dimensions);
+    bool check_correct_number_of_array_dimensions(SymbolRecord *found_record, SymbolRecord *record, int number_of_accessed_dimensions);
 };
 
 

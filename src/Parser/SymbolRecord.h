@@ -42,6 +42,8 @@ public:
     bool add_nested_properties_dimension_to_last_porperty();
 
     bool add_nested_property(string property);
+
+    string type_with_array_dimensions();
 };
 
 

@@ -76,7 +76,7 @@ TEST(UseNonDeclaredVarInForLoopConditionTest, SemanticVerificationTests)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
-    EXPECT_EQ(parser.print_semantic_errors(), "Error: idc variable is being used without being declared:1:37\n");
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: idc variable is being used without being declared:2:37\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
@@ -652,9 +652,9 @@ TEST(UseDeclareVarAsArrayInProg, SemanticVerificationTests)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
-    EXPECT_EQ(parser.print_semantic_errors(), "Error: can't assign variable idx a value of type int it needs type Util:1:59\n");
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: variable y is not an array but is being accessed as one:1:46\n");
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
 }
 TEST(AssignDeclareVarAsArrayInProg, SemanticVerificationTests)
@@ -668,12 +668,28 @@ TEST(AssignDeclareVarAsArrayInProg, SemanticVerificationTests)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
-    EXPECT_EQ(parser.print_semantic_errors(), "Error: can't assign variable idx a value of type int it needs type Util:1:59\n");
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: variable x is not an array but is being accessed as one:1:33\n");
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
 }
 
+TEST(AssignDeclareArrayWithTooFewDimensionsInProg, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("program { int p[5][5]; int x[5][5]; int y[5]; x[4] = y[4]; };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: array x is being accessed with too few dimensions:1:58\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
+    parser.global_symbol_table_->print(true);
+}
 // ----------------------------------------------------------------------------------------------------------------
 // type checking of an assignment statement
 

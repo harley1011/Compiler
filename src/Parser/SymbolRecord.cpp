@@ -70,11 +70,18 @@ bool SymbolRecord::add_nested_property(string property) {
 
 
 bool SymbolRecord::add_array_size(IntegerToken integer_token) {
-    append_to_type("[" + integer_token.lexeme_);
+    //append_to_type("[" + integer_token.lexeme_);
     array_sizes.push_back(integer_token.converted_lexeme_);
     return true;
 }
 
+string SymbolRecord::type_with_array_dimensions() {
+    string result = type_;
+    for(int i : array_sizes) {
+        result += "[" + to_string(i) + "]";
+    }
+    return result;
+}
 
 bool SymbolRecord::generate_function_type() {
     bool first = true;

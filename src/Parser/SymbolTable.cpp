@@ -21,7 +21,7 @@ bool SymbolTable::check_if_assign_variable_exist(SymbolRecord *record) {
         } else if (record->nested_properties_.size() > 0 ) {
             check_nested_property(record, found_record);
         } else {
-            check_correct_number_of_array_dimensions(record, 0);
+            check_correct_number_of_array_dimensions(found_record, record, record->nested_properties_dimensions_[found_record->name_]);
         }
     }
     return true;
@@ -69,6 +69,8 @@ bool SymbolTable::check_if_assign_variable_exist_and_correct_assign_type(SymbolR
                 return true;
             else
                 variable_property = nested_variable->type_;
+        } else {
+            check_correct_number_of_array_dimensions(record, variable_record, variable_record->nested_properties_dimensions_[variable_record->name_]);
         }
 
         if (assign_record->kind_ == "id" || assign_record->kind_ == "function") {
@@ -89,15 +91,17 @@ bool SymbolTable::check_if_assign_variable_exist_and_correct_assign_type(SymbolR
     return true;
 }
 
-bool SymbolTable::check_correct_number_of_array_dimensions(SymbolRecord *record, int number_of_accessed_dimensions) {
-    SymbolRecord* found_record = search(record->name_);
-    if (found_record->structure_ != "array" && record->nested_properties_dimensions_.size() > number_of_accessed_dimensions) {
-        report_error_to_highest_symbol_table("Error: " + record->name_ + " is not an array but is being accessed as one");
+bool SymbolTable::check_correct_number_of_array_dimensions(SymbolRecord *found_record, SymbolRecord *record, int number_of_accessed_dimensions) {
+    if (found_record->structure_ != "array" && number_of_accessed_dimensions > 0) {
+        report_error_to_highest_symbol_table("Error: variable " + record->name_ + " is not an array but is being accessed as one:");
     } else if (found_record->structure_ == "array") {
-
+        if (found_record->array_sizes.size() > number_of_accessed_dimensions) {
+            report_error_to_highest_symbol_table("Error: array " + record->name_ + " is being accessed with too few dimensions:");
+        } else if (found_record->array_sizes.size() < number_of_accessed_dimensions) {
+            report_error_to_highest_symbol_table("Error: array " + record->name_ + " is being accessed with too many dimensions:");
+        }
 
     }
-
     return true;
 }
 
@@ -318,8 +322,7 @@ bool SymbolTable::create_variable_entry(SymbolRecord** record) {
 
     (*record)->kind_ = "variable";
     if ((*record)->type_.substr(0,3) == "int" || (*record)->type_.substr(0, 5) == "float") {
-        if (((*record)->type_.size() > 3 && ((*record) ->type_.substr(3,1) == "[" || (*record) ->type_.substr(3,1) == " "))
-            || (*record)->type_.size() > 5 && ((*record)->type_.substr(5,1) == "[" || (*record)->type_.substr(5,1) == " " )) {
+        if ((*record)->array_sizes.size() > 0) {
             (*record)->properly_declared_ = true;
             (*record)->set_structure("array");
         }
@@ -528,7 +531,7 @@ string SymbolTable::generate_symbol_table_string(SymbolTable *table, string tabl
         buffer  << string(indent_count, ' ') << "|" << setw(name_width_out) << record->name_ << std::right << std::setfill(' ') << "|";
         buffer << setw(kind_width_out) << record->kind_ << std::right << std::setfill(' ') << "|";
         buffer << setw(structure_width_out) << record->structure_ << std::right << std::setfill(' ') << "|";
-        buffer << setw(type_width_out) << record->type_ << std::right << std::setfill(' ') << "|";
+        buffer << setw(type_width_out) << record->type_with_array_dimensions() << std::right << std::setfill(' ') << "|";
         buffer << setw(declared_width_out) << record->properly_declared_ << std::right << std::setfill(' ') << "|" << endl;
     }
 
