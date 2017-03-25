@@ -65,6 +65,7 @@ bool SymbolRecord::add_function_record(SymbolRecord* record) {
 
 bool SymbolRecord::add_nested_property(string property) {
     nested_properties_.push_back(property);
+    nested_properties_dimensions_[property] = 0;
     return true;
 }
 
@@ -100,7 +101,7 @@ bool SymbolRecord::generate_function_type() {
 
 bool SymbolRecord::add_nested_properties_dimension_to_last_porperty() {
     string property = name_;
-    if (nested_properties_.size() > 1)
+    if (nested_properties_.size() > 0)
         property = nested_properties_[nested_properties_.size() - 1];
     nested_properties_dimensions_[property] += 1;
     return true;

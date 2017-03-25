@@ -28,23 +28,26 @@ bool SymbolTable::check_if_assign_variable_exist(SymbolRecord *record) {
 }
 
 SymbolRecord * SymbolTable::check_nested_property(SymbolRecord *record, SymbolRecord *found_record) {
-    if (record->type_ == "int")
+    if (found_record->type_ == "int")
         report_error_to_highest_symbol_table("Error: " + record->name_ + " is of type int and doesn't have any properties to access:");
-    else if (record->type_ == "float")
+    else if (found_record->type_ == "float")
         report_error_to_highest_symbol_table("Error: " + record->name_ + " is of type float and doesn't have any properties to access:");
     else {
         SymbolRecord* current_record = found_record;
+        SymbolRecord* current_found_record = found_record;
         SymbolTable* top_symbol_table = found_record->symbol_table_->parent_symbol_table_;
         if (top_symbol_table->parent_symbol_table_ != NULL)
             top_symbol_table = top_symbol_table->parent_symbol_table_;
         for (int i = 0; i < record->nested_properties_.size(); i++) {
             string property = record->nested_properties_[i];
-            current_record = top_symbol_table->search(current_record->type_);
-            current_record = current_record->symbol_table_->search(property);
+            current_found_record = top_symbol_table->search(current_record->type_);
+            current_record = current_found_record->symbol_table_->search(property);
 
             if (current_record == NULL) {
                 report_error_to_highest_symbol_table("Error: invalid nested property " + property + " on variable " + record->name_ + ":");
                 return current_record;
+            } else {
+                check_correct_number_of_array_dimensions(current_record, current_record, record->nested_properties_dimensions_[current_record->name_]);
             }
 
 
@@ -92,9 +95,9 @@ bool SymbolTable::check_if_assign_variable_exist_and_correct_assign_type(SymbolR
 }
 
 bool SymbolTable::check_correct_number_of_array_dimensions(SymbolRecord *found_record, SymbolRecord *record, int number_of_accessed_dimensions) {
-    if (found_record->structure_ != "array" && number_of_accessed_dimensions > 0) {
+    if ((found_record->structure_ != "array" || found_record->array_sizes.size() == 0 ) && number_of_accessed_dimensions > 0) {
         report_error_to_highest_symbol_table("Error: variable " + record->name_ + " is not an array but is being accessed as one:");
-    } else if (found_record->structure_ == "array") {
+    } else if (found_record->structure_ == "array" || found_record->array_sizes.size() > 0) {
         if (found_record->array_sizes.size() > number_of_accessed_dimensions) {
             report_error_to_highest_symbol_table("Error: array " + record->name_ + " is being accessed with too few dimensions:");
         } else if (found_record->array_sizes.size() < number_of_accessed_dimensions) {

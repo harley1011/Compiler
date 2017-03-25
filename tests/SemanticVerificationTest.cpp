@@ -76,7 +76,7 @@ TEST(UseNonDeclaredVarInForLoopConditionTest, SemanticVerificationTests)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
-    EXPECT_EQ(parser.print_semantic_errors(), "Error: idc variable is being used without being declared:2:37\n");
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: idc variable is being used without being declared:1:37\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
@@ -688,6 +688,73 @@ TEST(AssignDeclareArrayWithTooFewDimensionsInProg, SemanticVerificationTests)
     EXPECT_EQ(parser.print_semantic_errors(), "Error: array x is being accessed with too few dimensions:1:58\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
+    parser.global_symbol_table_->print(true);
+}
+
+TEST(UseDeclareClassVarAsArrayInProg, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class A { int x; }; program { A a; int p[5][5]; int x[5][5]; x[4][3] = a.x[4]; };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: variable x is not an array but is being accessed as one:1:78\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
+
+TEST(UseDeclareClassArrayWithTooFewDimensionsInProg, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class A { int x[5][5]; }; program { A a; int p[5][5]; int x[5][5]; x[4][3] = a.x[4]; };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: array x is being accessed with too few dimensions:1:84\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
+
+TEST(UseDeclareNestedClassArrayWithTooFewDimensionsInProg, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class B { A a; }; class A { int x[5][5]; }; program { B b; int x[5][5]; x[4][3] = b.a.x[4]; };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: array x is being accessed with too few dimensions:1:91\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
+    parser.global_symbol_table_->print(true);
+}
+TEST(UseDeclareNestedArrayClassWithTooFewDimensionsInProg, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class B { A a[5]; }; class A { int x[5][5]; }; program { B b; int x[5][5]; x[4][3] = b.a.x[4][4]; };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: array a is being accessed with too few dimensions:1:97\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
     parser.global_symbol_table_->print(true);
 }
 // ----------------------------------------------------------------------------------------------------------------
