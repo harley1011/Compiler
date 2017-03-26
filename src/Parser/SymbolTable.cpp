@@ -95,7 +95,7 @@ bool SymbolTable::check_if_assign_variable_exist_and_correct_assign_type(SymbolR
 }
 
 bool SymbolTable::check_correct_number_of_array_dimensions(SymbolRecord *found_record, SymbolRecord *record, int number_of_accessed_dimensions) {
-    if ((found_record->structure_ != "array" || found_record->array_sizes.size() == 0 ) && number_of_accessed_dimensions > 0) {
+    if (found_record->structure_ != "array" && found_record->array_sizes.size() == 0  && number_of_accessed_dimensions > 0) {
         report_error_to_highest_symbol_table("Error: variable " + record->name_ + " is not an array but is being accessed as one:");
     } else if (found_record->structure_ == "array" || found_record->array_sizes.size() > 0) {
         if (found_record->array_sizes.size() > number_of_accessed_dimensions) {

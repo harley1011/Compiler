@@ -757,6 +757,43 @@ TEST(UseDeclareNestedArrayClassWithTooFewDimensionsInProg, SemanticVerificationT
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
     parser.global_symbol_table_->print(true);
 }
+
+TEST(AssignDeclareNestedArrayClassWithTooFewDimensionsInProg, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class B { A a[5]; }; class A { int x[5][5]; }; program { B b; int x[5][5]; b.a.x[4] = x[4][3]; };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: array a is being accessed with too few dimensions:1:94\\nError: array x is being accessed with too few dimensions:1:94\\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
+    parser.global_symbol_table_->print(true);
+}
+// ----------------------------------------------------------------------------------------------------------------
+// type checking of a complex expression
+
+TEST(AssignVarInvalidArithmeticExpression, SemanticVerificationTests)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("program { int p[5][5]; int x; int y; x = y[5]; };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: variable y is not an array but is being accessed as one:1:46\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
+    parser.global_symbol_table_->print(true);
+}
+
 // ----------------------------------------------------------------------------------------------------------------
 // type checking of an assignment statement
 
@@ -881,9 +918,6 @@ TEST(AssignDeclaredClassVarNestedClassVarWrongFuncTypeTest, SemanticVerification
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 4);
     parser.global_symbol_table_->print(true);
 }
-
-
-
 
 
 

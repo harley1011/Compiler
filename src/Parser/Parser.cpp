@@ -672,7 +672,7 @@ bool Parser::factorVarArrayNestId(SymbolRecord* func_record, SymbolRecord* recor
         return false;
     if (lookahead_ == "DOT") {
         form_derivation_string("<factorVarArrayNestId>", ". id <factorVarOrFunc>");
-        if (match("DOT") && match("ID") && factorVarOrFunc(func_record, record))
+        if (match("DOT") && match("ID") && record->add_nested_property(get_last_token().lexeme_) && factorVarOrFunc(func_record, record))
             return true;
     } else if (check_if_lookahead_is_in_set(
             {"MULT", "DASH", "AND", "ADD", "SUB", "OR", "EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ", "CLOSEBRA",
