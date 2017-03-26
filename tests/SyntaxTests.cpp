@@ -564,7 +564,8 @@ TEST(factorIdTest, ParserTests) {
     Parser parser = common_setup("var1 <", "<factor>");
     SymbolRecord *record = new SymbolRecord();
     SymbolRecord *func_record = new SymbolRecord();
-    EXPECT_TRUE(parser.factor(func_record, record));
+    ExpressionTree* tree = new ExpressionTree();
+    EXPECT_TRUE(parser.factor(func_record, record, tree));
     EXPECT_EQ(parser.current_rhs_derivation_, "id");
 }
 
@@ -572,7 +573,8 @@ TEST(factorIdNestTest, ParserTests) {
     Parser parser = common_setup("var1.var2 <", "<factor>");
     SymbolRecord *record = new SymbolRecord();
     SymbolRecord *func_record = new SymbolRecord();
-    EXPECT_TRUE(parser.factor(func_record, record));
+    ExpressionTree* tree = new ExpressionTree();
+    EXPECT_TRUE(parser.factor(func_record, record, tree));
     EXPECT_EQ(parser.current_rhs_derivation_, "id . id");
 }
 
@@ -580,7 +582,8 @@ TEST(factorArrayIdNestTest, ParserTests) {
     Parser parser = common_setup("var1[5][10] [ 20 + 20].var2 <", "<factor>");
     SymbolRecord *record = new SymbolRecord();
     SymbolRecord *func_record = new SymbolRecord();
-    EXPECT_TRUE(parser.factor(func_record, record));
+    ExpressionTree* tree = new ExpressionTree();
+    EXPECT_TRUE(parser.factor(func_record, record, tree));
     EXPECT_EQ(parser.current_rhs_derivation_, "id [ integer ] [ integer ] [ integer + integer ] . id");
 }
 
@@ -588,7 +591,8 @@ TEST(factorNestedFuncTest, ParserTests) {
     Parser parser = common_setup("var1[5][10][ 20 + 20].var2( 10, 10 - 20, var4.var6(10, 10) ) <", "<factor>");
     SymbolRecord *record = new SymbolRecord();
     SymbolRecord *func_record = new SymbolRecord();
-    EXPECT_TRUE(parser.factor(func_record, record));
+    ExpressionTree* tree = new ExpressionTree();
+    EXPECT_TRUE(parser.factor(func_record, record, tree));
     EXPECT_EQ(parser.current_rhs_derivation_,
               "id [ integer ] [ integer ] [ integer + integer ] . id ( integer , integer - integer , id . id ( integer , integer ) )");
 }
@@ -597,7 +601,8 @@ TEST(factorNestedInvalidFuncTest, ParserTests) {
     Parser parser = common_setup("var1[5](10) <", "<factor>");
     SymbolRecord *record = new SymbolRecord();
     SymbolRecord *func_record = new SymbolRecord();
-    EXPECT_TRUE(parser.factor(func_record, record));
+    ExpressionTree* tree = new ExpressionTree();
+    EXPECT_TRUE(parser.factor(func_record, record, tree));
     EXPECT_EQ(parser.syntax_errors.size(), 1);
     EXPECT_EQ(parser.current_rhs_derivation_, "id [ integer ]");
 }
@@ -606,7 +611,8 @@ TEST(factorIntegerTest, ParserTests) {
     Parser parser = common_setup("200", "<factor>");
     SymbolRecord *record = new SymbolRecord();
     SymbolRecord *func_record = new SymbolRecord();
-    EXPECT_TRUE(parser.factor(func_record, record));
+    ExpressionTree* tree = new ExpressionTree();
+    EXPECT_TRUE(parser.factor(func_record, record, tree));
     EXPECT_EQ(parser.current_rhs_derivation_, "integer");
 }
 
@@ -614,7 +620,8 @@ TEST(factorFloatTest, ParserTests) {
     Parser parser = common_setup("200.12", "<factor>");
     SymbolRecord *record = new SymbolRecord();
     SymbolRecord *func_record = new SymbolRecord();
-    EXPECT_TRUE(parser.factor(func_record, record));
+    ExpressionTree* tree = new ExpressionTree();
+    EXPECT_TRUE(parser.factor(func_record, record, tree));
     EXPECT_EQ(parser.current_rhs_derivation_, "float");
 }
 
@@ -622,7 +629,8 @@ TEST(factorArithExprTest, ParserTests) {
     Parser parser = common_setup("( 20 * 20 - 10 / 10 + var2 (10, 10) )", "<factor>");
     SymbolRecord *record = new SymbolRecord();
     SymbolRecord *func_record = new SymbolRecord();
-    EXPECT_TRUE(parser.factor(func_record, record));
+    ExpressionTree* tree = new ExpressionTree();
+    EXPECT_TRUE(parser.factor(func_record, record, tree));
     EXPECT_EQ(parser.current_rhs_derivation_, "( integer * integer - integer / integer + id ( integer , integer ) )");
 }
 
@@ -630,7 +638,8 @@ TEST(factorNotTest, ParserTests) {
     Parser parser = common_setup("not var2.var1 <", "<factor>");
     SymbolRecord *record = new SymbolRecord();
     SymbolRecord *func_record = new SymbolRecord();
-    EXPECT_TRUE(parser.factor(func_record,record));
+    ExpressionTree* tree = new ExpressionTree();
+    EXPECT_TRUE(parser.factor(func_record,record, tree));
     EXPECT_EQ(parser.current_rhs_derivation_, "not id . id");
 }
 
@@ -638,7 +647,8 @@ TEST(factorSignPlusTest, ParserTests) {
     Parser parser = common_setup("+var2.var1 <", "<factor>");
     SymbolRecord *record = new SymbolRecord();
     SymbolRecord *func_record = new SymbolRecord();
-    EXPECT_TRUE(parser.factor(func_record, record));
+    ExpressionTree* tree = new ExpressionTree();
+    EXPECT_TRUE(parser.factor(func_record, record, tree));
     EXPECT_EQ(parser.current_rhs_derivation_, "+ id . id");
 }
 
@@ -646,7 +656,8 @@ TEST(factorSignNegTest, ParserTests) {
     Parser parser = common_setup("-var2.var1 <", "<factor>");
     SymbolRecord *record = new SymbolRecord();
     SymbolRecord *func_record = new SymbolRecord();
-    EXPECT_TRUE(parser.factor(func_record, record));
+    ExpressionTree* tree = new ExpressionTree();
+    EXPECT_TRUE(parser.factor(func_record, record, tree));
     EXPECT_EQ(parser.current_rhs_derivation_, "- id . id");
 }
 
@@ -654,7 +665,8 @@ TEST(termMultTest, ParserTests) {
     Parser parser = common_setup("var2 * 10.21;", "<term>");
     SymbolRecord *record = new SymbolRecord();
     SymbolRecord *func_record = new SymbolRecord();
-    EXPECT_TRUE(parser.term(func_record, record));
+    ExpressionTree* tree = new ExpressionTree();
+    EXPECT_TRUE(parser.term(func_record, tree));
     EXPECT_EQ(parser.current_rhs_derivation_, "id * float");
 }
 
@@ -662,7 +674,8 @@ TEST(termDashTest, ParserTests) {
     Parser parser = common_setup("var2 / 10.21;", "<term>");
     SymbolRecord *record = new SymbolRecord();
     SymbolRecord *func_record = new SymbolRecord();
-    EXPECT_TRUE(parser.term(func_record, record));
+    ExpressionTree* tree = new ExpressionTree();
+    EXPECT_TRUE(parser.term(func_record, tree));
     EXPECT_EQ(parser.current_rhs_derivation_, "id / float");
 }
 
@@ -670,7 +683,8 @@ TEST(termAndTest, ParserTests) {
     Parser parser = common_setup("var2 and 1;", "<term>");
     SymbolRecord *record = new SymbolRecord();
     SymbolRecord *func_record = new SymbolRecord();
-    EXPECT_TRUE(parser.term(func_record, record));
+    ExpressionTree* tree = new ExpressionTree();
+    EXPECT_TRUE(parser.term(func_record, tree));
     EXPECT_EQ(parser.current_rhs_derivation_, "id and integer");
 }
 
@@ -678,7 +692,8 @@ TEST(termMultipleTest, ParserTests) {
     Parser parser = common_setup("var2 * 10.21 * ( 10 + 10 ) / var5(1, 3) * id.id[10];", "<term>");
     SymbolRecord *record = new SymbolRecord();
     SymbolRecord *func_record = new SymbolRecord();
-    EXPECT_TRUE(parser.term(func_record, record));
+    ExpressionTree* tree = new ExpressionTree();
+    EXPECT_TRUE(parser.term(func_record, tree));
     EXPECT_EQ(parser.current_rhs_derivation_,
               "id * float * ( integer + integer ) / id ( integer , integer ) * id . id [ integer ]");
 }
@@ -688,7 +703,8 @@ TEST(arithExprAddTest, ParserTests) {
     Parser parser = common_setup("var2 + 10.21;", "<arithExpr>");
     SymbolRecord *record = new SymbolRecord();
     SymbolRecord *func_record = new SymbolRecord();
-    EXPECT_TRUE(parser.arithExpr(func_record, record));
+    ExpressionTree* tree = new ExpressionTree();
+    EXPECT_TRUE(parser.arithExpr(func_record, tree));
     EXPECT_EQ(parser.current_rhs_derivation_, "id + float");
 }
 
@@ -697,7 +713,8 @@ TEST(arithExprSubTest, ParserTests) {
     Parser parser = common_setup("var2 - 10.21;", "<arithExpr>");
     SymbolRecord *record = new SymbolRecord();
     SymbolRecord *func_record = new SymbolRecord();
-    EXPECT_TRUE(parser.arithExpr(func_record, record));
+    ExpressionTree* tree = new ExpressionTree();
+    EXPECT_TRUE(parser.arithExpr(func_record, tree));
     EXPECT_EQ(parser.current_rhs_derivation_, "id - float");
 }
 
@@ -705,7 +722,8 @@ TEST(arithExprOrTest, ParserTests) {
     Parser parser = common_setup("var2 or 10.21;", "<arithExpr>");
     SymbolRecord *record = new SymbolRecord();
     SymbolRecord *func_record = new SymbolRecord();
-    EXPECT_TRUE(parser.arithExpr(func_record, record));
+    ExpressionTree* tree = new ExpressionTree();
+    EXPECT_TRUE(parser.arithExpr(func_record, tree));
     EXPECT_EQ(parser.current_rhs_derivation_, "id or float");
 }
 
@@ -713,7 +731,8 @@ TEST(arithExprAddOrSubTest, ParserTests) {
     Parser parser = common_setup("var2 * 10.21 * ( 10 + 10 ) / var5(1, 3) * id.id[10];", "<arithExpr>");
     SymbolRecord *record = new SymbolRecord();
     SymbolRecord *func_record = new SymbolRecord();
-    EXPECT_TRUE(parser.arithExpr(func_record, record));
+    ExpressionTree* tree = new ExpressionTree();
+    EXPECT_TRUE(parser.arithExpr(func_record, tree));
     EXPECT_EQ(parser.current_rhs_derivation_,
               "id * float * ( integer + integer ) / id ( integer , integer ) * id . id [ integer ]");
 }
@@ -723,7 +742,8 @@ TEST(arithExprMultiTest, ParserTests) {
     Parser parser = common_setup("var2 + 10.21 * ( 10 + 10 ) / var5(1, 3) - id.id[10];", "<arithExpr>");
     SymbolRecord *record = new SymbolRecord();
     SymbolRecord *func_record = new SymbolRecord();
-    EXPECT_TRUE(parser.arithExpr(func_record, record));
+    ExpressionTree* tree = new ExpressionTree();
+    EXPECT_TRUE(parser.arithExpr(func_record, tree));
     EXPECT_EQ(parser.current_rhs_derivation_,
               "id + float * ( integer + integer ) / id ( integer , integer ) - id . id [ integer ]");
 }
@@ -733,7 +753,8 @@ TEST(exprNotEqTest, ParserTests) {
     Parser parser = common_setup("2 <> 5;", "<expr>");
     SymbolRecord *record = new SymbolRecord();
     SymbolRecord *func_record = new SymbolRecord();
-    EXPECT_TRUE(parser.expr(func_record, record));
+    ExpressionTree* tree = new ExpressionTree();
+    EXPECT_TRUE(parser.expr(func_record, tree));
     EXPECT_EQ(parser.current_rhs_derivation_, "integer <> integer");
 }
 
@@ -741,7 +762,8 @@ TEST(exprEqTest, ParserTests) {
     Parser parser = common_setup("var2 == var3.var1;", "<expr>");
     SymbolRecord *record = new SymbolRecord();
     SymbolRecord *func_record = new SymbolRecord();
-    EXPECT_TRUE(parser.expr(func_record, record));
+    ExpressionTree* tree = new ExpressionTree();
+    EXPECT_TRUE(parser.expr(func_record, tree));
     EXPECT_EQ(parser.current_rhs_derivation_, "id == id . id");
 }
 
@@ -749,7 +771,8 @@ TEST(exprLtTest, ParserTests) {
     Parser parser = common_setup("var2[5].var5(10, 10) < var3.var1;", "<expr>");
     SymbolRecord *record = new SymbolRecord();
     SymbolRecord *func_record = new SymbolRecord();
-    EXPECT_TRUE(parser.expr(func_record, record));
+    ExpressionTree* tree = new ExpressionTree();
+    EXPECT_TRUE(parser.expr(func_record, tree));
     EXPECT_EQ(parser.current_rhs_derivation_, "id [ integer ] . id ( integer , integer ) < id . id");
 }
 
@@ -758,7 +781,8 @@ TEST(exprGtTest, ParserTests) {
     Parser parser = common_setup(" 10 * var2 > 11 * 2;", "<expr>");
     SymbolRecord *record = new SymbolRecord();
     SymbolRecord *func_record = new SymbolRecord();
-    EXPECT_TRUE(parser.expr(func_record, record));
+    ExpressionTree* tree = new ExpressionTree();
+    EXPECT_TRUE(parser.expr(func_record, tree));
     EXPECT_EQ(parser.current_rhs_derivation_, "integer * id > integer * integer");
 }
 
@@ -767,7 +791,8 @@ TEST(exprLtEqTest, ParserTests) {
     Parser parser = common_setup(" 10 * var2[5] <= 11 * 2;", "<expr>");
     SymbolRecord *record = new SymbolRecord();
     SymbolRecord *func_record = new SymbolRecord();
-    EXPECT_TRUE(parser.expr(func_record, record));
+    ExpressionTree* tree = new ExpressionTree();
+    EXPECT_TRUE(parser.expr(func_record, tree));
     EXPECT_EQ(parser.current_rhs_derivation_, "integer * id [ integer ] <= integer * integer");
 }
 
@@ -776,7 +801,8 @@ TEST(exprGtEqTest, ParserTests) {
     Parser parser = common_setup(" 10 * (10 + var2(10, 10)) - 10 >= (var3[10].var4 - 10) * 2;", "<expr>");
     SymbolRecord *record = new SymbolRecord();
     SymbolRecord *func_record = new SymbolRecord();
-    EXPECT_TRUE(parser.expr(func_record, record));
+    ExpressionTree* tree = new ExpressionTree();
+    EXPECT_TRUE(parser.expr(func_record, tree));
     EXPECT_EQ(parser.current_rhs_derivation_,
               "integer * ( integer + id ( integer , integer ) ) - integer >= ( id [ integer ] . id - integer ) * integer");
 }

@@ -769,7 +769,7 @@ TEST(AssignDeclareNestedArrayClassWithTooFewDimensionsInProg, SemanticVerificati
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
-    EXPECT_EQ(parser.print_semantic_errors(), "Error: array a is being accessed with too few dimensions:1:94\\nError: array x is being accessed with too few dimensions:1:94\\n");
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: array a is being accessed with too few dimensions:1:94\nError: array x is being accessed with too few dimensions:1:94\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
     parser.global_symbol_table_->print(true);
@@ -781,7 +781,7 @@ TEST(AssignVarInvalidArithmeticExpression, SemanticVerificationTests)
 {
     vector<Token*> tokens;
     Scanner scanner;
-    tokens = scanner.generate_tokens("program { int p[5][5]; int x; int y; x = y[5]; };", false);
+    tokens = scanner.generate_tokens("program { int x; x = 2 * 3 + 5 + 6 * 8;};", false);
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;

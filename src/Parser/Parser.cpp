@@ -324,7 +324,8 @@ bool Parser::varOrStat(SymbolRecord* func_record, SymbolRecord** record) {
         form_derivation_string("<varOrStat>", "<indiceLst> <idnest> <assignOp> <expr> ;");
         (*record)->set_name((*record)->type_);
         SymbolRecord* assign_record = new SymbolRecord();
-        if (indiceLst(func_record, *record) && idnest(func_record, *record) && assignOp() && expr(func_record, assign_record) && func_record->symbol_table_->check_if_assign_variable_exist_and_correct_assign_type(*record, assign_record) && match("DELI", {"INT", "ID", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN", "CLOSECURL"}, ";", "<missingSemiColon>")) {
+        ExpressionTree* tree = new ExpressionTree();
+        if (indiceLst(func_record, *record) && idnest(func_record, *record) && assignOp() && expr(func_record, tree) && func_record->symbol_table_->check_if_assign_variable_exist_and_correct_assign_type(*record, assign_record) && match("DELI", {"INT", "ID", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN", "CLOSECURL"}, ";", "<missingSemiColon>")) {
             return true;
         }
     }
@@ -368,17 +369,18 @@ bool Parser::statementRes(SymbolRecord* func_record) {
         return false;
     SymbolRecord** local_record = create_new_symbol_record();
     (*local_record)->symbol_table_->second_pass_ = global_symbol_table_->second_pass_;
+    ExpressionTree* tree = new ExpressionTree();
     if (lookahead_ == "IF") {
         form_derivation_string("<statementRes>", "if ( <expr> ) then <statThenBlock>");
-        if (match("IF") && match("OPENPARA") && expr(func_record, *local_record) && match("CLOSEPARA") && match("THEN") && statThenBlock(func_record)) {
+        if (match("IF") && match("OPENPARA") && expr(func_record, tree) && match("CLOSEPARA") && match("THEN") && statThenBlock(func_record)) {
             return true;
         }
     } else if (lookahead_ == "FOR") {
         form_derivation_string("<statementRes>", "for ( <type> id <assignOp> <expr> ; <relExpr> ; <assignStat> ) <statBlock>");
         SymbolRecord* assign_record = new SymbolRecord(global_symbol_table_->second_pass_);
         SymbolRecord* rel_record = new SymbolRecord(global_symbol_table_->second_pass_);
-        if (match("FOR") && match("OPENPARA") && type(*local_record) && match("ID") && (*local_record)->set_name(get_last_token().lexeme_) && func_record->symbol_table_->create_variable_entry(local_record) && assignOp() && expr(func_record, *local_record) && match("DELI") &&
-            relExpr(func_record, rel_record) && match("DELI") && assignStat(func_record, assign_record) && match("CLOSEPARA") && statBlock(func_record)) {
+        if (match("FOR") && match("OPENPARA") && type(*local_record) && match("ID") && (*local_record)->set_name(get_last_token().lexeme_) && func_record->symbol_table_->create_variable_entry(local_record) && assignOp() && expr(func_record, tree) && match("DELI") &&
+            relExpr(func_record, tree) && match("DELI") && assignStat(func_record, assign_record) && match("CLOSEPARA") && statBlock(func_record)) {
             return true;
         }
     } else if (lookahead_ == "GET") {
@@ -388,12 +390,12 @@ bool Parser::statementRes(SymbolRecord* func_record) {
         }
     } else if (lookahead_ == "PUT") {
         form_derivation_string("<statementRes>", "put ( <expr> ) ;");
-        if (match("PUT") && match("OPENPARA") && expr(func_record, *local_record) && match("CLOSEPARA") && match("DELI")) {
+        if (match("PUT") && match("OPENPARA") && expr(func_record, tree) && match("CLOSEPARA") && match("DELI")) {
             return true;
         }
     } else if (lookahead_ == "RETURN") {
         form_derivation_string("<statementRes>", "return ( <expr> ) ;");
-        if (match("RETURN") && match("OPENPARA") && expr(func_record, *local_record) && match("CLOSEPARA") && match("DELI")) {
+        if (match("RETURN") && match("OPENPARA") && expr(func_record, tree) && match("CLOSEPARA") && match("DELI")) {
             return true;
         }
     }
@@ -436,7 +438,8 @@ bool Parser::assignStat(SymbolRecord* func_record, SymbolRecord* record) {
         return false;
     if (lookahead_ == "ID") {
         form_derivation_string("<assignStat>", "<variable> <assignOp> <expr>");
-        if (variable(func_record, record) && assignOp() && expr(func_record, record))
+        ExpressionTree* tree = new ExpressionTree();
+        if (variable(func_record, record) && assignOp() && expr(func_record, tree))
             return true;
     }
     return false;
@@ -475,30 +478,32 @@ bool Parser::statThenBlock(SymbolRecord* func_record) {
     return false;
 }
 
-bool Parser::expr(SymbolRecord* func_record, SymbolRecord* record) {
+bool Parser::expr(SymbolRecord* func_record, ExpressionTree* abstract_expression_tree) {
     if (!skip_errors({"ID", "INUM", "FNUM", "OPENPARA", "NOT", "ADD", "SUB"}, {"COM", "CLOSEPARA", "DELI"}, false))
         return false;
     if (is_lookahead_a_value() || lookahead_ == "OPENPARA" || lookahead_ == "NOT" || lookahead_ == "ADD" || lookahead_ == "SUB") {
         form_derivation_string("<expr>", "<arithExpr> <relOrAri>");
-        if (arithExpr(func_record, record) && relOrAri(func_record, record)) {
+        if (arithExpr(func_record, abstract_expression_tree) && relOrAri(func_record, abstract_expression_tree)) {
+            abstract_expression_tree->post_order_print();
             return true;
         }
     }
     return false;
 }
 
-bool Parser::relOrAri(SymbolRecord* func_record, SymbolRecord* record) {
+bool Parser::relOrAri(SymbolRecord* func_record, ExpressionTree* abstract_expression_tree) {
     if (!skip_errors({"EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ", "ADD", "SUB", "OR"}, {"COM", "CLOSEPARA", "DELI"},
                      true))
         return false;
     if (lookahead_ == "EQUIV" || lookahead_ == "NOTEQ" || lookahead_ == "LT" || lookahead_ == "GT" ||
         lookahead_ == "LTEQ" || lookahead_ == "GTEQ") {
         form_derivation_string("<relOrAri>", "<relOp> <arithExpr>");
-        if (relOp(record) && arithExpr(func_record, record))
+        SymbolRecord* operation_record = new SymbolRecord();
+        if (relOp(operation_record) && arithExpr(func_record, abstract_expression_tree))
             return true;
     } else if (lookahead_ == "ADD" || lookahead_ == "SUB" || lookahead_ == "OR") {
         form_derivation_string("<relOrAri>", "<arithExprD>");
-        if (arithExprD(func_record, record))
+        if (arithExprD(func_record, abstract_expression_tree))
             return true;
     } else if (lookahead_ == "COM" || lookahead_ == "CLOSEPARA" || lookahead_ == "DELI") {
         form_derivation_string("<relOrAri>", "");
@@ -509,39 +514,41 @@ bool Parser::relOrAri(SymbolRecord* func_record, SymbolRecord* record) {
 }
 
 
-bool Parser::relExpr(SymbolRecord* func_record, SymbolRecord* record) {
+bool Parser::relExpr(SymbolRecord* func_record, ExpressionTree* abstract_expression_tree) {
     if (!skip_errors({"OPENPARA", "ID", "INUM", "FNUM", "NOT", "ADD", "SUB"}, {"DELI"}, false))
         return false;
     if (is_lookahead_a_value() || lookahead_ == "OPENPARA" || lookahead_ == "NOT" || lookahead_ == "ADD" ||
         lookahead_ == "SUB") {
         form_derivation_string("<relExpr>", "<arithExpr> <relOp> <arithExpr>");
-        if (arithExpr(func_record, record) && relOp(record) && arithExpr(func_record, record))
+        SymbolRecord* operation_record = new SymbolRecord();
+        if (arithExpr(func_record, abstract_expression_tree) && relOp(operation_record) && arithExpr(func_record, abstract_expression_tree))
             return true;
     }
     return false;
 
 }
 
-bool Parser::arithExpr(SymbolRecord* func_record, SymbolRecord* record) {
+bool Parser::arithExpr(SymbolRecord* func_record, ExpressionTree* abstract_expression_tree) {
     if (!skip_errors({"OPENPARA", "ID", "INUM", "FNUM", "NOT", "ADD", "SUB"},
                      {"CLOSEBRA", "CLOSEPARA", "EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ", "DELI", "COM"}, false))
         return false;
     if (is_lookahead_a_value() || lookahead_ == "OPENPARA" || lookahead_ == "NOT" || lookahead_ == "ADD" ||
         lookahead_ == "SUB") {
         form_derivation_string("<arithExpr>", "<term> <arithExprD>");
-        if (term(func_record, record) && arithExprD(func_record, record))
+        if (term(func_record, abstract_expression_tree) && arithExprD(func_record, abstract_expression_tree))
             return true;
     }
     return false;
 }
 
-bool Parser::arithExprD(SymbolRecord* func_record, SymbolRecord* record) {
+bool Parser::arithExprD(SymbolRecord* func_record, ExpressionTree* abstract_expression_tree) {
     if (!skip_errors({"ADD", "SUB", "OR"},
                      {"CLOSEBRA", "CLOSEPARA", "EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ", "DELI", "COM"}, true))
         return false;
     if (lookahead_ == "ADD" || lookahead_ == "SUB" || lookahead_ == "OR") {
         form_derivation_string("<arithExprD>", "<addOp> <term> <arithExprD>");
-        if (addOp(record) && term(func_record, record) && arithExprD(func_record, record))
+        SymbolRecord* operation_record = new SymbolRecord();
+        if (addOp(operation_record) && abstract_expression_tree->add_new_record(operation_record) && term(func_record, abstract_expression_tree) && arithExprD(func_record, abstract_expression_tree))
             return true;
     } else if (check_if_lookahead_is_in_set(
             {"EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ", "CLOSEBRA", "CLOSEPARA", "DELI", "COM"})) { // follow set
@@ -567,7 +574,7 @@ bool Parser::sign(SymbolRecord* record) {
     return false;
 }
 
-bool Parser::term(SymbolRecord* func_record, SymbolRecord* record) {
+bool Parser::term(SymbolRecord* func_record, ExpressionTree* abstract_expression_tree) {
     if (!skip_errors({"OPENPARA", "ID", "INUM", "FNUM", "NOT", "ADD", "SUB"},
                      {"ADD", "SUB", "OR", "CLOSEBRA", "CLOSEPARA", "EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ", "DELI",
                       "COM"}, false))
@@ -575,21 +582,22 @@ bool Parser::term(SymbolRecord* func_record, SymbolRecord* record) {
     if (is_lookahead_a_value() || lookahead_ == "OPENPARA" || lookahead_ == "NOT" || lookahead_ == "ADD" ||
         lookahead_ == "SUB") {
         form_derivation_string("<term>", "<factor> <termD>");
-        if (factor(func_record ,record) && termD(func_record, record)) {
+        if (factor(func_record, NULL, abstract_expression_tree) && termD(func_record, abstract_expression_tree)) {
             return true;
         }
     }
     return false;
 }
 
-bool Parser::termD(SymbolRecord* func_record, SymbolRecord* record) {
+bool Parser::termD(SymbolRecord* func_record, ExpressionTree* abstract_expression_tree) {
     if (!skip_errors({"MULT", "DASH", "AND"},
                      {"ADD", "SUB", "OR", "CLOSEBRA", "CLOSEPARA", "EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ", "DELI",
                       "COM"}, true))
         return false;
     if (lookahead_ == "MULT" || lookahead_ == "DASH" || lookahead_ == "AND") {
         form_derivation_string("<termD>", "<multOp> <factor> <termD>");
-        if (multOp(record) && factor(func_record, record) && termD(func_record, record))
+        SymbolRecord* operation_record = new SymbolRecord();
+        if (multOp(operation_record) && abstract_expression_tree->add_new_record(operation_record) && factor(func_record, NULL, abstract_expression_tree) && termD(func_record, abstract_expression_tree))
             return true;
     } else if (check_if_lookahead_is_in_set(
             {"ADD", "SUB", "OR", "EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ", "CLOSEBRA", "CLOSEPARA", "DELI", "COM",
@@ -600,31 +608,35 @@ bool Parser::termD(SymbolRecord* func_record, SymbolRecord* record) {
     return false;
 }
 
-bool Parser::factor(SymbolRecord* func_record, SymbolRecord* record) {
+bool Parser::factor(SymbolRecord* func_record, SymbolRecord* record, ExpressionTree* abstract_expression_tree) {
     if (!skip_errors({"OPENPARA", "ID", "INUM", "FNUM", "NOT", "ADD", "SUB"},
                      {"MULT", "DASH", "AND", "ADD", "SUB", "OR", "CLOSEBRA", "CLOSEPARA", "EQUIV", "NOTEQ", "LT", "GT",
                       "LTEQ", "GTEQ", "DELI", "COM"}, false))
         return false;
+    if (record == NULL)
+        record = new SymbolRecord();
     if (lookahead_ == "ID") {
         form_derivation_string("<factor>", "id <factorVarOrFunc>");
         record->kind_ = "id";
-        if (match("ID") && record->set_name(get_last_token().lexeme_) && factorVarOrFunc(func_record, record))
+        if (match("ID") && record->set_name(get_last_token().lexeme_) && factorVarOrFunc(func_record, record) && abstract_expression_tree->add_new_record(record))
             return true;
     } else if (lookahead_ == "INUM" || lookahead_ == "FNUM") {
         form_derivation_string("<factor>", "<num>");
-        if (num(record))
+        if (num(record) && abstract_expression_tree->add_new_record(record))
             return true;
     } else if (lookahead_ == "OPENPARA") {
         form_derivation_string("<factor>", "( <arithExpr> )");
-        if (match("OPENPARA") && arithExpr(func_record, record) && match("CLOSEPARA"))
+        if (match("OPENPARA") && arithExpr(func_record, abstract_expression_tree) && match("CLOSEPARA") && abstract_expression_tree->add_new_record(record))
             return true;
     } else if (lookahead_ == "NOT") {
         form_derivation_string("<factor>", "not <factor>");
-        if (match("NOT") && factor(func_record, record))
+        record->single_operators_before_.push_back("NOT");
+        if (match("NOT") && factor(func_record, record, abstract_expression_tree) && abstract_expression_tree->add_new_record(record))
             return true;
     } else if (lookahead_ == "ADD" || lookahead_ == "SUB") {
         form_derivation_string("<factor>", "<sign> <factor>");
-        if (sign(record) && factor(func_record, record))
+        record->single_operators_before_.push_back(lookahead_);
+        if (sign(record) && factor(func_record, record, abstract_expression_tree) && abstract_expression_tree->add_new_record(record))
             return true;
     }
     return false;
@@ -753,7 +765,8 @@ bool Parser::indice(SymbolRecord* func_record, SymbolRecord* record) {
         return false;
     if (lookahead_ == "OPENBRA") {
         form_derivation_string("<indice>", "[ <arithExpr> ]");
-        if (match("OPENBRA") && record->add_nested_properties_dimension_to_last_porperty() && arithExpr(func_record, record) && match("CLOSEBRA")) {
+        ExpressionTree* tree = new ExpressionTree();
+        if (match("OPENBRA") && record->add_nested_properties_dimension_to_last_porperty() && arithExpr(func_record, tree) && match("CLOSEBRA")) {
             return true;
         }
     }
@@ -880,7 +893,8 @@ bool Parser::aParams(SymbolRecord* func_record, SymbolRecord* record) {
         record->kind_ = "function";
         form_derivation_string("<aParams>", "<expr> <aParamsTail>");
         SymbolRecord* aParam_record = new SymbolRecord();
-        if (expr(func_record, aParam_record) && record->add_function_record(aParam_record) && aParamsTail(func_record, record))
+        ExpressionTree* tree = new ExpressionTree();
+        if (expr(func_record, tree) && record->add_function_record(aParam_record) && aParamsTail(func_record, record))
             return true;
     } else if (lookahead_ == "CLOSEPARA") {
         func_record->symbol_table_->check_if_func_exists(record);
@@ -912,7 +926,8 @@ bool Parser::aParamsTail(SymbolRecord* func_record, SymbolRecord* record) {
     if (lookahead_ == "COM") {
         form_derivation_string("<aParamsTail>", ", <expr> <aParamsTail>");
         SymbolRecord* aParam_record = new SymbolRecord();
-        if (match("COM") && expr(func_record, aParam_record) && record->add_function_record(aParam_record) && aParamsTail(func_record, record))
+        ExpressionTree* tree = new ExpressionTree();
+        if (match("COM") && expr(func_record, tree) && record->add_function_record(aParam_record) && aParamsTail(func_record, record))
             return true;
     } else if (lookahead_ == "CLOSEPARA") { // Follow set
         func_record->symbol_table_->check_if_func_exists(record);
@@ -938,6 +953,8 @@ bool Parser::relOp(SymbolRecord* record) {
     if (!skip_errors({"EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ"},
                      {"ID", "OPENPARA", "NOT", "INUM", "FNUM", "ADD", "SUB"}, false))
         return false;
+    record->kind_ = "RELOP";
+    record->type_ = lookahead_;
     if (lookahead_ == "EQUIV") {
         form_derivation_string("<relOp>", "==");
         if (match("EQUIV"))
@@ -969,16 +986,20 @@ bool Parser::relOp(SymbolRecord* record) {
 bool Parser::addOp(SymbolRecord* record) {
     if (!skip_errors({"ADD", "SUB", "OR"}, {"ID", "OPENPARA", "NOT", "INUM", "FNUM", "ADD", "SUB"}, false))
         return false;
+    record->kind_ = "ADDOP";
     if (lookahead_ == "ADD") {
         form_derivation_string("<addOp>", "+");
+        record->type_ = "ADD";
         if (match("ADD"))
             return true;
     } else if (lookahead_ == "SUB") {
         form_derivation_string("<addOp>", "-");
+        record->type_ = "SUB";
         if (match("SUB"))
             return true;
     } else if (lookahead_ == "OR") {
         form_derivation_string("<addOp>", "or");
+        record->type_ = "OR";
         if (match("OR"))
             return true;
     }
@@ -988,16 +1009,20 @@ bool Parser::addOp(SymbolRecord* record) {
 bool Parser::multOp(SymbolRecord* record) {
     if (!skip_errors({"MULT", "DASH", "AND"}, {"ID", "OPENPARA", "NOT", "INUM", "FNUM", "ADD", "SUB"}, false))
         return false;
+    record->kind_ = "MULTOP";
     if (lookahead_ == "MULT") {
         form_derivation_string("<multOp>", "*");
+        record->type_ = "MULTI";
         if (match("MULT"))
             return true;
     } else if (lookahead_ == "DASH") {
         form_derivation_string("<multOp>", "/");
+        record->type_ = "DIV";
         if (match("DASH"))
             return true;
     } else if (lookahead_ == "AND") {
         form_derivation_string("<multOp>", "and");
+        record->type_ = "AND";
         if (match("AND"))
             return true;
     }

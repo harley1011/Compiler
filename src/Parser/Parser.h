@@ -13,6 +13,7 @@
 #include "../IntegerToken.h"
 #include "../Token.h"
 #include "../FloatToken.h"
+#include "ExpressionTree.h"
 
 class Parser {
 
@@ -73,14 +74,14 @@ public:
     bool statementRes(SymbolRecord* func_record);
     bool assignStat(SymbolRecord* func_record, SymbolRecord* record);
     bool statBlock(SymbolRecord* func_record);
-    bool expr(SymbolRecord* func_record, SymbolRecord* record);
-    bool relOrAri(SymbolRecord* func_record, SymbolRecord* record);
-    bool arithExpr(SymbolRecord* func_record, SymbolRecord* record);
-    bool arithExprD(SymbolRecord* func_record, SymbolRecord* record);
+    bool expr(SymbolRecord* func_record, ExpressionTree* abstract_expression_tree);
+    bool relOrAri(SymbolRecord* func_record, ExpressionTree* abstract_expression_tree);
+    bool arithExpr(SymbolRecord* func_record, ExpressionTree* abstract_expression_tree);
+    bool arithExprD(SymbolRecord* func_record, ExpressionTree* abstract_expression_tree);
     bool sign(SymbolRecord* record);
-    bool term(SymbolRecord* func_record, SymbolRecord* record);
-    bool termD(SymbolRecord* func_record, SymbolRecord* record);
-    bool factor(SymbolRecord* func_record, SymbolRecord* record);
+    bool term(SymbolRecord* func_record, ExpressionTree* abstract_expression_tree);
+    bool termD(SymbolRecord* func_record, ExpressionTree* abstract_expression_tree);
+    bool factor(SymbolRecord* func_record, SymbolRecord* record, ExpressionTree* abstract_expression_tree);
     bool factorVarOrFunc(SymbolRecord* func_record, SymbolRecord* record);
     bool varOrFuncIdNest(SymbolRecord* func_record, SymbolRecord* record);
     bool variable(SymbolRecord* func_record, SymbolRecord* record);
@@ -105,7 +106,7 @@ public:
 
     bool is_lookahead_a_statement();
 
-    bool relExpr(SymbolRecord* func_record, SymbolRecord* record);
+    bool relExpr(SymbolRecord* func_record, ExpressionTree* abstract_expression_tree);
 
     bool is_lookahead_a_value();
     bool check_if_lookahead_is_in_set(set<string> values);

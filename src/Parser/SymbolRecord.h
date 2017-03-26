@@ -17,6 +17,7 @@ public:
     string kind_;
     string type_;
     vector<string> function_parameters_;
+    vector<string> single_operators_before_;
     map<string, int> nested_properties_dimensions_;
     vector<string> nested_properties_;
     string name_;
