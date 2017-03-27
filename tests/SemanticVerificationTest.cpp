@@ -5,7 +5,7 @@
 #include "SemanticVerificationTest.h"
 #include "gtest/gtest.h"
 #include "../src/Parser/Parser.h"
-
+Parser common_setup(string test_program, string derivation_string);
 // ----------------------------------------------------------------------------------------------------------------
 // undefined id: variable, class, function tests
 // undefined member: data member, method, including deeply nested
@@ -777,21 +777,61 @@ TEST(AssignDeclareNestedArrayClassWithTooFewDimensionsInProg, SemanticVerificati
 // ----------------------------------------------------------------------------------------------------------------
 // type checking of a complex expression
 
-TEST(AssignVarInvalidArithmeticExpression, SemanticVerificationTests)
+TEST(ExpressionTreeSimpleAdd, SemanticVerificationTests)
 {
-    vector<Token*> tokens;
-    Scanner scanner;
-    tokens = scanner.generate_tokens("program { int x; x = 2 * 3 + 5 + 6 * 8;};", false);
+    Parser parser = common_setup("10 + 11;", "<arithExpr>");
+    parser.enable_derivation_output_ = false;
+    SymbolRecord *func_record = new SymbolRecord();
+    ExpressionTree* tree = new ExpressionTree();
+    parser.expr(func_record, tree);
+    EXPECT_EQ(tree->post_order_print(), "10 11 ADD ");
+}
+TEST(ExpressionTreeSimpleMulti, SemanticVerificationTests)
+{
+    Parser parser = common_setup("10 * 19;", "<arithExpr>");
+    parser.enable_derivation_output_ = false;
+    SymbolRecord *func_record = new SymbolRecord();
+    ExpressionTree* tree = new ExpressionTree();
+    parser.expr(func_record, tree);
+    EXPECT_EQ(tree->post_order_print(), "10 19 MULTI ");
+}
 
-    Parser parser;
-    parser.enable_double_pass_parse_ = true;
+TEST(ExpressionTreeMultiAndAdd, SemanticVerificationTests)
+{
+    Parser parser = common_setup("10 * 19 + 12;", "<arithExpr>");
+    parser.enable_derivation_output_ = false;
+    SymbolRecord *func_record = new SymbolRecord();
+    ExpressionTree* tree = new ExpressionTree();
+    parser.expr(func_record, tree);
+    EXPECT_EQ(tree->post_order_print(), "10 19 MULTI 12 ADD ");
+}
+TEST(ExpressionTreeMultiAndAddTwo, SemanticVerificationTests)
+{
+    Parser parser = common_setup("10 * 19 + 12 * 5 + 4 * 100 + 12 - 15;", "<arithExpr>");
+    parser.enable_derivation_output_ = false;
+    SymbolRecord *func_record = new SymbolRecord();
+    ExpressionTree* tree = new ExpressionTree();
+    parser.expr(func_record, tree);
+    EXPECT_EQ(tree->post_order_print(), "10 19 MULTI 12 5 MULTI 4 100 MULTI 12 15 SUB ADD ADD ADD ");
+}
 
-    EXPECT_EQ(parser.parse(tokens), true);
-    EXPECT_EQ(parser.semantic_errors_.size(), 1);
-    EXPECT_EQ(parser.print_semantic_errors(), "Error: variable y is not an array but is being accessed as one:1:46\n");
-
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
-    parser.global_symbol_table_->print(true);
+TEST(ExpressionTreeMultiAndAddWithPara, SemanticVerificationTests)
+{
+    Parser parser = common_setup("10 * ( 7 + 5 );", "<arithExpr>");
+    parser.enable_derivation_output_ = false;
+    SymbolRecord *func_record = new SymbolRecord();
+    ExpressionTree* tree = new ExpressionTree();
+    parser.expr(func_record, tree);
+    EXPECT_EQ(tree->post_order_print(), "10 7 5 ADD MULTI ");
+}
+TEST(ExpressionTreeMultiAndAddWithParaTwo, SemanticVerificationTests)
+{
+    Parser parser = common_setup("10 * 5 + 4 * ( 7 + 5 ) + 99;", "<arithExpr>");
+    parser.enable_derivation_output_ = false;
+    SymbolRecord *func_record = new SymbolRecord();
+    ExpressionTree* tree = new ExpressionTree();
+    parser.expr(func_record, tree);
+    EXPECT_EQ(tree->post_order_print(), "10 7 5 ADD MULTI ");
 }
 
 // ----------------------------------------------------------------------------------------------------------------
@@ -1056,3 +1096,4 @@ TEST(FuncWithWrongParametersOfTypeCordAndIntInProg, SemanticVerificationTests)
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
     parser.global_symbol_table_->print(true);
 }
+

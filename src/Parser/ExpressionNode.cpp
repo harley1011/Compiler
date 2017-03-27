@@ -4,11 +4,12 @@
 
 #include "ExpressionNode.h"
 
-ExpressionNode::ExpressionNode(SymbolRecord *record) {
+ExpressionNode::ExpressionNode(SymbolRecord *record, bool in_para) {
     left_tree_ = NULL;
     right_tree_ = NULL;
     parent_tree_ = NULL;
     record_ = record;
+    in_para_ = in_para;
 }
 
 ExpressionNode::ExpressionNode() {
@@ -16,4 +17,5 @@ ExpressionNode::ExpressionNode() {
     left_tree_ = NULL;
     right_tree_ = NULL;
     parent_tree_ = NULL;
+    in_para_ = false;
 }

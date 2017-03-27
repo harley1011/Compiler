@@ -626,7 +626,12 @@ bool Parser::factor(SymbolRecord* func_record, SymbolRecord* record, ExpressionT
             return true;
     } else if (lookahead_ == "OPENPARA") {
         form_derivation_string("<factor>", "( <arithExpr> )");
-        if (match("OPENPARA") && arithExpr(func_record, abstract_expression_tree) && match("CLOSEPARA") && abstract_expression_tree->add_new_record(record))
+        ExpressionTree* nested_tree = abstract_expression_tree;
+        if (abstract_expression_tree->root_node_->record_ != NULL)
+            nested_tree = new ExpressionTree();
+        if (match("OPENPARA") && arithExpr(func_record, nested_tree) && match("CLOSEPARA"))
+            if (abstract_expression_tree != NULL)
+                abstract_expression_tree->add_bracket_tree(nested_tree);
             return true;
     } else if (lookahead_ == "NOT") {
         form_derivation_string("<factor>", "not <factor>");

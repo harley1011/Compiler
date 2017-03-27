@@ -14,10 +14,17 @@ public:
     bool add_new_record(SymbolRecord *record);
     bool add_new_record(SymbolRecord *record, ExpressionNode* node);
     void check_tree_order(ExpressionNode *node);
-
+    void set_all_nodes_in_para(bool in_para);
+    void set_all_nodes_in_para(bool in_para, ExpressionNode *node);
     string post_order_print();
 
     string post_order_print(ExpressionNode *node);
+
+    bool add_bracket_tree(ExpressionTree *tree);
+
+    bool add_bracket_tree(ExpressionNode *node);
+
+    bool add_bracket_tree(ExpressionNode *node, ExpressionTree *tree);
 };
 
 
