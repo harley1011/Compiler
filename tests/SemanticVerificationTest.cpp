@@ -844,7 +844,7 @@ TEST(ExpressionTreeMultiAndAddWithParaThree, SemanticVerificationTests)
     EXPECT_EQ(tree->post_order_print(), "3 4 MULTI 2 7 MULTI 5 ADD 99 133 MULTI ADD ADD ");
     EXPECT_EQ(tree->calculate_total(), 13198);
 }
-TEST(ExpressionTreeMultiAndAddWithParaFor, SemanticVerificationTests)
+TEST(ExpressionTreeMultiAndAddWithParaFour, SemanticVerificationTests)
 {
     Parser parser = common_setup("3 * 4 + ( 2 * 7 + 5 ) + 99 * ( 1 + 2 * 6 ) + 133;", "<arithExpr>");
     parser.enable_derivation_output_ = false;
@@ -854,6 +854,29 @@ TEST(ExpressionTreeMultiAndAddWithParaFor, SemanticVerificationTests)
     EXPECT_EQ(tree->post_order_print(), "3 4 MULTI 2 7 MULTI 5 ADD 99 1 2 6 MULTI ADD MULTI 133 ADD ADD ADD ");
     EXPECT_EQ(tree->calculate_total(), 1451);
 }
+
+TEST(ExpressionTreeMultiAndAddWithParaFive, SemanticVerificationTests)
+{
+    Parser parser = common_setup("3 * 4 + ( 2 * 7 + 5 * ( 2 + 5));", "<arithExpr>");
+    parser.enable_derivation_output_ = false;
+    SymbolRecord *func_record = new SymbolRecord();
+    ExpressionTree* tree = new ExpressionTree();
+    parser.expr(func_record, tree);
+    EXPECT_EQ(tree->post_order_print(), "3 4 MULTI 2 7 MULTI 5 2 5 ADD MULTI ADD ADD ");
+    EXPECT_EQ(tree->calculate_total(), 61);
+}
+
+TEST(ExpressionTreeMultiAndAddWithParaSix, SemanticVerificationTests)
+{
+    Parser parser = common_setup("3 * 4 + ( 2 * 7 + 6 * ( 2 + 5)) + 99 * 133;", "<arithExpr>");
+    parser.enable_derivation_output_ = false;
+    SymbolRecord *func_record = new SymbolRecord();
+    ExpressionTree* tree = new ExpressionTree();
+    parser.expr(func_record, tree);
+    EXPECT_EQ(tree->post_order_print(), "3 4 MULTI 2 7 MULTI 5 2 5 ADD MULTI ADD ADD ");
+    EXPECT_EQ(tree->calculate_total(), 61);
+}
+
 // ----------------------------------------------------------------------------------------------------------------
 // type checking of an assignment statement
 
