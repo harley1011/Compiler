@@ -768,7 +768,7 @@ TEST(AssignDeclareNestedArrayClassWithTooFewDimensionsInProg, SemanticVerificati
     parser.enable_double_pass_parse_ = true;
 
     EXPECT_EQ(parser.parse(tokens), true);
-    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.semantic_errors_.size(), 2);
     EXPECT_EQ(parser.print_semantic_errors(), "Error: array a is being accessed with too few dimensions:1:94\nError: array x is being accessed with too few dimensions:1:94\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
@@ -873,10 +873,73 @@ TEST(ExpressionTreeMultiAndAddWithParaSix, SemanticVerificationTests)
     SymbolRecord *func_record = new SymbolRecord();
     ExpressionTree* tree = new ExpressionTree();
     parser.expr(func_record, tree);
-    EXPECT_EQ(tree->post_order_print(), "3 4 MULTI 2 7 MULTI 5 2 5 ADD MULTI ADD ADD ");
-    EXPECT_EQ(tree->calculate_total(), 61);
+    EXPECT_EQ(tree->post_order_print(), "3 4 MULTI 2 7 MULTI 6 2 5 ADD MULTI ADD 99 133 MULTI ADD ADD ");
+    EXPECT_EQ(tree->calculate_total(), 13235);
+}
+TEST(ExpressionTreeMultiAndAddWithParaSeven, SemanticVerificationTests)
+{
+    Parser parser = common_setup("3 - 4;", "<arithExpr>");
+    parser.enable_derivation_output_ = false;
+    SymbolRecord *func_record = new SymbolRecord();
+    ExpressionTree* tree = new ExpressionTree();
+    parser.expr(func_record, tree);
+    EXPECT_EQ(tree->post_order_print(), "3 4 SUB ");
+    EXPECT_EQ(tree->calculate_total(), -1);
+}
+TEST(ExpressionTreeMultiAndAddWithParaEight, SemanticVerificationTests)
+{
+    Parser parser = common_setup("10 / 5 - 2 + 5;", "<arithExpr>");
+    parser.enable_derivation_output_ = false;
+    SymbolRecord *func_record = new SymbolRecord();
+    ExpressionTree* tree = new ExpressionTree();
+    parser.expr(func_record, tree);
+    EXPECT_EQ(tree->post_order_print(), "10 5 DIV 2 SUB 5 ADD ");
+    EXPECT_EQ(tree->calculate_total(), 5);
 }
 
+TEST(ExpressionTreeMultiAndAddWithParaNine, SemanticVerificationTests)
+{
+    Parser parser = common_setup("10 / 5 * 2;", "<arithExpr>");
+    parser.enable_derivation_output_ = false;
+    SymbolRecord *func_record = new SymbolRecord();
+    ExpressionTree* tree = new ExpressionTree();
+    parser.expr(func_record, tree);
+    EXPECT_EQ(tree->post_order_print(), "10 5 DIV 2 MULTI ");
+    EXPECT_EQ(tree->calculate_total(), 4);
+}
+
+TEST(ExpressionTreeMultiAndAddWithParaTen, SemanticVerificationTests)
+{
+    Parser parser = common_setup("10 / 5 * 2 - 5 * 5;", "<arithExpr>");
+    parser.enable_derivation_output_ = false;
+    SymbolRecord *func_record = new SymbolRecord();
+    ExpressionTree* tree = new ExpressionTree();
+    parser.expr(func_record, tree);
+    EXPECT_EQ(tree->post_order_print(), "10 5 DIV 2 MULTI 5 SUB ");
+    EXPECT_EQ(tree->calculate_total(), -21);
+}
+
+TEST(ExpressionTreeMultiAndAddWithParaEleven, SemanticVerificationTests)
+{
+    Parser parser = common_setup("10 * 50 / 25 * 2 / 2 - 40;", "<arithExpr>");
+    parser.enable_derivation_output_ = false;
+    SymbolRecord *func_record = new SymbolRecord();
+    ExpressionTree* tree = new ExpressionTree();
+    parser.expr(func_record, tree);
+    EXPECT_EQ(tree->post_order_print(), "10 50 25 DIV 2 2 DIV MULTI MULTI 40 SUB ");
+    EXPECT_EQ(tree->calculate_total(), -20);
+}
+
+TEST(ExpressionTreeMultiAndAddWithParaTwelve, SemanticVerificationTests)
+{
+    Parser parser = common_setup("10 * 50 / 25 * (2 + 6 + ( 2 + 8) * (2 + 2)) / 2 - 40;", "<arithExpr>");
+    parser.enable_derivation_output_ = false;
+    SymbolRecord *func_record = new SymbolRecord();
+    ExpressionTree* tree = new ExpressionTree();
+    parser.expr(func_record, tree);
+    EXPECT_EQ(tree->post_order_print(), "10 50 25 DIV 2 6 2 8 ADD 2 2 ADD MULTI ADD ADD 2 DIV MULTI MULTI 40 SUB ");
+    EXPECT_EQ(tree->calculate_total(), 440);
+}
 // ----------------------------------------------------------------------------------------------------------------
 // type checking of an assignment statement
 

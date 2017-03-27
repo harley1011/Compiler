@@ -10,10 +10,12 @@ ExpressionTree::ExpressionTree() {
 
 bool ExpressionTree::add_new_record(SymbolRecord *record) {
     add_new_record(record, root_node_);
+    return true;
 }
 bool ExpressionTree::add_bracket_tree(ExpressionTree *tree) {
     tree->set_all_nodes_in_para(true);
     add_bracket_tree(root_node_, tree);
+    return true;
 }
 
 bool ExpressionTree::add_bracket_tree(ExpressionNode* node, ExpressionTree *tree) {
@@ -58,7 +60,8 @@ void ExpressionTree::check_tree_order(ExpressionNode *node) {
     if (node->parent_tree_ == NULL)
         return;
 
-    if (node->record_->kind_ == "ADDOP" && node->parent_tree_->record_->kind_ == "MULTOP" ) {
+    if ((node->record_->kind_ == "ADDOP" && (node->parent_tree_->record_->kind_ == "MULTOP" || node->parent_tree_->record_->type_ == "SUB" ) ||
+            (node->record_ ->kind_ == "MULTOP" && (node->parent_tree_->record_->type_ == "DIV")))) {
         node->parent_tree_->right_tree_ = node->left_tree_;
         node->left_tree_ = node->parent_tree_;
         node->parent_tree_ = node->left_tree_->parent_tree_;
@@ -74,13 +77,14 @@ void ExpressionTree::check_tree_order(ExpressionNode *node) {
             top_para_node = top_para_node->parent_tree_;
         }
         node->parent_tree_->right_tree_ = node->left_tree_;
-        node->left_tree_ = node->parent_tree_;
-        //node->parent_tree_->parent_tree_ = node;
+        node->left_tree_ = top_para_node->right_tree_;
 
         if (top_para_node->in_para_) {
             node->parent_tree_ = NULL;
+            top_para_node->parent_tree_ = node;
             root_node_ = node;
         } else {
+            top_para_node->right_tree_->parent_tree_ = node;
             top_para_node->right_tree_ = node;
             node->parent_tree_ = top_para_node;
 
@@ -121,8 +125,8 @@ int ExpressionTree::calculate_total() {
             string operator_type = first_record->type_;
             first_record = tmp_post_fix_queue->top();
             tmp_post_fix_queue->pop();
-            int first = first_record->integer_value_;
-            int second = tmp_post_fix_queue->top()->integer_value_;
+            int second = first_record->integer_value_;
+            int first = tmp_post_fix_queue->top()->integer_value_;
             tmp_post_fix_queue->pop();
 
             if (operator_type == "MULTI") {
@@ -181,11 +185,6 @@ string ExpressionTree::post_order_print(ExpressionNode *node) {
     else
         return result + node->record_->type_ + " ";
 }
-
-bool ExpressionTree::add_bracket_tree(ExpressionNode *node) {
-    return false;
-}
-
 
 
 
