@@ -20,10 +20,11 @@ bool ExpressionTree::add_bracket_tree(ExpressionNode* node, ExpressionTree *tree
 
     if (node->left_tree_ == NULL) {
         node->left_tree_ = tree->root_node_;
-        node->parent_tree_ = tree->root_node_;
+        node->left_tree_->parent_tree_ = node;
     } else if (node->right_tree_ == NULL){
         node->right_tree_ = tree->root_node_;
-        node->parent_tree_ = tree->root_node_;
+        node->right_tree_->parent_tree_ = node;
+        check_tree_order(node);
     } else {
         add_bracket_tree(node->right_tree_, tree);
     }
@@ -35,12 +36,13 @@ bool ExpressionTree::add_new_record(SymbolRecord *record, ExpressionNode* node) 
     if (node->record_ == NULL)
         node->record_ = record;
     else if (node->left_tree_ == NULL) {
-        node->left_tree_ = new ExpressionNode(node->record_, root_node_->in_para_);
+        node->in_para_ = false;
+        node->left_tree_ = new ExpressionNode(node->record_, false);
         node->left_tree_->parent_tree_ = node;
         node->record_ = record;
     }
     else if (node->right_tree_ == NULL) {
-        node->right_tree_ = new ExpressionNode(record, root_node_->in_para_);
+        node->right_tree_ = new ExpressionNode(record, false);
         node->right_tree_->parent_tree_ = node;
         post_order_print();
         check_tree_order(node);
@@ -73,12 +75,13 @@ void ExpressionTree::check_tree_order(ExpressionNode *node) {
         }
         node->parent_tree_->right_tree_ = node->left_tree_;
         node->left_tree_ = node->parent_tree_;
-        node->parent_tree_->parent_tree_ = node;
+        //node->parent_tree_->parent_tree_ = node;
 
         if (top_para_node->in_para_) {
             node->parent_tree_ = NULL;
             root_node_ = node;
         } else {
+            top_para_node->right_tree_ = node;
             node->parent_tree_ = top_para_node;
 
         }
@@ -99,6 +102,66 @@ void ExpressionTree::set_all_nodes_in_para(bool in_para, ExpressionNode *node) {
 
     node->in_para_ = in_para;
 }
+
+int ExpressionTree::calculate_total() {
+    stack<SymbolRecord*>* tmp_post_fix_queue = new stack<SymbolRecord*>;
+    calculate_total(root_node_, tmp_post_fix_queue);
+    stack<SymbolRecord*>* post_fix_queue = new stack<SymbolRecord*>;;
+
+    while (!tmp_post_fix_queue->empty()) {
+        SymbolRecord* record = tmp_post_fix_queue->top();
+        post_fix_queue->push(record);
+        tmp_post_fix_queue->pop();
+    }
+
+    while (post_fix_queue->size() > 0) {
+        SymbolRecord* first_record = post_fix_queue->top();
+        post_fix_queue->pop();
+        if (first_record->kind_ == "MULTOP" || first_record->kind_ == "ADDOP") {
+            string operator_type = first_record->type_;
+            first_record = tmp_post_fix_queue->top();
+            tmp_post_fix_queue->pop();
+            int first = first_record->integer_value_;
+            int second = tmp_post_fix_queue->top()->integer_value_;
+            tmp_post_fix_queue->pop();
+
+            if (operator_type == "MULTI") {
+                first_record->integer_value_ = first * second;
+            } else if (operator_type == "DIV") {
+                first_record->integer_value_ = first / second;
+            } else if (operator_type == "AND") {
+                first_record->integer_value_ = first && second;
+            } else if (operator_type == "ADD") {
+                first_record->integer_value_ = first + second;
+            } else if (operator_type == "SUB") {
+                first_record->integer_value_ = first - second;
+            } else if (operator_type == "OR") {
+                first_record->integer_value_ = first || second;
+            }
+        }
+        tmp_post_fix_queue->push(first_record);
+
+    }
+    SymbolRecord* return_record = tmp_post_fix_queue->top();
+    delete tmp_post_fix_queue;
+    delete post_fix_queue;
+    return return_record->integer_value_;
+
+}
+
+void ExpressionTree::calculate_total(ExpressionNode *node, stack<SymbolRecord*>* queue) {
+    if (node == NULL)
+        return;
+
+    calculate_total(node->left_tree_, queue);
+    calculate_total(node->right_tree_, queue);
+
+    if (node->record_ == NULL )
+        return;
+    queue->push(node->record_);
+
+}
+
 
 string ExpressionTree::post_order_print() {
     string result = post_order_print(root_node_);
@@ -122,4 +185,7 @@ string ExpressionTree::post_order_print(ExpressionNode *node) {
 bool ExpressionTree::add_bracket_tree(ExpressionNode *node) {
     return false;
 }
+
+
+
 

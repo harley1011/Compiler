@@ -3,6 +3,7 @@
 //
 #include "SymbolRecord.h"
 #include "ExpressionNode.h"
+#include <stack>
 #ifndef COMPILER_ABSTRACTEXPRESSIONTREE_H
 #define COMPILER_ABSTRACTEXPRESSIONTREE_H
 
@@ -25,6 +26,12 @@ public:
     bool add_bracket_tree(ExpressionNode *node);
 
     bool add_bracket_tree(ExpressionNode *node, ExpressionTree *tree);
+
+    int calculate_total();
+
+    int calculate_total(ExpressionNode *node);
+    void calculate_total(ExpressionNode *node, stack<SymbolRecord*>* stack);
+
 };
 
 
