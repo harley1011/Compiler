@@ -4,7 +4,7 @@
 
 #include "SymbolRecord.h"
 #include "SymbolTable.h"
-#include "../IntegerToken.h"
+#include "../Scanner/IntegerToken.h"
 
 
 SymbolRecord::SymbolRecord(string kind, string type, string name) {

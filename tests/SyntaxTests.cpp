@@ -18,7 +18,6 @@ TEST(FileTest, ParserTests) {
     tokens = scanner.generate_tokens("given_program.txt", true);
 
     Parser parser("built_given_program_parser_deriv_out.txt", "built_syntax_error_report_out.txt");
-    SymbolRecord *record = new SymbolRecord();
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_TRUE(compare_files("given_program_parser_deriv_out.txt", "built_given_program_parser_deriv_out.txt"));
 }

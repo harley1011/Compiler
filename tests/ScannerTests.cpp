@@ -2,9 +2,9 @@
 #include "ScannerTests.h"
 #include "gtest/gtest.h"
 
-#include "../src/Scanner.h"
-#include "../src/IntegerToken.h"
-#include "../src/FloatToken.h"
+#include "../src/Scanner/Scanner.h"
+#include "../src/Scanner/IntegerToken.h"
+#include "../src/Scanner/FloatToken.h"
 #include <vector>
 
 bool check_location(string program, string search_string, int row, int column);

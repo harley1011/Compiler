@@ -6,13 +6,13 @@
 #define COMPILER_SYNTAXPARSER_H
 
 #include <iostream>
-#include "../Scanner.h"
+#include "../Scanner/Scanner.h"
 #include <set>
 #include "../Parser/SymbolTable.h"
 #include "../Parser/SymbolRecord.h"
-#include "../IntegerToken.h"
+#include "../Scanner/IntegerToken.h"
 #include "../Token.h"
-#include "../FloatToken.h"
+#include "../Scanner/FloatToken.h"
 #include "ExpressionTree.h"
 
 class Parser {

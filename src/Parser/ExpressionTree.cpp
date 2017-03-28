@@ -30,7 +30,6 @@ bool ExpressionTree::add_bracket_tree(ExpressionNode* node, ExpressionTree *tree
     } else {
         add_bracket_tree(node->right_tree_, tree);
     }
-    post_order_print();
     return true;
 }
 
@@ -46,9 +45,7 @@ bool ExpressionTree::add_new_record(SymbolRecord *record, ExpressionNode* node) 
     else if (node->right_tree_ == NULL) {
         node->right_tree_ = new ExpressionNode(record, false);
         node->right_tree_->parent_tree_ = node;
-        post_order_print();
         check_tree_order(node);
-        post_order_print();
     } else {
         add_new_record(record, node->right_tree_);
     }

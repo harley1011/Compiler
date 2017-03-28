@@ -1,8 +1,8 @@
 #include <iostream>
 #include <vector>
 #include <map>
-#include "State.h"
-#include "Token.h"
+#include "../State.h"
+#include "../Token.h"
 #include <fstream>
 #include "Scanner.h"
 #include "IntegerToken.h"

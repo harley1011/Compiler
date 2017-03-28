@@ -2,7 +2,7 @@
 // Created by Harley on 1/24/2017.
 //
 
-#include "State.h"
+#include "../State.h"
 
 int State::get_next_state(char lookup) {
     if (next_states_.count(lookup)) {

@@ -1,5 +1,5 @@
 #include "Parser.h"
-#include "../FloatToken.h"
+#include "../Scanner/FloatToken.h"
 
 Parser::Parser() {
     current_rhs_derivation_ = "<classDeclLst> <progBody>";

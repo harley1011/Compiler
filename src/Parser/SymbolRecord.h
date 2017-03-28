@@ -1,6 +1,6 @@
 #include <string>
 #include <vector>
-#include "../IntegerToken.h"
+#include "../Scanner/IntegerToken.h"
 
 using namespace std;
 

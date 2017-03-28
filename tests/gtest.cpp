@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
-#include "../src/Scanner.h"
-#include "../src/IntegerToken.h"
-#include "../src/FloatToken.h"
+#include "../src/Scanner/Scanner.h"
+#include "../src/Scanner/IntegerToken.h"
+#include "../src/Scanner/FloatToken.h"
 #include <vector>
 
 int main(int argc, char **argv) {

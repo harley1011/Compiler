@@ -1,5 +1,5 @@
 #include <string>
-#include "Token.h"
+#include "../Token.h"
 #include <list>
 #include <iostream>
 #include <fstream>

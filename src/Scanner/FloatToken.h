@@ -1,7 +1,7 @@
 //
 // Created by Harley on 1/27/2017.
 //
-#include "Token.h"
+#include "../Token.h"
 #ifndef COMPILER_FLOATTOKEN_H
 #define COMPILER_FLOATTOKEN_H
 
