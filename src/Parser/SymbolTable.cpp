@@ -8,7 +8,9 @@
 #include <algorithm>
 
 SymbolRecord* find_nested_record(SymbolRecord* record, SymbolRecord* found_record);
-SymbolTable::SymbolTable() {
+void determine_record_fields(SymbolRecord* record);
+
+    SymbolTable::SymbolTable() {
     second_pass_ = false;
     parent_symbol_table_ = NULL;
 }
@@ -130,9 +132,11 @@ SymbolRecord* find_nested_record(SymbolRecord* record, SymbolRecord* found_recor
 bool SymbolTable::check_if_func_exists(SymbolRecord* func_record) {
     if (second_pass_) {
         SymbolRecord* local_record = search(func_record->name_);
-        if (local_record == NULL) {
-            report_error_to_highest_symbol_table("Error: " + func_record->name_ + " function is being used without being declared:");
-        } else if (func_record->nested_properties_.size() > 0 ) {
+         if (func_record->nested_properties_.size() > 0 ) {
+             if (local_record == NULL) {
+                 report_error_to_highest_symbol_table("Error: " + func_record->name_ + " variable is being used without being declared:");
+                 return true;
+             }
             if (func_record->type_ == "int")
                 report_error_to_highest_symbol_table("Error: " + func_record->name_ + " is of type int and doesn't have any properties to access:");
             else if (func_record->type_ == "float")
@@ -155,6 +159,10 @@ bool SymbolTable::check_if_func_exists(SymbolRecord* func_record) {
                 }
             }
         }
+         else if (local_record == NULL) {
+             report_error_to_highest_symbol_table(
+                     "Error: " + func_record->name_ + " function is being used without being declared:");
+         }
         else {
             for (int i = 0; i < local_record->function_parameters_.size(); i++) {
                 if (i == func_record->function_parameters_record_.size()) {
@@ -324,31 +332,7 @@ bool SymbolTable::create_variable_entry(SymbolRecord** record) {
     }
 
     (*record)->kind_ = "variable";
-    if ((*record)->type_.substr(0,3) == "int" || (*record)->type_.substr(0, 5) == "float") {
-        if ((*record)->array_sizes.size() > 0) {
-            (*record)->properly_declared_ = true;
-            (*record)->set_structure("array");
-        }
-        else if ((*record)->type_.size() == 3 || (*record)->type_.size() == 5) {
-            (*record)->properly_declared_ = true;
-            (*record)->set_structure("simple");
-        }
-        else {
-            (*record)->set_structure("class");
-
-            if ((*record)->type_.find("[") != string::npos) {
-                (*record)->structure_ += " array";
-            }
-        }
-    }
-    else {
-        (*record)->properly_declared_ = false;
-        (*record)->set_structure("class");
-
-        if ((*record)->type_.find("[") != string::npos) {
-            (*record)->structure_ += " array";
-        }
-    }
+    determine_record_fields(*record);
     insert(*record);
     return true;
 }
@@ -393,36 +377,32 @@ bool SymbolTable::create_parameter_entry(SymbolRecord* record) {
         return true;
     }
     record->kind_ = "parameter";
-    if (record->type_.substr(0,3) == "int" || record->type_.substr(0, 5) == "float") {
-        if ((record->type_.size() > 3 && (record ->type_.substr(3,1) == "[" || record ->type_.substr(3,1) == " "))
-            || record->type_.size() > 5 && (record->type_.substr(5,1) == "[" || record->type_.substr(5,1) == " " )) {
+    determine_record_fields(record);
+
+    insert(record);
+    return true;
+}
+
+void determine_record_fields(SymbolRecord* record) {
+
+    if (record->type_ == "int" || record->type_ == "float") {
+        if (record->array_sizes.size() > 0) {
             record->properly_declared_ = true;
             record->set_structure("array");
         }
-        else if (record->type_.size() == 3 || record->type_.size() == 5) {
+        else {
             record->properly_declared_ = true;
             record->set_structure("simple");
-        }
-        else {
-            record->set_structure("class");
-
-            if (record->type_.find("[") != string::npos) {
-                record->structure_ += " array";
-            }
         }
     }
     else {
         record->properly_declared_ = false;
         record->set_structure("class");
-
-        if (record->type_.find("[") != string::npos) {
+        if (record->array_sizes.size() > 0) {
             record->structure_ += " array";
         }
     }
-    insert(record);
-    return true;
 }
-
 bool SymbolTable::insert(SymbolRecord *record) {
     if (record->symbol_table_->parent_symbol_table_ == NULL)
         record->symbol_table_->parent_symbol_table_ = this;

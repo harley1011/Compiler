@@ -16,14 +16,14 @@ bool check_record_properties_and_declared(string type, string name, string kind,
 }
 
 bool check_record_properties(string type, string name, string kind, string structure, SymbolRecord* record) {
-    EXPECT_EQ(record->type_, type);
+    EXPECT_EQ(record->type_with_array_dimensions(), type);
     EXPECT_EQ(record->name_, name);
     EXPECT_EQ(record->kind_, kind);
     EXPECT_EQ(record->structure_, structure);
 
 }
 bool check_record_properties_with_array_sizes(string type, string name, string kind, string structure, vector<int> array_sizes, SymbolRecord* record) {
-    EXPECT_EQ(record->type_, type);
+    EXPECT_EQ(record->type_with_array_dimensions(), type);
     EXPECT_EQ(record->name_, name);
     EXPECT_EQ(record->kind_, kind);
     EXPECT_EQ(record->structure_, structure);
@@ -161,7 +161,7 @@ TEST(varProperlyDeclaredInClassTest, SemanticTests)
 {
     vector<Token*> tokens;
     Scanner scanner;
-    tokens = scanner.generate_tokens("class Cord { int x; int y; int z; Cord cord; }; program { };", false);
+    tokens = scanner.generate_tokens("class Cordz { }; class Cord { int x; int y; int z; Cordz cord;}; program { };", false);
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
@@ -169,9 +169,9 @@ TEST(varProperlyDeclaredInClassTest, SemanticTests)
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_.size(), 4);
-    EXPECT_TRUE(parser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_[3]->properly_declared_);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_[1]->symbol_table_->symbol_records_.size(), 4);
+    EXPECT_TRUE(parser.global_symbol_table_->symbol_records_[1]->symbol_table_->symbol_records_[2]->properly_declared_);
     parser.global_symbol_table_->print(true);
 }
 
@@ -514,14 +514,14 @@ TEST(DeclareDuplicateIdClassTest, SemanticTests)
 {
     vector<Token*> tokens;
     Scanner scanner;
-    tokens = scanner.generate_tokens("class nameHere { nameHere idx; nameHere idx; }; program { };", false);
+    tokens = scanner.generate_tokens("class Cord { }; class nameHere { Cord idx; Cord idx; }; program { };", false);
 
     Parser parser;
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
     parser.global_symbol_table_->print(true);
 }
 

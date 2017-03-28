@@ -106,7 +106,7 @@ public:
 
     bool is_lookahead_a_statement();
 
-    bool relExpr(SymbolRecord* func_record, ExpressionTree* abstract_expression_tree);
+    bool relExpr(SymbolRecord* func_record);
 
     bool is_lookahead_a_value();
     bool check_if_lookahead_is_in_set(set<string> values);
