@@ -323,9 +323,8 @@ bool Parser::varOrStat(SymbolRecord* func_record, SymbolRecord** record) {
     } else if (lookahead_ == "OPENBRA" || lookahead_ == "EQUAL" || lookahead_ == "DOT") {
         form_derivation_string("<varOrStat>", "<indiceLst> <idnest> <assignOp> <expr> ;");
         (*record)->set_name((*record)->type_);
-        SymbolRecord* assign_record = new SymbolRecord();
         ExpressionTree* tree = new ExpressionTree();
-        if (indiceLst(func_record, *record) && idnest(func_record, *record) && assignOp() && expr(func_record, tree) && func_record->symbol_table_->check_if_assign_variable_exist_and_correct_assign_type(*record, assign_record) && match("DELI", {"INT", "ID", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN", "CLOSECURL"}, ";", "<missingSemiColon>")) {
+        if (indiceLst(func_record, *record) && idnest(func_record, *record) && assignOp() && expr(func_record, tree) && func_record->symbol_table_->check_expression_tree_for_correct_type(*record, tree) && match("DELI", {"INT", "ID", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN", "CLOSECURL"}, ";", "<missingSemiColon>")) {
             return true;
         }
     }
@@ -498,7 +497,7 @@ bool Parser::relOrAri(SymbolRecord* func_record, ExpressionTree* abstract_expres
         form_derivation_string("<relOrAri>", "<relOp> <arithExpr>");
         SymbolRecord* operation_record = new SymbolRecord();
         ExpressionTree* right_expression_tree = new ExpressionTree();
-        if (relOp(operation_record) && arithExpr(func_record, right_expression_tree))
+        if (relOp(operation_record) && arithExpr(func_record, right_expression_tree) && abstract_expression_tree->split_tree_with_rel_operator(right_expression_tree, operation_record))
             return true;
     } else if (lookahead_ == "ADD" || lookahead_ == "SUB" || lookahead_ == "OR") {
         form_derivation_string("<relOrAri>", "<arithExprD>");
@@ -621,7 +620,7 @@ bool Parser::factor(SymbolRecord* func_record, SymbolRecord* record, ExpressionT
         record = new SymbolRecord();
     if (lookahead_ == "ID") {
         form_derivation_string("<factor>", "id <factorVarOrFunc>");
-        record->kind_ = "id";
+        record->kind_ = "variable";
         record->structure_ = "class";
         if (match("ID") && record->set_name(get_last_token().lexeme_) && factorVarOrFunc(func_record, record) && abstract_expression_tree->add_new_record(record))
             return true;

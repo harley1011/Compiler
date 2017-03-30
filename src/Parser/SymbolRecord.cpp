@@ -44,15 +44,6 @@ bool SymbolRecord::set_name(string name) {
     return true;
 }
 
-bool SymbolRecord::append_to_type(string type) {
-    type_ += type;
-    return true;
-}
-
-bool SymbolRecord::add_function_parameter(string type) {
-    function_parameters_.push_back(type);
-    return true;
-}
 bool SymbolRecord::set_structure(string structure) {
     structure_ = structure;
     return true;
@@ -105,4 +96,11 @@ bool SymbolRecord::add_nested_properties_dimension_to_last_porperty() {
         property = nested_properties_[nested_properties_.size() - 1];
     nested_properties_dimensions_[property] += 1;
     return true;
+}
+
+string SymbolRecord::generate_nested_properties_string() {
+    string nested_property_string = name_;
+    for (string property: nested_properties_)
+        nested_property_string += "." + property;
+    return nested_property_string;
 }

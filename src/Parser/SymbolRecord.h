@@ -34,9 +34,9 @@ public:
     bool set_type(string type);
     bool set_name(string name);
     bool set_structure(string structure);
-    bool append_to_type(string type);
-    bool add_function_parameter(string type);
+
     bool generate_function_type();
+    string generate_nested_properties_string();
     bool add_array_size(IntegerToken integer_token);
 
     bool add_function_record(SymbolRecord *record);

@@ -2,7 +2,7 @@
 // Created by Harley on 3/21/2017.
 //
 
-#include "SemanticVerificationTest.h"
+#include "SemanticVerification.h"
 #include "gtest/gtest.h"
 #include "../src/Parser/Parser.h"
 Parser common_setup(string test_program, string derivation_string);
@@ -10,7 +10,7 @@ Parser common_setup(string test_program, string derivation_string);
 // undefined id: variable, class, function tests
 // undefined member: data member, method, including deeply nested
     // undefined variable tests
-TEST(AssignNonDeclardedVarInClassFuncTest, SemanticVerificationTests)
+TEST(AssignNonDeclardedVarInClassFuncTest, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -29,7 +29,7 @@ TEST(AssignNonDeclardedVarInClassFuncTest, SemanticVerificationTests)
 }
 
 
-TEST(AssignNonDeclardedVarInProgTest, SemanticVerificationTests)
+TEST(AssignNonDeclardedVarInProgTest, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -47,7 +47,7 @@ TEST(AssignNonDeclardedVarInProgTest, SemanticVerificationTests)
 }
 
 
-TEST(AssignNonDeclardedArrayInProgTest, SemanticVerificationTests)
+TEST(AssignNonDeclardedArrayInProgTest, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -65,7 +65,7 @@ TEST(AssignNonDeclardedArrayInProgTest, SemanticVerificationTests)
 }
 
 
-TEST(UseNonDeclaredVarInForLoopConditionTest, SemanticVerificationTests)
+TEST(UseNonDeclaredVarInForLoopConditionTest, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -83,7 +83,7 @@ TEST(UseNonDeclaredVarInForLoopConditionTest, SemanticVerificationTests)
 }
 
 
-TEST(AssignNonDeclardedVarInFuncTest, SemanticVerificationTests)
+TEST(AssignNonDeclardedVarInFuncTest, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -101,7 +101,7 @@ TEST(AssignNonDeclardedVarInFuncTest, SemanticVerificationTests)
 }
 
 
-TEST(UseNonDeclaredVarInExpression, SemanticVerificationTests)
+TEST(UseNonDeclaredVarInExpression, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -117,7 +117,7 @@ TEST(UseNonDeclaredVarInExpression, SemanticVerificationTests)
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
 }
-TEST(AddIdInProg, SemanticVerificationTests)
+TEST(AddIdInProg, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -134,7 +134,7 @@ TEST(AddIdInProg, SemanticVerificationTests)
     parser.global_symbol_table_->print(true);
 }
 
-TEST(UseNonDeclaredVarInGetTest, SemanticVerificationTests)
+TEST(UseNonDeclaredVarInGetTest, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -151,7 +151,7 @@ TEST(UseNonDeclaredVarInGetTest, SemanticVerificationTests)
     parser.global_symbol_table_->print(true);
 }
 
-TEST(UseNonDeclaredVarInPutTest, SemanticVerificationTests)
+TEST(UseNonDeclaredVarInPutTest, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -168,7 +168,7 @@ TEST(UseNonDeclaredVarInPutTest, SemanticVerificationTests)
     parser.global_symbol_table_->print(true);
 }
 
-TEST(UseNonDeclaredVarInReturnTest, SemanticVerificationTests)
+TEST(UseNonDeclaredVarInReturnTest, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -186,7 +186,7 @@ TEST(UseNonDeclaredVarInReturnTest, SemanticVerificationTests)
 }
 
     // undefined function test
-TEST(AssignVarNonDeclaredFuncInClassFuncTest, SemanticVerificationTests)
+TEST(AssignVarNonDeclaredFuncInClassFuncTest, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -203,7 +203,7 @@ TEST(AssignVarNonDeclaredFuncInClassFuncTest, SemanticVerificationTests)
     parser.global_symbol_table_->print(true);
 }
 
-TEST(AssignVarNonDeclaredFuncInProgTest, SemanticVerificationTests)
+TEST(AssignVarNonDeclaredFuncInProgTest, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -221,7 +221,7 @@ TEST(AssignVarNonDeclaredFuncInProgTest, SemanticVerificationTests)
 }
 
 
-TEST(AssignVarNonDeclaredFuncInFuncTest, SemanticVerificationTests)
+TEST(AssignVarNonDeclaredFuncInFuncTest, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -328,7 +328,7 @@ TEST(ReturnUnDefinedClassInFuncTest, SemanticTests)
 }
 
     // data member test
-TEST(UseNonDeclaredDataMember, SemanticVerificationTests)
+TEST(UseNonDeclaredDataMember, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -348,7 +348,7 @@ TEST(UseNonDeclaredDataMember, SemanticVerificationTests)
 
     // deeply nested
 
-TEST(UseNonDeclaredNestedDataMember, SemanticVerificationTests)
+TEST(UseNonDeclaredNestedDataMember, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -365,7 +365,7 @@ TEST(UseNonDeclaredNestedDataMember, SemanticVerificationTests)
     parser.global_symbol_table_->print(true);
 }
 
-TEST(UseNonDeclaredNestedFunc, SemanticVerificationTests)
+TEST(UseNonDeclaredNestedFunc, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -385,7 +385,7 @@ TEST(UseNonDeclaredNestedFunc, SemanticVerificationTests)
 // ----------------------------------------------------------------------------------------------------------------
 // forward/circular references: implementation of two passes
 
-TEST(CircularClassReferenceTest, SemanticVerificationTests)
+TEST(CircularClassReferenceTest, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -402,7 +402,7 @@ TEST(CircularClassReferenceTest, SemanticVerificationTests)
     parser.global_symbol_table_->print(true);
 }
 
-TEST(CircularClassNestedReferenceTest, SemanticVerificationTests)
+TEST(CircularClassNestedReferenceTest, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -419,7 +419,7 @@ TEST(CircularClassNestedReferenceTest, SemanticVerificationTests)
     parser.global_symbol_table_->print(true);
 }
 
-TEST(CircularClassReferenceWithoutOneTest, SemanticVerificationTests)
+TEST(CircularClassReferenceWithoutOneTest, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -439,7 +439,7 @@ TEST(CircularClassReferenceWithoutOneTest, SemanticVerificationTests)
 // ----------------------------------------------------------------------------------------------------------------
 // multiply defined id: variable, class, function, class member
     // duplicates variables
-TEST(DeclareDuplicateIntInProgram, SemanticVerificationTests)
+TEST(DeclareDuplicateIntInProgram, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -458,7 +458,7 @@ TEST(DeclareDuplicateIntInProgram, SemanticVerificationTests)
 
 
 
-TEST(DeclareDuplicateFloatInProgram, SemanticVerificationTests)
+TEST(DeclareDuplicateFloatInProgram, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -476,7 +476,7 @@ TEST(DeclareDuplicateFloatInProgram, SemanticVerificationTests)
 }
 
 
-TEST(DeclareDuplicateClassInProgram, SemanticVerificationTests)
+TEST(DeclareDuplicateClassInProgram, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -495,7 +495,7 @@ TEST(DeclareDuplicateClassInProgram, SemanticVerificationTests)
 
     // duplicate class member variables
 
-TEST(DeclareDuplicateIntInClass, SemanticVerificationTests)
+TEST(DeclareDuplicateIntInClass, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -512,7 +512,7 @@ TEST(DeclareDuplicateIntInClass, SemanticVerificationTests)
     parser.global_symbol_table_->print(true);
 }
 
-TEST(DeclareDuplicateFloatInClass, SemanticVerificationTests)
+TEST(DeclareDuplicateFloatInClass, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -528,7 +528,7 @@ TEST(DeclareDuplicateFloatInClass, SemanticVerificationTests)
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
     parser.global_symbol_table_->print(true);
 }
-TEST(DeclareDuplicateClassInClass, SemanticVerificationTests)
+TEST(DeclareDuplicateClassInClass, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -546,7 +546,7 @@ TEST(DeclareDuplicateClassInClass, SemanticVerificationTests)
 }
 
 
-TEST(DeclareDuplicateIntInClassFunc, SemanticVerificationTests)
+TEST(DeclareDuplicateIntInClassFunc, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -563,7 +563,7 @@ TEST(DeclareDuplicateIntInClassFunc, SemanticVerificationTests)
     parser.global_symbol_table_->print(true);
 }
 
-TEST(DeclareDuplicateIntInClassFuncParams, SemanticVerificationTests)
+TEST(DeclareDuplicateIntInClassFuncParams, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -581,7 +581,7 @@ TEST(DeclareDuplicateIntInClassFuncParams, SemanticVerificationTests)
 }
 
 
-TEST(DeclareDuplicateClassVarInClassFuncParams, SemanticVerificationTests)
+TEST(DeclareDuplicateClassVarInClassFuncParams, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -601,7 +601,7 @@ TEST(DeclareDuplicateClassVarInClassFuncParams, SemanticVerificationTests)
 
     // duplicate class definition
 
-TEST(DeclareDuplicateClassDefinition, SemanticVerificationTests)
+TEST(DeclareDuplicateClassDefinition, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -620,7 +620,7 @@ TEST(DeclareDuplicateClassDefinition, SemanticVerificationTests)
 
     // duplicate func definition
 
-TEST(DeclareDuplicateClassFuncDefinition, SemanticVerificationTests)
+TEST(DeclareDuplicateClassFuncDefinition, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -637,7 +637,7 @@ TEST(DeclareDuplicateClassFuncDefinition, SemanticVerificationTests)
     parser.global_symbol_table_->print(true);
 }
 
-TEST(DeclareDuplicateFuncDefinition, SemanticVerificationTests)
+TEST(DeclareDuplicateFuncDefinition, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -654,7 +654,7 @@ TEST(DeclareDuplicateFuncDefinition, SemanticVerificationTests)
     parser.global_symbol_table_->print(true);
 }
 
-TEST(DeclareThreeDuplicateFuncDefinition, SemanticVerificationTests)
+TEST(DeclareThreeDuplicateFuncDefinition, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -673,7 +673,7 @@ TEST(DeclareThreeDuplicateFuncDefinition, SemanticVerificationTests)
 
 // ----------------------------------------------------------------------------------------------------------------
 // arrays: using right number of dimensions
-TEST(UseDeclareVarAsArrayInProg, SemanticVerificationTests)
+TEST(UseDeclareVarAsArrayInProg, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -689,7 +689,7 @@ TEST(UseDeclareVarAsArrayInProg, SemanticVerificationTests)
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
 }
-TEST(AssignDeclareVarAsArrayInProg, SemanticVerificationTests)
+TEST(AssignDeclareVarAsArrayInProg, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -706,7 +706,7 @@ TEST(AssignDeclareVarAsArrayInProg, SemanticVerificationTests)
     parser.global_symbol_table_->print(true);
 }
 
-TEST(AssignDeclareArrayWithTooFewDimensionsInProg, SemanticVerificationTests)
+TEST(AssignDeclareArrayWithTooFewDimensionsInProg, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -723,7 +723,7 @@ TEST(AssignDeclareArrayWithTooFewDimensionsInProg, SemanticVerificationTests)
     parser.global_symbol_table_->print(true);
 }
 
-TEST(UseDeclareClassVarAsArrayInProg, SemanticVerificationTests)
+TEST(UseDeclareClassVarAsArrayInProg, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -740,7 +740,7 @@ TEST(UseDeclareClassVarAsArrayInProg, SemanticVerificationTests)
     parser.global_symbol_table_->print(true);
 }
 
-TEST(UseDeclareClassArrayWithTooFewDimensionsInProg, SemanticVerificationTests)
+TEST(UseDeclareClassArrayWithTooFewDimensionsInProg, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -757,7 +757,7 @@ TEST(UseDeclareClassArrayWithTooFewDimensionsInProg, SemanticVerificationTests)
     parser.global_symbol_table_->print(true);
 }
 
-TEST(UseDeclareNestedClassArrayWithTooFewDimensionsInProg, SemanticVerificationTests)
+TEST(UseDeclareNestedClassArrayWithTooFewDimensionsInProg, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -773,7 +773,7 @@ TEST(UseDeclareNestedClassArrayWithTooFewDimensionsInProg, SemanticVerificationT
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
     parser.global_symbol_table_->print(true);
 }
-TEST(UseDeclareNestedArrayClassWithTooFewDimensionsInProg, SemanticVerificationTests)
+TEST(UseDeclareNestedArrayClassWithTooFewDimensionsInProg, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -790,7 +790,7 @@ TEST(UseDeclareNestedArrayClassWithTooFewDimensionsInProg, SemanticVerificationT
     parser.global_symbol_table_->print(true);
 }
 
-TEST(AssignDeclareNestedArrayClassWithTooFewDimensionsInProg, SemanticVerificationTests)
+TEST(AssignDeclareNestedArrayClassWithTooFewDimensionsInProg, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -809,7 +809,76 @@ TEST(AssignDeclareNestedArrayClassWithTooFewDimensionsInProg, SemanticVerificati
 // ----------------------------------------------------------------------------------------------------------------
 // type checking of a complex expression
 
-TEST(ExpressionTreeSimpleAdd, SemanticVerificationTests)
+TEST(AssignIntVariableAddClassVariableWithNumber, SemanticVerification)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class A { }; program { A a; int x; x = a + 5; };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: can't perform arithmetic operations with variable a that is not of type int or float:1:45\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
+
+TEST(AssignIntVariableMultClassVariableWithNumber, SemanticVerification)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class A { }; class B { }; program { A a; B b; int x; x = a * 5; };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: can't perform arithmetic operations with variable a that is not of type int or float:1:63\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
+    parser.global_symbol_table_->print(true);
+}
+
+TEST(AssignIntVariableMultClassNestedVariableWithNumber, SemanticVerification)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class A { }; class B { A a; }; program { B b; int x; x = b.a * 5; };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: can't perform arithmetic operations with variable b.a that is not of type int or float:1:65\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
+    parser.global_symbol_table_->print(true);
+}
+
+TEST(AssignIntVariableMultClassFunctionWithNumber, SemanticVerification)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class A { }; class B { A testFunc() { A a; return (a); }; }; program { B b; int x; x = b.testFunc * 5; };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: can't perform arithmetic operations with variable b.testFunc that is not of type int or float:1:102\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
+    parser.global_symbol_table_->print(true);
+}
+
+
+TEST(ExpressionTreeSimpleAdd, SemanticVerification)
 {
     Parser parser = common_setup("10 + 11;", "<arithExpr>");
     parser.enable_derivation_output_ = false;
@@ -818,7 +887,7 @@ TEST(ExpressionTreeSimpleAdd, SemanticVerificationTests)
     parser.expr(func_record, tree);
     EXPECT_EQ(tree->post_order_print(), "10 11 ADD ");
 }
-TEST(ExpressionTreeSimpleMulti, SemanticVerificationTests)
+TEST(ExpressionTreeSimpleMulti, SemanticVerification)
 {
     Parser parser = common_setup("10 * 19;", "<arithExpr>");
     parser.enable_derivation_output_ = false;
@@ -828,7 +897,7 @@ TEST(ExpressionTreeSimpleMulti, SemanticVerificationTests)
     EXPECT_EQ(tree->post_order_print(), "10 19 MULTI ");
 }
 
-TEST(ExpressionTreeMultiAndAdd, SemanticVerificationTests)
+TEST(ExpressionTreeMultiAndAdd, SemanticVerification)
 {
     Parser parser = common_setup("10 * 19 + 12;", "<arithExpr>");
     parser.enable_derivation_output_ = false;
@@ -837,7 +906,7 @@ TEST(ExpressionTreeMultiAndAdd, SemanticVerificationTests)
     parser.expr(func_record, tree);
     EXPECT_EQ(tree->post_order_print(), "10 19 MULTI 12 ADD ");
 }
-TEST(ExpressionTreeMultiAndAddTwo, SemanticVerificationTests)
+TEST(ExpressionTreeMultiAndAddTwo, SemanticVerification)
 {
     Parser parser = common_setup("10 * 19 + 12 * 5 + 4 * 100 + 12 - 15;", "<arithExpr>");
     parser.enable_derivation_output_ = false;
@@ -847,7 +916,7 @@ TEST(ExpressionTreeMultiAndAddTwo, SemanticVerificationTests)
     EXPECT_EQ(tree->post_order_print(), "10 19 MULTI 12 5 MULTI 4 100 MULTI 12 15 SUB ADD ADD ADD ");
 }
 
-TEST(ExpressionTreeExpression, SemanticVerificationTests)
+TEST(ExpressionTreeExpression, SemanticVerification)
 {
     Parser parser = common_setup("10 * ( 7 + 5 );", "<arithExpr>");
     parser.enable_derivation_output_ = false;
@@ -856,7 +925,7 @@ TEST(ExpressionTreeExpression, SemanticVerificationTests)
     parser.expr(func_record, tree);
     EXPECT_EQ(tree->post_order_print(), "10 7 5 ADD MULTI ");
 }
-TEST(ExpressionTreeExpressionTwo, SemanticVerificationTests)
+TEST(ExpressionTreeExpressionTwo, SemanticVerification)
 {
     Parser parser = common_setup("4 + ( 2 * 7 + 5 ) + 99 * 133;", "<arithExpr>");
     parser.enable_derivation_output_ = false;
@@ -866,7 +935,7 @@ TEST(ExpressionTreeExpressionTwo, SemanticVerificationTests)
     EXPECT_EQ(tree->post_order_print(), "4 2 7 MULTI 5 ADD 99 133 MULTI ADD ADD ");
     EXPECT_EQ(tree->calculate_total(), 13190);
 }
-TEST(ExpressionTreeExpressionThree, SemanticVerificationTests)
+TEST(ExpressionTreeExpressionThree, SemanticVerification)
 {
     Parser parser = common_setup("3 * 4 + ( 2 * 7 + 5 ) + 99 * 133;", "<arithExpr>");
     parser.enable_derivation_output_ = false;
@@ -876,7 +945,7 @@ TEST(ExpressionTreeExpressionThree, SemanticVerificationTests)
     EXPECT_EQ(tree->post_order_print(), "3 4 MULTI 2 7 MULTI 5 ADD 99 133 MULTI ADD ADD ");
     EXPECT_EQ(tree->calculate_total(), 13198);
 }
-TEST(ExpressionTreeExpressionFour, SemanticVerificationTests)
+TEST(ExpressionTreeExpressionFour, SemanticVerification)
 {
     Parser parser = common_setup("3 * 4 + ( 2 * 7 + 5 ) + 99 * ( 1 + 2 * 6 ) + 133;", "<arithExpr>");
     parser.enable_derivation_output_ = false;
@@ -887,7 +956,7 @@ TEST(ExpressionTreeExpressionFour, SemanticVerificationTests)
     EXPECT_EQ(tree->calculate_total(), 1451);
 }
 
-TEST(ExpressionTreeExpressionFive, SemanticVerificationTests)
+TEST(ExpressionTreeExpressionFive, SemanticVerification)
 {
     Parser parser = common_setup("3 * 4 + ( 2 * 7 + 5 * ( 2 + 5));", "<arithExpr>");
     parser.enable_derivation_output_ = false;
@@ -898,7 +967,7 @@ TEST(ExpressionTreeExpressionFive, SemanticVerificationTests)
     EXPECT_EQ(tree->calculate_total(), 61);
 }
 
-TEST(ExpressionTreeExpressionSix, SemanticVerificationTests)
+TEST(ExpressionTreeExpressionSix, SemanticVerification)
 {
     Parser parser = common_setup("3 * 4 + ( 2 * 7 + 6 * ( 2 + 5)) + 99 * 133;", "<arithExpr>");
     parser.enable_derivation_output_ = false;
@@ -908,7 +977,7 @@ TEST(ExpressionTreeExpressionSix, SemanticVerificationTests)
     EXPECT_EQ(tree->post_order_print(), "3 4 MULTI 2 7 MULTI 6 2 5 ADD MULTI ADD 99 133 MULTI ADD ADD ");
     EXPECT_EQ(tree->calculate_total(), 13235);
 }
-TEST(ExpressionTreeExpressionSeven, SemanticVerificationTests)
+TEST(ExpressionTreeExpressionSeven, SemanticVerification)
 {
     Parser parser = common_setup("3 - 4;", "<arithExpr>");
     parser.enable_derivation_output_ = false;
@@ -918,7 +987,7 @@ TEST(ExpressionTreeExpressionSeven, SemanticVerificationTests)
     EXPECT_EQ(tree->post_order_print(), "3 4 SUB ");
     EXPECT_EQ(tree->calculate_total(), -1);
 }
-TEST(ExpressionTreeExpressionEight, SemanticVerificationTests)
+TEST(ExpressionTreeExpressionEight, SemanticVerification)
 {
     Parser parser = common_setup("10 / 5 - 2 + 5;", "<arithExpr>");
     parser.enable_derivation_output_ = false;
@@ -929,7 +998,7 @@ TEST(ExpressionTreeExpressionEight, SemanticVerificationTests)
     EXPECT_EQ(tree->calculate_total(), 5);
 }
 
-TEST(ExpressionTreeExpressionNine, SemanticVerificationTests)
+TEST(ExpressionTreeExpressionNine, SemanticVerification)
 {
     Parser parser = common_setup("10 / 5 * 2;", "<arithExpr>");
     parser.enable_derivation_output_ = false;
@@ -940,7 +1009,7 @@ TEST(ExpressionTreeExpressionNine, SemanticVerificationTests)
     EXPECT_EQ(tree->calculate_total(), 4);
 }
 
-TEST(ExpressionTreeExpressionTen, SemanticVerificationTests)
+TEST(ExpressionTreeExpressionTen, SemanticVerification)
 {
     Parser parser = common_setup("10 / 5 * 2 - 5 * 5;", "<arithExpr>");
     parser.enable_derivation_output_ = false;
@@ -951,7 +1020,7 @@ TEST(ExpressionTreeExpressionTen, SemanticVerificationTests)
     EXPECT_EQ(tree->calculate_total(), -21);
 }
 
-TEST(ExpressionTreeExpressionEleven, SemanticVerificationTests)
+TEST(ExpressionTreeExpressionEleven, SemanticVerification)
 {
     Parser parser = common_setup("10 * 50 / 25 * 2 / 2 - 40;", "<arithExpr>");
     parser.enable_derivation_output_ = false;
@@ -962,7 +1031,7 @@ TEST(ExpressionTreeExpressionEleven, SemanticVerificationTests)
     EXPECT_EQ(tree->calculate_total(), -20);
 }
 
-TEST(ExpressionTreeExpressionTwelve, SemanticVerificationTests)
+TEST(ExpressionTreeExpressionTwelve, SemanticVerification)
 {
     Parser parser = common_setup("10 * 50 / 25 * (2 + 6 + ( 2 + 8) * (2 + 2)) / 2 - 40;", "<arithExpr>");
     parser.enable_derivation_output_ = false;
@@ -972,7 +1041,7 @@ TEST(ExpressionTreeExpressionTwelve, SemanticVerificationTests)
     EXPECT_EQ(tree->post_order_print(), "10 50 25 DIV 2 6 2 8 ADD 2 2 ADD MULTI ADD ADD 2 DIV MULTI MULTI 40 SUB ");
     EXPECT_EQ(tree->calculate_total(), 440);
 }
-TEST(ExpressionTreeExpressionThirteen, SemanticVerificationTests)
+TEST(ExpressionTreeExpressionThirteen, SemanticVerification)
 {
     Parser parser = common_setup("( 10 ) + 5;", "<arithExpr>");
     parser.enable_derivation_output_ = false;
@@ -985,7 +1054,7 @@ TEST(ExpressionTreeExpressionThirteen, SemanticVerificationTests)
 // ----------------------------------------------------------------------------------------------------------------
 // type checking of an assignment statement
 
-TEST(AssignDeclaredClassVarIntFuncTest, SemanticVerificationTests)
+TEST(AssignDeclaredClassVarIntFuncTest, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -1003,7 +1072,7 @@ TEST(AssignDeclaredClassVarIntFuncTest, SemanticVerificationTests)
 }
 
 
-TEST(AssignDeclaredClassVarIdClassFuncTest, SemanticVerificationTests)
+TEST(AssignDeclaredClassVarIdClassFuncTest, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -1020,7 +1089,7 @@ TEST(AssignDeclaredClassVarIdClassFuncTest, SemanticVerificationTests)
 }
 
 
-TEST(AssignDeclaredClassVarIntClassFuncTest, SemanticVerificationTests)
+TEST(AssignDeclaredClassVarIntClassFuncTest, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -1037,7 +1106,7 @@ TEST(AssignDeclaredClassVarIntClassFuncTest, SemanticVerificationTests)
     parser.global_symbol_table_->print(true);
 }
 
-TEST(AssignDeclaredClassDataMember, SemanticVerificationTests)
+TEST(AssignDeclaredClassDataMember, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -1055,7 +1124,7 @@ TEST(AssignDeclaredClassDataMember, SemanticVerificationTests)
 }
 
 
-TEST(AssignDeclaredClassVarNestedClassVarToAnotherDeclaredClassVar, SemanticVerificationTests)
+TEST(AssignDeclaredClassVarNestedClassVarToAnotherDeclaredClassVar, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -1073,7 +1142,7 @@ TEST(AssignDeclaredClassVarNestedClassVarToAnotherDeclaredClassVar, SemanticVeri
 }
 
 
-TEST(AssignDeclaredClassVarNestedClassVarWrongVarTypeTest, SemanticVerificationTests)
+TEST(AssignDeclaredClassVarNestedClassVarWrongVarTypeTest, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -1090,7 +1159,7 @@ TEST(AssignDeclaredClassVarNestedClassVarWrongVarTypeTest, SemanticVerificationT
     parser.global_symbol_table_->print(true);
 }
 
-TEST(AssignDeclaredClassVarNestedClassVarWrongFuncTypeTest, SemanticVerificationTests)
+TEST(AssignDeclaredClassVarNestedClassVarWrongFuncTypeTest, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -1113,7 +1182,7 @@ TEST(AssignDeclaredClassVarNestedClassVarWrongFuncTypeTest, SemanticVerification
 // function calls: right number and types of parameters upon call
 
 // function right number parameter tests
-TEST(FuncWithWrongNoOfParametersInProg, SemanticVerificationTests)
+TEST(FuncWithWrongNoOfParametersInProg, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -1130,7 +1199,7 @@ TEST(FuncWithWrongNoOfParametersInProg, SemanticVerificationTests)
     parser.global_symbol_table_->print(true);
 }
 
-TEST(FuncWithWrongNoOfParametersInClassFunc, SemanticVerificationTests)
+TEST(FuncWithWrongNoOfParametersInClassFunc, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -1149,7 +1218,7 @@ TEST(FuncWithWrongNoOfParametersInClassFunc, SemanticVerificationTests)
 
 
 // function type checks
-TEST(FuncWithCorrectParametersOfTypeIntAndFloatInProg, SemanticVerificationTests)
+TEST(FuncWithCorrectParametersOfTypeIntAndFloatInProg, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -1165,7 +1234,7 @@ TEST(FuncWithCorrectParametersOfTypeIntAndFloatInProg, SemanticVerificationTests
     parser.global_symbol_table_->print(true);
 }
 
-TEST(FuncWithCorrectParametersOfTypeIntAndIdFloatInProg, SemanticVerificationTests)
+TEST(FuncWithCorrectParametersOfTypeIntAndIdFloatInProg, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -1181,7 +1250,7 @@ TEST(FuncWithCorrectParametersOfTypeIntAndIdFloatInProg, SemanticVerificationTes
     parser.global_symbol_table_->print(true);
 }
 
-TEST(FuncWithCorrectParametersOfTypeIntAndFloatInClassFunc, SemanticVerificationTests)
+TEST(FuncWithCorrectParametersOfTypeIntAndFloatInClassFunc, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -1197,7 +1266,7 @@ TEST(FuncWithCorrectParametersOfTypeIntAndFloatInClassFunc, SemanticVerification
     parser.global_symbol_table_->print(true);
 }
 
-TEST(ClassFuncWithCorrectParametersOfTypeAndIdFloatInClassFunc, SemanticVerificationTests)
+TEST(ClassFuncWithCorrectParametersOfTypeAndIdFloatInClassFunc, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -1212,7 +1281,7 @@ TEST(ClassFuncWithCorrectParametersOfTypeAndIdFloatInClassFunc, SemanticVerifica
     parser.global_symbol_table_->print(true);
 }
 
-TEST(FuncWithCorrectParametersOfTypeCordAndIntInProg, SemanticVerificationTests)
+TEST(FuncWithCorrectParametersOfTypeCordAndIntInProg, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -1228,7 +1297,7 @@ TEST(FuncWithCorrectParametersOfTypeCordAndIntInProg, SemanticVerificationTests)
     parser.global_symbol_table_->print(true);
 }
 
-TEST(FuncWithWrongParametersOfTypeCordAndIntInProg, SemanticVerificationTests)
+TEST(FuncWithWrongParametersOfTypeCordAndIntInProg, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;

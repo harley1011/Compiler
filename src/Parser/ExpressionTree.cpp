@@ -18,6 +18,17 @@ bool ExpressionTree::add_bracket_tree(ExpressionTree *tree) {
     return true;
 }
 
+bool ExpressionTree::split_tree_with_rel_operator(ExpressionTree *tree, SymbolRecord *rel_record) {
+    ExpressionNode* node = new ExpressionNode(rel_record, false);
+    node->left_tree_ = root_node_;
+    root_node_->parent_tree_ = node;
+    root_node_ = node;
+    root_node_->right_tree_ = tree->root_node_;
+    tree->root_node_->parent_tree_ = root_node_;
+
+    return true;
+}
+
 bool ExpressionTree::add_bracket_tree(ExpressionNode* node, ExpressionTree *tree) {
 
     if (node->left_tree_ == NULL) {
@@ -181,6 +192,25 @@ string ExpressionTree::post_order_print(ExpressionNode *node) {
         return result + to_string(node->record_->integer_value_) + " ";
     else
         return result + node->record_->type_ + " ";
+}
+
+vector<SymbolRecord *> ExpressionTree::all_identifiers_in_expression() {
+    vector<SymbolRecord*>* identifiers = new vector<SymbolRecord*>;
+    all_identifiers_in_expression(identifiers, root_node_);
+    return (*identifiers);
+}
+
+
+void ExpressionTree::all_identifiers_in_expression(vector<SymbolRecord*>* identifiers, ExpressionNode *node) {
+    if (node == NULL)
+        return;
+
+    all_identifiers_in_expression(identifiers, node->left_tree_);
+    all_identifiers_in_expression(identifiers, node->right_tree_);
+
+    if (node->record_->kind_ == "variable" || node->record_->kind_ == "function")
+        identifiers->push_back(node->record_);
+
 }
 
 

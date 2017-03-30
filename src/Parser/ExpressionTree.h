@@ -32,6 +32,12 @@ public:
     int calculate_total(ExpressionNode *node);
     void calculate_total(ExpressionNode *node, stack<SymbolRecord*>* stack);
 
+    vector<SymbolRecord *> all_identifiers_in_expression();
+
+    bool split_tree_with_rel_operator(ExpressionTree *tree, SymbolRecord *rel_record);
+
+
+    void all_identifiers_in_expression(vector<SymbolRecord *>* identifiers, ExpressionNode *node);
 };
 
 

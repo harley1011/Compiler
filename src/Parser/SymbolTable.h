@@ -1,5 +1,6 @@
 #include <vector>
 #include "SymbolRecord.h"
+#include "ExpressionTree.h"
 
 #ifndef COMPILER_SYMBOLTABLE_H
 #define COMPILER_SYMBOLTABLE_H
@@ -39,13 +40,13 @@ public:
 
 
     bool check_if_assign_variable_exist_and_correct_assign_type(SymbolRecord *variable_record, SymbolRecord *assign_record);
+    bool check_expression_tree_for_correct_type(SymbolRecord *variable_record, ExpressionTree* tree);
 
 
     SymbolRecord *search_type(string type);
 
     SymbolRecord * check_nested_property(SymbolRecord *record, SymbolRecord *found_record);
 
-    bool check_for_circular_references();
 
     bool check_for_circular_references(SymbolRecord *record);
 
@@ -55,6 +56,8 @@ public:
     SymbolRecord *search_top_table(string name);
 
     bool check_correct_number_of_array_dimensions(SymbolRecord *found_record, SymbolRecord *record, int number_of_accessed_dimensions);
+
+    bool check_if_record_is_num_type(SymbolRecord *record);
 };
 
 
