@@ -366,7 +366,8 @@ TEST(aParamsTailTest, ParserTests) {
     Parser parser = common_setup(", 5 )", "<aParamsTail>");
     SymbolRecord *func_record = new SymbolRecord();
     SymbolRecord *record = new SymbolRecord();
-    EXPECT_TRUE(parser.aParamsTail(func_record, record));
+    vector<ExpressionTree *> *function_expression_parameters = new vector<ExpressionTree*>;
+    EXPECT_TRUE(parser.aParamsTail(func_record, record, function_expression_parameters));
     EXPECT_EQ(parser.current_rhs_derivation_, ", integer");
 }
 
@@ -374,7 +375,8 @@ TEST(aParamsTailNoArgTest, ParserTests) {
     Parser parser = common_setup(" )", "<aParamsTail>");
     SymbolRecord *func_record = new SymbolRecord();
     SymbolRecord *record = new SymbolRecord();
-    EXPECT_TRUE(parser.aParamsTail(func_record, record));
+    vector<ExpressionTree *> *function_expression_parameters = new vector<ExpressionTree*>;
+    EXPECT_TRUE(parser.aParamsTail(func_record, record, function_expression_parameters));
     EXPECT_EQ(parser.current_rhs_derivation_, "");
 }
 
@@ -382,7 +384,8 @@ TEST(aParamsTailMultiArgTest, ParserTests) {
     Parser parser = common_setup(", 5, 10.12, varTest[10] , 10 + 10 * 10 / (10 - 100) )", "<aParamsTail>");
     SymbolRecord *func_record = new SymbolRecord();
     SymbolRecord *record = new SymbolRecord();
-    EXPECT_TRUE(parser.aParamsTail(func_record, record));
+    vector<ExpressionTree *> *function_expression_parameters = new vector<ExpressionTree*>;
+    EXPECT_TRUE(parser.aParamsTail(func_record, record, function_expression_parameters));
     EXPECT_EQ(parser.current_rhs_derivation_,
               ", integer , float , id [ integer ] , integer + integer * integer / ( integer - integer )");
 }

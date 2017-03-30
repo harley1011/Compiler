@@ -1,8 +1,9 @@
 //
 // Created by Harley on 3/25/2017.
 //
-#include "SymbolRecord.h"
+
 #include "ExpressionNode.h"
+#include "SymbolRecord.h"
 #include <stack>
 #ifndef COMPILER_ABSTRACTEXPRESSIONTREE_H
 #define COMPILER_ABSTRACTEXPRESSIONTREE_H

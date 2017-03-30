@@ -2,7 +2,7 @@
 // Created by Harley on 3/9/2017.
 //
 
-#include "SymbolRecord.h"
+
 #include "SymbolTable.h"
 #include "../Scanner/IntegerToken.h"
 
@@ -49,11 +49,6 @@ bool SymbolRecord::set_structure(string structure) {
     return true;
 }
 
-bool SymbolRecord::add_function_record(SymbolRecord* record) {
-    function_parameters_record_.push_back(record);
-    return true;
-}
-
 bool SymbolRecord::add_nested_property(string property) {
     nested_properties_.push_back(property);
     nested_properties_dimensions_[property] = 0;
@@ -62,7 +57,6 @@ bool SymbolRecord::add_nested_property(string property) {
 
 
 bool SymbolRecord::add_array_size(IntegerToken integer_token) {
-    //append_to_type("[" + integer_token.lexeme_);
     array_sizes.push_back(integer_token.converted_lexeme_);
     return true;
 }
@@ -76,16 +70,8 @@ string SymbolRecord::type_with_array_dimensions() {
 }
 
 bool SymbolRecord::generate_function_type() {
-    bool first = true;
     for(SymbolRecord* record: symbol_table_->symbol_records_) {
         function_parameters_.push_back(record->type_);
-//        if (first){
-//            first = false;
-//            type_ += " : ";
-//        }
-//        else
-//            type_ += ", ";
-//        type_ += record->type_;
     }
     return true;
 }

@@ -95,7 +95,8 @@ public:
     bool fParams(SymbolRecord* record);
     bool aParams(SymbolRecord* func_record, SymbolRecord* record);
     bool fParamsTail(SymbolRecord* record);
-    bool aParamsTail(SymbolRecord* func_record, SymbolRecord* record);
+    bool aParamsTail(SymbolRecord *func_record, SymbolRecord *record,
+                     vector<ExpressionTree *> *function_expression_parameters);
     bool assignOp();
     bool relOp(SymbolRecord* record);
     bool addOp(SymbolRecord* record);

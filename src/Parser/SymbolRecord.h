@@ -25,7 +25,6 @@ public:
     SymbolTable* symbol_table_;
     bool properly_declared_;
     vector<int> array_sizes;
-    vector<SymbolRecord*> function_parameters_record_;
     string address;
     int integer_value_;
     float float_value_;
@@ -38,8 +37,6 @@ public:
     bool generate_function_type();
     string generate_nested_properties_string();
     bool add_array_size(IntegerToken integer_token);
-
-    bool add_function_record(SymbolRecord *record);
     bool add_nested_properties_dimension_to_last_porperty();
 
     bool add_nested_property(string property);

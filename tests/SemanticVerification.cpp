@@ -238,6 +238,23 @@ TEST(AssignVarNonDeclaredFuncInFuncTest, SemanticVerification)
     parser.global_symbol_table_->print(true);
 }
 
+
+TEST(AssignVarDeclaredNestedClassFuncFuncInFuncTest, SemanticVerification)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class A { }; class B { A a; int funcTest() {return(1); }; }; };  class C { B b;  B funcTest() { return(b); }; }; program { A a; B b; C c; int x; x = c.b.funcTest(); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+    EXPECT_EQ(parser.print_semantic_errors(), "");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 4);
+    parser.global_symbol_table_->print(true);
+}
     // undefined class test
 
 TEST(DeclaredUnDefinedClassInClassFuncTest, SemanticTests)
@@ -843,7 +860,7 @@ TEST(AssignIntVariableMultClassVariableWithNumber, SemanticVerification)
     parser.global_symbol_table_->print(true);
 }
 
-TEST(AssignIntVariableMultClassNestedVariableWithNumber, SemanticVerification)
+TEST(AssignIntVariableMultiClassNestedVariableWithNumber, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -860,7 +877,23 @@ TEST(AssignIntVariableMultClassNestedVariableWithNumber, SemanticVerification)
     parser.global_symbol_table_->print(true);
 }
 
-TEST(AssignIntVariableMultClassFunctionWithNumber, SemanticVerification)
+TEST(AssignIntVariableMultiVariableExpressionAndFunction, SemanticVerification)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class A { }; class B { A a; A funcTest() {return(a); }; }; };  class C { B b;  B funcTest() { return(b); }; }; program { A a; B b; C c; int x; x = c.b.funcTest() + a + b + c + b.a; };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 5);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: can't perform arithmetic operations with function c.b.funcTest that is not of type int or float:1:180\nError: can't perform arithmetic operations with variable a that is not of type int or float:1:180\nError: can't perform arithmetic operations with variable b that is not of type int or float:1:180\nError: can't perform arithmetic operations with variable c that is not of type int or float:1:180\nError: can't perform arithmetic operations with variable b.a that is not of type int or float:1:180\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 4);
+    parser.global_symbol_table_->print(true);
+}
+TEST(AssignIntVariableWithWrongIdentifier, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -874,6 +907,22 @@ TEST(AssignIntVariableMultClassFunctionWithNumber, SemanticVerification)
     EXPECT_EQ(parser.print_semantic_errors(), "Error: can't perform arithmetic operations with variable b.testFunc that is not of type int or float:1:102\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
+    parser.global_symbol_table_->print(true);
+}
+TEST(FunctionCallWithInvalidExpression, SemanticVerification)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class A { }; class B { A testFunc() { A a; return (a); }; }; program { B b; int x; x = funcTest(b.testFunc * 5); }; int funcTest(int x) { return (x); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: can't perform arithmetic operations with variable b.testFunc that is not of type int or float:1:102\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 4);
     parser.global_symbol_table_->print(true);
 }
 
@@ -1054,7 +1103,7 @@ TEST(ExpressionTreeExpressionThirteen, SemanticVerification)
 // ----------------------------------------------------------------------------------------------------------------
 // type checking of an assignment statement
 
-TEST(AssignDeclaredClassVarIntFuncTest, SemanticVerification)
+TEST(AssignDeclaredClassVarIntFunc, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -1072,7 +1121,7 @@ TEST(AssignDeclaredClassVarIntFuncTest, SemanticVerification)
 }
 
 
-TEST(AssignDeclaredClassVarIdClassFuncTest, SemanticVerification)
+TEST(AssignDeclaredClassVarIdClassFunc, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -1089,7 +1138,7 @@ TEST(AssignDeclaredClassVarIdClassFuncTest, SemanticVerification)
 }
 
 
-TEST(AssignDeclaredClassVarIntClassFuncTest, SemanticVerification)
+TEST(AssignDeclaredClassVarIntClassFunc, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -1101,6 +1150,40 @@ TEST(AssignDeclaredClassVarIntClassFuncTest, SemanticVerification)
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
     EXPECT_EQ(parser.print_semantic_errors(), "Error: can't assign variable idx a value of type int it needs type Util:1:139\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
+    parser.global_symbol_table_->print(true);
+}
+
+TEST(AssignDeclaredClassVarIntegerInProg, SemanticVerification)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class Util { }; class Func { int funcTest(int id, int idc) { return (id); }; }; program { Util idx; Func func; idx = 100;}; ", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: can't assign variable idx a value of type int it needs type Util:1:121\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
+    parser.global_symbol_table_->print(true);
+}
+
+TEST(AssignDeclaredClassVarIntegerInClassFunc, SemanticVerification)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class Util { }; class Func { int funcTest(int id, int idc) { Util idx; Func func; idx = 100; return (id); }; }; program { }; ", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: can't assign variable idx a value of type int it needs type Util:1:92\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
     parser.global_symbol_table_->print(true);

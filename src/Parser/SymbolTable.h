@@ -33,10 +33,10 @@ public:
 
     string generate_symbol_table_string(SymbolTable *table, string table_name, int indent_count);
 
-
     bool check_if_assign_variable_exist(SymbolRecord *record);
 
-    bool check_if_func_exists(SymbolRecord *func_record);
+    bool check_if_func_exists_and_parameters_are_valid(SymbolRecord *func_record,
+                                                       vector<ExpressionTree *> *function_expression_parameters);
 
 
     bool check_if_assign_variable_exist_and_correct_assign_type(SymbolRecord *variable_record, SymbolRecord *assign_record);
@@ -55,9 +55,15 @@ public:
 
     SymbolRecord *search_top_table(string name);
 
-    bool check_correct_number_of_array_dimensions(SymbolRecord *found_record, SymbolRecord *record, int number_of_accessed_dimensions);
+    bool check_correct_number_of_array_dimensions(SymbolRecord* found_record, SymbolRecord *record, int number_of_accessed_dimensions);
 
     bool check_if_record_is_num_type(SymbolRecord *record);
+
+    bool check_expression_is_valid(ExpressionTree *tree);
+
+    bool check_if_func_parameter_is_valid_expression(SymbolRecord *func_record, ExpressionTree *tree);
+
+    bool check_if_func_exists(SymbolRecord *func_record);
 };
 
 

@@ -370,14 +370,14 @@ bool Parser::statementRes(SymbolRecord* func_record) {
     ExpressionTree* tree = new ExpressionTree();
     if (lookahead_ == "IF") {
         form_derivation_string("<statementRes>", "if ( <expr> ) then <statThenBlock>");
-        if (match("IF") && match("OPENPARA") && expr(func_record, tree) && match("CLOSEPARA") && match("THEN") && statThenBlock(func_record)) {
+        if (match("IF") && match("OPENPARA") && expr(func_record, tree) && func_record->symbol_table_->check_expression_is_valid(tree) && match("CLOSEPARA") && match("THEN") && statThenBlock(func_record)) {
             return true;
         }
     } else if (lookahead_ == "FOR") {
         form_derivation_string("<statementRes>", "for ( <type> id <assignOp> <expr> ; <relExpr> ; <assignStat> ) <statBlock>");
         SymbolRecord* assign_record = new SymbolRecord(global_symbol_table_->second_pass_);
         if (match("FOR") && match("OPENPARA") && type(*local_record) && match("ID") && (*local_record)->set_name(get_last_token().lexeme_) &&
-                func_record->symbol_table_->create_variable_entry(local_record) && assignOp() && expr(func_record, tree) && match("DELI") &&
+                func_record->symbol_table_->create_variable_entry(local_record) && assignOp() && expr(func_record, tree) && match("DELI") && func_record->symbol_table_->check_expression_tree_for_correct_type(*local_record, tree) &&
             relExpr(func_record) && match("DELI") && assignStat(func_record, assign_record) && match("CLOSEPARA") && statBlock(func_record)) {
             return true;
         }
@@ -388,12 +388,12 @@ bool Parser::statementRes(SymbolRecord* func_record) {
         }
     } else if (lookahead_ == "PUT") {
         form_derivation_string("<statementRes>", "put ( <expr> ) ;");
-        if (match("PUT") && match("OPENPARA") && expr(func_record, tree) && match("CLOSEPARA") && match("DELI")) {
+        if (match("PUT") && match("OPENPARA") && expr(func_record, tree) && func_record->symbol_table_->check_expression_is_valid(tree) && match("CLOSEPARA") && match("DELI")) {
             return true;
         }
     } else if (lookahead_ == "RETURN") {
         form_derivation_string("<statementRes>", "return ( <expr> ) ;");
-        if (match("RETURN") && match("OPENPARA") && expr(func_record, tree) && match("CLOSEPARA") && match("DELI")) {
+        if (match("RETURN") && match("OPENPARA") && expr(func_record, tree) && func_record->symbol_table_->check_expression_is_valid(tree) && match("CLOSEPARA") && match("DELI")) {
             return true;
         }
     }
@@ -437,7 +437,7 @@ bool Parser::assignStat(SymbolRecord* func_record, SymbolRecord* record) {
     if (lookahead_ == "ID") {
         form_derivation_string("<assignStat>", "<variable> <assignOp> <expr>");
         ExpressionTree* tree = new ExpressionTree();
-        if (variable(func_record, record) && assignOp() && expr(func_record, tree))
+        if (variable(func_record, record) && assignOp() && expr(func_record, tree) && func_record->symbol_table_->check_expression_tree_for_correct_type(record, tree))
             return true;
     }
     return false;
@@ -884,31 +884,13 @@ bool Parser::fParams(SymbolRecord* record) {
         form_derivation_string("<fParams>", "<type> id <arraySize> <fParamsTail>");
         SymbolRecord* fParam_record = new SymbolRecord();
         fParam_record->symbol_table_->parent_symbol_table_ = global_symbol_table_;
-        if (type(fParam_record) && match("ID") && fParam_record->set_name(get_last_token().lexeme_) && arraySize(fParam_record) && record->symbol_table_->create_parameter_entry(fParam_record) && record->add_function_record(fParam_record) && fParamsTail(record))
+        if (type(fParam_record) && match("ID") && fParam_record->set_name(get_last_token().lexeme_) && arraySize(fParam_record) && record->symbol_table_->create_parameter_entry(fParam_record) &&
+                fParamsTail(record))
             if (!global_symbol_table_->second_pass_)
                 record->generate_function_type();
             return true;
     } else if (lookahead_ == "CLOSEPARA") {
         form_derivation_string("<fParams>", "");
-        return true;
-    }
-    return false;
-}
-
-bool Parser::aParams(SymbolRecord* func_record, SymbolRecord* record) {
-    if (!skip_errors({"ID", "INUM", "FNUM", "OPENPARA", "NOT", "ADD", "SUB"}, {"CLOSEPARA"}, true))
-        return false;
-    if (is_lookahead_a_value() || lookahead_ == "OPENPARA" || lookahead_ == "NOT" || lookahead_ == "ADD" ||
-        lookahead_ == "SUB") {
-        record->kind_ = "function";
-        form_derivation_string("<aParams>", "<expr> <aParamsTail>");
-        SymbolRecord* aParam_record = new SymbolRecord();
-        ExpressionTree* tree = new ExpressionTree();
-        if (expr(func_record, tree) && record->add_function_record(aParam_record) && aParamsTail(func_record, record))
-            return true;
-    } else if (lookahead_ == "CLOSEPARA") {
-        func_record->symbol_table_->check_if_func_exists(record);
-        form_derivation_string("<aParams>", "");
         return true;
     }
     return false;
@@ -921,7 +903,8 @@ bool Parser::fParamsTail(SymbolRecord* record) {
         form_derivation_string("<fParamsTail>", ", <type> id <arraySize> <fParamsTail>");
         SymbolRecord* fParam_record = new SymbolRecord();
         fParam_record->symbol_table_->parent_symbol_table_ = global_symbol_table_;
-        if (match("COM") && type(fParam_record) && match("ID") && fParam_record->set_name(get_last_token().lexeme_) && arraySize(fParam_record) && record->symbol_table_->create_parameter_entry(fParam_record) && record->add_function_record(fParam_record) && fParamsTail(record))
+        if (match("COM") && type(fParam_record) && match("ID") && fParam_record->set_name(get_last_token().lexeme_) && arraySize(fParam_record) && record->symbol_table_->create_parameter_entry(fParam_record) &&
+             fParamsTail(record))
             return true;
     } else if (lookahead_ == "CLOSEPARA") { // Follow set
         form_derivation_string("<fParamsTail>", "");
@@ -930,17 +913,39 @@ bool Parser::fParamsTail(SymbolRecord* record) {
     return false;
 }
 
-bool Parser::aParamsTail(SymbolRecord* func_record, SymbolRecord* record) {
+bool Parser::aParams(SymbolRecord* func_record, SymbolRecord* record) {
+    if (!skip_errors({"ID", "INUM", "FNUM", "OPENPARA", "NOT", "ADD", "SUB"}, {"CLOSEPARA"}, true))
+        return false;
+    if (is_lookahead_a_value() || lookahead_ == "OPENPARA" || lookahead_ == "NOT" || lookahead_ == "ADD" ||
+        lookahead_ == "SUB") {
+        record->kind_ = "function";
+        form_derivation_string("<aParams>", "<expr> <aParamsTail>");
+        ExpressionTree* tree = new ExpressionTree();
+        vector<ExpressionTree *> *function_expression_parameters = new vector<ExpressionTree*>;
+        function_expression_parameters->push_back(tree);
+        if (expr(func_record, tree) && aParamsTail(func_record, record, function_expression_parameters) && func_record->symbol_table_->check_if_func_exists_and_parameters_are_valid(record, function_expression_parameters))
+            return true;
+    } else if (lookahead_ == "CLOSEPARA") {
+        func_record->symbol_table_->check_if_func_exists(record);
+        form_derivation_string("<aParams>", "");
+        return true;
+    }
+    return false;
+}
+
+
+
+
+bool Parser::aParamsTail(SymbolRecord *func_record, SymbolRecord *record, vector<ExpressionTree *> *function_expression_parameters) {
     if (!skip_errors({"COM"}, {"CLOSEPARA"}, true))
         return false;
     if (lookahead_ == "COM") {
         form_derivation_string("<aParamsTail>", ", <expr> <aParamsTail>");
-        SymbolRecord* aParam_record = new SymbolRecord();
         ExpressionTree* tree = new ExpressionTree();
-        if (match("COM") && expr(func_record, tree) && record->add_function_record(aParam_record) && aParamsTail(func_record, record))
+        function_expression_parameters->push_back(tree);
+        if (match("COM") && expr(func_record, tree) && aParamsTail(func_record, record, function_expression_parameters))
             return true;
     } else if (lookahead_ == "CLOSEPARA") { // Follow set
-        func_record->symbol_table_->check_if_func_exists(record);
         form_derivation_string("<aParamsTail>", "");
         return true;
     }
