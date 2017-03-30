@@ -17,11 +17,9 @@ public:
     ExpressionNode* parent_tree_;
     bool in_para_;
 
-    bool add_new_record(SymbolRecord *record);
+    vector<SymbolRecord *> all_identifiers_in_expression();
 
-    void check_tree_order();
-
-    string post_order_print();
+    void all_identifiers_in_expression(vector<SymbolRecord*>* identifiers, ExpressionNode *node);
 
 };
 

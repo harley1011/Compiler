@@ -393,7 +393,7 @@ bool Parser::statementRes(SymbolRecord* func_record) {
         }
     } else if (lookahead_ == "RETURN") {
         form_derivation_string("<statementRes>", "return ( <expr> ) ;");
-        if (match("RETURN") && match("OPENPARA") && expr(func_record, tree) && func_record->symbol_table_->check_expression_is_valid(tree) && match("CLOSEPARA") && match("DELI")) {
+        if (match("RETURN") && match("OPENPARA") && expr(func_record, tree) && func_record->symbol_table_->check_if_return_type_is_correct_type(func_record, tree) && match("CLOSEPARA") && match("DELI")) {
             return true;
         }
     }

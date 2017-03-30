@@ -415,7 +415,7 @@ TEST(FuncDeclareClassWithDuplicateVariablesTest, SemanticTests)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.syntax_errors.size(), 0);
-    EXPECT_EQ(parser.semantic_errors_.size(), 4);
+    EXPECT_EQ(parser.semantic_errors_.size(), 5);
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_.size(), 4);

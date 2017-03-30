@@ -30,7 +30,7 @@ public:
     SymbolRecord* search(string name);
     void set_second_pass(bool second_pass);
     void set_properly_declared(SymbolRecord *record);
-
+    bool check_if_return_type_is_correct_type(SymbolRecord *func_record, ExpressionTree* expression);
     string generate_symbol_table_string(SymbolTable *table, string table_name, int indent_count);
 
     bool check_if_assign_variable_exist(SymbolRecord *record);
@@ -64,6 +64,14 @@ public:
     bool check_if_func_parameter_is_valid_expression(SymbolRecord *func_record, ExpressionTree *tree);
 
     bool check_if_func_exists(SymbolRecord *func_record);
+
+    bool check_if_return_type_is_correct_type(SymbolRecord *func_record);
+
+    bool check_valid_arithmetic_expression(ExpressionNode *node);
+
+    bool check_valid_relational_expression(ExpressionNode *expression);
+
+    bool check_if_matching_types(string variable_property, string assign_type);
 };
 
 

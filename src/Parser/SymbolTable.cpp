@@ -63,26 +63,56 @@ bool SymbolTable::check_expression_is_valid(ExpressionTree *tree) {
     if (!second_pass_)
         return true;
 
-    if (tree->root_node_->record_->kind_ == "ADDOP" || tree->root_node_->record_->kind_ == "MULTOP") {
-        vector<SymbolRecord*> identifiers = tree->all_identifiers_in_expression();
-        if (identifiers.size() > 0) {
+    if (tree->root_node_->record_->kind_ == "RELOP") {
+        ExpressionNode* left_expression = tree->root_node_->left_tree_;
+        ExpressionNode* right_expression = tree->root_node_->right_tree_;
+
+        check_valid_relational_expression(left_expression);
+        check_valid_relational_expression(right_expression);
+
+    } else if (tree->root_node_->record_->kind_ == "ADDOP" || tree->root_node_->record_->kind_ == "MULTOP") {
+        check_valid_arithmetic_expression(tree->root_node_);
+    }
+    return true;
+}
+
+bool SymbolTable::check_valid_relational_expression(ExpressionNode *expression) {
+    if (expression->record_->kind_ == "ADDOP" || expression->record_->kind_ == "MULTOP") {
+        check_valid_arithmetic_expression(expression);
+        } else  {
+            if (expression->record_->type_ != "int" || expression->record_->type_ != "float") {
+                SymbolRecord *current_found_record = search(expression->record_->name_);
+                if (expression->record_->nested_properties_.size() > 0)
+                    current_found_record = find_nested_record(expression->record_, current_found_record);
+                if (current_found_record != NULL && current_found_record->type_ != "int" && current_found_record->type_ != "float")
+                    report_error_to_highest_symbol_table("Error: variable " + current_found_record->name_ + " of type " + current_found_record->type_ + " can't be in a relational expression it needs to be of type int or float:");
+            }
+        }
+}
+
+bool SymbolTable::check_valid_arithmetic_expression(ExpressionNode *node) {
+    vector<SymbolRecord*> identifiers = node->all_identifiers_in_expression();
+    if (identifiers.size() > 0) {
             for (SymbolRecord* current_record: identifiers) {
                 SymbolRecord* current_found_record = search(current_record->name_);
                 if (current_found_record != NULL)
                     current_found_record = find_nested_record(current_record, current_found_record);
 
                 if ( current_found_record != NULL && !check_if_record_is_num_type(current_found_record) ) {
-                    if (current_record->nested_properties_.size() == 0)
-                        report_error_to_highest_symbol_table("Error: can't perform arithmetic operations with " + current_record->kind_ + " " + current_record->name_ + " that is not of type int or float:" );
+                    if (current_record->nested_properties_.size() == 0) {
+                        report_error_to_highest_symbol_table(
+                                "Error: can't perform arithmetic operations with " + current_record->kind_ + " " +
+                                current_record->name_ + " that is not of type int or float:");
+                    }
                     else {
                         report_error_to_highest_symbol_table("Error: can't perform arithmetic operations with " + current_record->kind_ + " " + current_record->generate_nested_properties_string() + " that is not of type int or float:" );
                     }
                 }
             }
         }
-    }
     return true;
 }
+
 
 bool SymbolTable::check_expression_tree_for_correct_type(SymbolRecord *variable_record, ExpressionTree *tree) {
     if (!second_pass_) {
@@ -105,7 +135,7 @@ bool SymbolTable::check_expression_tree_for_correct_type(SymbolRecord *variable_
         }
     }
 
-    if (tree->root_node_->record_->kind_ == "ADDOP" || tree->root_node_->record_->kind_ == "MULTOP") {
+    if (tree->root_node_->record_->kind_ == "ADDOP" || tree->root_node_->record_->kind_ == "MULTOP" || tree->root_node_->record_->kind_ == "RELOP") {
 
         if (record->type_ != "float" && record->type_ != "int") {
             report_error_to_highest_symbol_table("Error: can't assign variable " + record->name_ + " of type " + record->type_  + " an arithmetic expression, it must be of type int or float:");
@@ -126,9 +156,7 @@ bool SymbolTable::check_expression_tree_for_correct_type(SymbolRecord *variable_
 
             if (found_assign_record != NULL) {
                 string assign_type = found_assign_record->type_;
-                if (variable_property != found_assign_record->type_ &&
-                    (variable_property != "int" || assign_type != "float") &&
-                    (variable_property != "float" || assign_type != "int"))
+                if (check_if_matching_types(variable_property, assign_type))
                     report_error_to_highest_symbol_table(
                             "Error: can't assign variable " + record->name_ + " a value of type " +
                             found_assign_record->type_ + " it needs type " + record->type_ + ":");
@@ -137,6 +165,12 @@ bool SymbolTable::check_expression_tree_for_correct_type(SymbolRecord *variable_
     }
 
     return true;
+}
+
+bool SymbolTable::check_if_matching_types(string variable_property, string assign_type) {
+    return variable_property != assign_type &&
+           (variable_property != "int" || assign_type != "float") &&
+           (variable_property != "float" || assign_type != "int");
 }
 
 bool SymbolTable::check_if_record_is_num_type(SymbolRecord *record) {
@@ -148,7 +182,6 @@ bool SymbolTable::check_if_record_is_num_type(SymbolRecord *record) {
         return false;
     return true;
 }
-
 
 bool SymbolTable::check_correct_number_of_array_dimensions(SymbolRecord* found_record, SymbolRecord *record, int number_of_accessed_dimensions) {
     if (found_record->structure_ != "array" && found_record->array_sizes.size() == 0  && number_of_accessed_dimensions > 0) {
@@ -180,6 +213,32 @@ SymbolRecord* find_nested_record(SymbolRecord* record, SymbolRecord* found_recor
 
     }
     return  current_record;
+}
+
+bool SymbolTable::check_if_return_type_is_correct_type(SymbolRecord *func_record, ExpressionTree* expression) {
+    if (!second_pass_)
+        return true;
+    int error_count = errors_.size();
+    check_expression_is_valid(expression);
+
+    if (errors_.size() == error_count && expression->root_node_->record_->kind_ != "ADDOP" && expression->root_node_->record_->kind_ != "MULTIOP" && expression->root_node_->record_->kind_ != "RELOP" ) {
+        SymbolRecord* found_func_record = search(func_record->name_);
+        SymbolRecord* return_record = expression->root_node_->record_;
+        SymbolRecord* found_return_record = return_record;
+
+        if (found_return_record->type_ == "") {
+            found_return_record = search(return_record->name_);
+
+            if (found_return_record->nested_properties_.size() > 0) {
+                found_return_record = find_nested_record(return_record, found_func_record);
+            }
+        }
+
+        if (check_if_matching_types(found_return_record->type_, found_func_record->type_))
+            report_error_to_highest_symbol_table("Error: function " + found_func_record->name_ + " has a return type of " + found_func_record->type_ + " but is returning type " + found_return_record->type_ + ":");
+
+    }
+
 }
 
 bool SymbolTable::check_if_func_exists(SymbolRecord *func_record) {
@@ -228,39 +287,31 @@ bool SymbolTable::check_if_func_exists_and_parameters_are_valid(SymbolRecord *fu
         return true;
     if (check_if_func_exists(func_record)) {
         SymbolRecord* local_record = search(func_record->name_);
-        if (local_record == NULL)
+        if (func_record->nested_properties_.size() > 0)
             local_record = find_nested_record(func_record, local_record);
         if (function_expression_parameters->size() != local_record->function_parameters_.size())
-        report_error_to_highest_symbol_table("Error: " + func_record->name_ + " is being invoked with " + to_string(function_expression_parameters->size()) + " parameters but needs " + to_string(local_record->function_parameters_.size()) + ":");
+            report_error_to_highest_symbol_table("Error: " + func_record->name_ + " is being invoked with " + to_string(function_expression_parameters->size()) + " parameters but needs " + to_string(local_record->function_parameters_.size()) + ":");
+
+        for(int i = 0; i < local_record->function_parameters_.size() && i < function_expression_parameters->size(); i++) {
+            SymbolRecord* current_func_parameter = local_record->symbol_table_->symbol_records_[i];
+            ExpressionTree* current_expression_parameter = function_expression_parameters->at(i);
+
+            if (current_expression_parameter->root_node_->record_->kind_ == "ADDOP" || current_expression_parameter->root_node_->record_->kind_ == "MULTOP") {
+                if (current_func_parameter->type_ != "float" && current_func_parameter->type_ != "int") {
+                    report_error_to_highest_symbol_table("Error: parameter " + current_func_parameter->name_ + " is of type " + current_func_parameter->type_  + " and an arithmetic expression is being passed that evaluates to a int or float:");
+                }
+                check_expression_is_valid(current_expression_parameter);
+            } else {
+                SymbolRecord* current_expression_found_parameter = current_expression_parameter->root_node_->record_;
+
+                if (current_expression_found_parameter->type_ == "")
+                    current_expression_found_parameter = search(current_expression_parameter->root_node_->record_->name_);
+                if (check_if_matching_types(current_expression_found_parameter->type_, current_func_parameter->type_))
+                    report_error_to_highest_symbol_table("Error: parameter " + current_func_parameter->name_ + " is of type " + current_func_parameter->type_ + " but type " + current_expression_found_parameter->type_ + " is being passed on function call " + func_record->name_ +":");
+            }
+
+        }
     }
-
-
-
-
-//            for (int i = 0; i < local_record->function_parameters_.size(); i++) {
-//                if (i == function_expression_parameters->size()) {
-//                    report_error_to_highest_symbol_table("Error: " + func_record->name_ + " is being invoked with only " + to_string(i) + " parameters but needs " + to_string(local_record->function_parameters_.size()) + ":");
-//                    break;
-//                }
-//                string actual_type = local_record->function_parameters_[i];
-//                string received_type = "";
-//                if (func_record->function_parameters_record_[i]->kind_ == "variable") {
-//                    SymbolRecord* found_record = search(func_record->function_parameters_record_[i]->name_);
-//                    if (found_record != NULL) {
-//                        received_type = found_record->type_;
-//                    }
-//                    else {
-//                        received_type = actual_type;
-//                    }
-//                } else
-//                    received_type = func_record->function_parameters_record_[i]->type_;
-//
-//                if (actual_type != received_type && (actual_type != "int" || received_type != "float") && (actual_type != "float" || received_type != "int")) {
-//                    report_error_to_highest_symbol_table("Error: " + func_record->name_ + " " + to_string(i + 1) + " parameter is of type " + actual_type + " but " + received_type + " is being passed:");
-//                }
-//
-//            }
-
     return true;
 }
 
@@ -358,7 +409,6 @@ string SymbolTable::print(bool output_to_console) {
 
 }
 
-
 void SymbolTable::check_for_circular_references(SymbolRecord *record, SymbolRecord *member_record, vector<string> already_checked_types) {
 
     if (find(already_checked_types.begin(), already_checked_types.end(), member_record->type_) != already_checked_types.end())
@@ -378,7 +428,6 @@ void SymbolTable::check_for_circular_references(SymbolRecord *record, SymbolReco
         }
     }
 }
-
 
 bool SymbolTable::check_for_circular_references(SymbolRecord *record) {
     vector<string> already_checked_types;

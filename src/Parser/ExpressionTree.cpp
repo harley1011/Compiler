@@ -194,24 +194,4 @@ string ExpressionTree::post_order_print(ExpressionNode *node) {
         return result + node->record_->type_ + " ";
 }
 
-vector<SymbolRecord *> ExpressionTree::all_identifiers_in_expression() {
-    vector<SymbolRecord*>* identifiers = new vector<SymbolRecord*>;
-    all_identifiers_in_expression(identifiers, root_node_);
-    return (*identifiers);
-}
-
-
-void ExpressionTree::all_identifiers_in_expression(vector<SymbolRecord*>* identifiers, ExpressionNode *node) {
-    if (node == NULL)
-        return;
-
-    all_identifiers_in_expression(identifiers, node->left_tree_);
-    all_identifiers_in_expression(identifiers, node->right_tree_);
-
-    if (node->record_->kind_ == "variable" || node->record_->kind_ == "function")
-        identifiers->push_back(node->record_);
-
-}
-
-
 
