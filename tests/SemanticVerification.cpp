@@ -1276,7 +1276,7 @@ TEST(FuncWithWrongNoOfParametersInProg, SemanticVerification)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
-    EXPECT_EQ(parser.print_semantic_errors(), "Error: funcTest is being invoked with only 2 parameters but needs 3:1:42\n");
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: funcTest is being invoked with 2 parameters but needs 3:1:42\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
     parser.global_symbol_table_->print(true);
@@ -1293,7 +1293,7 @@ TEST(FuncWithWrongNoOfParametersInClassFunc, SemanticVerification)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
-    EXPECT_EQ(parser.print_semantic_errors(), "Error: funcTest is being invoked with only 2 parameters but needs 3:1:58\n");
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: funcTest is being invoked with 2 parameters but needs 3:1:58\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
     parser.global_symbol_table_->print(true);

@@ -91,7 +91,8 @@ string SymbolRecord::generate_nested_properties_string() {
     return nested_property_string;
 }
 
-bool SymbolRecord::add_function_record(SymbolRecord *pRecord) {
-    function_parameters_.push_back(pRecord->name_);
+bool SymbolRecord::add_function_record(SymbolRecord *pRecord, bool second_pass) {
+    if (!second_pass)
+        function_parameters_.push_back(pRecord->name_);
     return true;
 }

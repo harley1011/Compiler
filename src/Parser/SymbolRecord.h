@@ -43,7 +43,7 @@ public:
 
     string type_with_array_dimensions();
 
-    bool add_function_record(SymbolRecord *pRecord);
+    bool add_function_record(SymbolRecord *pRecord, bool second_pass);
 };
 
 

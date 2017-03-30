@@ -884,8 +884,9 @@ bool Parser::fParams(SymbolRecord* record) {
         form_derivation_string("<fParams>", "<type> id <arraySize> <fParamsTail>");
         SymbolRecord* fParam_record = new SymbolRecord();
         fParam_record->symbol_table_->parent_symbol_table_ = global_symbol_table_;
-        if (type(fParam_record) && match("ID") && fParam_record->set_name(get_last_token().lexeme_) && arraySize(fParam_record) && record->symbol_table_->create_parameter_entry(fParam_record) && record->add_function_record(fParam_record) &&
-                fParamsTail(record))
+        if (type(fParam_record) && match("ID") && fParam_record->set_name(get_last_token().lexeme_)
+             && arraySize(fParam_record) && record->symbol_table_->create_parameter_entry(fParam_record) &&
+            fParamsTail(record))
             if (!global_symbol_table_->second_pass_)
                 record->generate_function_type();
             return true;
@@ -903,8 +904,9 @@ bool Parser::fParamsTail(SymbolRecord* record) {
         form_derivation_string("<fParamsTail>", ", <type> id <arraySize> <fParamsTail>");
         SymbolRecord* fParam_record = new SymbolRecord();
         fParam_record->symbol_table_->parent_symbol_table_ = global_symbol_table_;
-        if (match("COM") && type(fParam_record) && match("ID") && fParam_record->set_name(get_last_token().lexeme_) && arraySize(fParam_record) && record->symbol_table_->create_parameter_entry(fParam_record) && record->add_function_record(fParam_record) &&
-             fParamsTail(record))
+        if (match("COM") && type(fParam_record) && match("ID") && fParam_record->set_name(get_last_token().lexeme_) &&
+             arraySize(fParam_record) && record->symbol_table_->create_parameter_entry(fParam_record) &&
+            fParamsTail(record))
             return true;
     } else if (lookahead_ == "CLOSEPARA") { // Follow set
         form_derivation_string("<fParamsTail>", "");
