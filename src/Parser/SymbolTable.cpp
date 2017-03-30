@@ -229,8 +229,11 @@ bool SymbolTable::check_if_return_type_is_correct_type(SymbolRecord *func_record
         if (found_return_record->type_ == "") {
             found_return_record = search(return_record->name_);
 
-            if (found_return_record->nested_properties_.size() > 0) {
-                found_return_record = find_nested_record(return_record, found_func_record);
+            if (found_return_record == NULL)
+                return true;
+
+            if (return_record->nested_properties_.size() > 0) {
+                found_return_record = find_nested_record(return_record, found_return_record);
             }
         }
 
@@ -238,6 +241,7 @@ bool SymbolTable::check_if_return_type_is_correct_type(SymbolRecord *func_record
             report_error_to_highest_symbol_table("Error: function " + found_func_record->name_ + " has a return type of " + found_func_record->type_ + " but is returning type " + found_return_record->type_ + ":");
 
     }
+    return true;
 
 }
 

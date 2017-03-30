@@ -312,14 +312,14 @@ TEST(ReturnUnDefinedClassInClassFuncTest, SemanticTests)
 {
     vector<Token*> tokens;
     Scanner scanner;
-    tokens = scanner.generate_tokens("class Cord { Cordz funcClass(){ return (0); }; }; program { };", false);
+    tokens = scanner.generate_tokens("class Cord { Cordz funcClass(){ Cordz cord; return (cord); }; }; program { };", false);
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
 
     EXPECT_EQ(parser.parse(tokens), true);
-    EXPECT_EQ(parser.semantic_errors_.size(), 1);
-    EXPECT_EQ(parser.print_semantic_errors(), "Error: Cordz is not a valid type:1:29\n");
+    EXPECT_EQ(parser.semantic_errors_.size(), 2);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: Cordz is not a valid type:1:29\nError: Cordz is not a valid type:1:45\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
 
@@ -336,8 +336,8 @@ TEST(ReturnUnDefinedClassInFuncTest, SemanticTests)
     parser.enable_double_pass_parse_ = true;
 
     EXPECT_EQ(parser.parse(tokens), true);
-    EXPECT_EQ(parser.semantic_errors_.size(), 1);
-    EXPECT_EQ(parser.print_semantic_errors(), "Error: Cordz is not a valid type:1:45\n");
+    EXPECT_EQ(parser.semantic_errors_.size(), 2);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: Cordz is not a valid type:1:45\nError: function funcClass has a return type of Cordz but is returning type int:1:58\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
 
@@ -1190,13 +1190,14 @@ TEST(AssignDeclaredClassVarIdClassFunc, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
-    tokens = scanner.generate_tokens("class Util { }; class Func { Util funcTest(int id, int idc) { return (id); }; }; program { Util idx; Func func; idx = func.funcTest(10, 10);}; ", false);
+    tokens = scanner.generate_tokens("class Util { }; class Func { Util funcTest(int id, int idc) { Util util; return (util); }; }; program { Util idx; Func func; idx = func.funcTest(10, 10);}; ", false);
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
+    EXPECT_EQ(parser.print_semantic_errors(), "");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
     parser.global_symbol_table_->print(true);
@@ -1336,7 +1337,7 @@ TEST(FuncWithWrongReturnType, SemanticVerification)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
-    EXPECT_EQ(parser.print_semantic_errors(), "Error: function funcTest has a return type of A but is returning type int;1:96\n");
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: function funcTest has a return type of A but is returning type int:1:96\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
     parser.global_symbol_table_->print(true);
@@ -1353,7 +1354,7 @@ TEST(ClassFuncWithWrongReturnType, SemanticVerification)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
-    EXPECT_EQ(parser.print_semantic_errors(), "Error: function funcTest has a return type of A but is returning type int;1:67\n");
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: function funcTest has a return type of A but is returning type int:1:67\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
     parser.global_symbol_table_->print(true);
