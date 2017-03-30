@@ -90,3 +90,8 @@ string SymbolRecord::generate_nested_properties_string() {
         nested_property_string += "." + property;
     return nested_property_string;
 }
+
+bool SymbolRecord::add_function_record(SymbolRecord *pRecord) {
+    function_parameters_.push_back(pRecord->name_);
+    return true;
+}

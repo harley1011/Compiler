@@ -927,179 +927,179 @@ TEST(FunctionCallWithInvalidExpression, SemanticVerification)
 }
 
 
-TEST(ExpressionTreeSimpleAdd, SemanticVerification)
-{
-    Parser parser = common_setup("10 + 11;", "<arithExpr>");
-    parser.enable_derivation_output_ = false;
-    SymbolRecord *func_record = new SymbolRecord();
-    ExpressionTree* tree = new ExpressionTree();
-    parser.expr(func_record, tree);
-    EXPECT_EQ(tree->post_order_print(), "10 11 ADD ");
-}
-TEST(ExpressionTreeSimpleMulti, SemanticVerification)
-{
-    Parser parser = common_setup("10 * 19;", "<arithExpr>");
-    parser.enable_derivation_output_ = false;
-    SymbolRecord *func_record = new SymbolRecord();
-    ExpressionTree* tree = new ExpressionTree();
-    parser.expr(func_record, tree);
-    EXPECT_EQ(tree->post_order_print(), "10 19 MULTI ");
-}
-
-TEST(ExpressionTreeMultiAndAdd, SemanticVerification)
-{
-    Parser parser = common_setup("10 * 19 + 12;", "<arithExpr>");
-    parser.enable_derivation_output_ = false;
-    SymbolRecord *func_record = new SymbolRecord();
-    ExpressionTree* tree = new ExpressionTree();
-    parser.expr(func_record, tree);
-    EXPECT_EQ(tree->post_order_print(), "10 19 MULTI 12 ADD ");
-}
-TEST(ExpressionTreeMultiAndAddTwo, SemanticVerification)
-{
-    Parser parser = common_setup("10 * 19 + 12 * 5 + 4 * 100 + 12 - 15;", "<arithExpr>");
-    parser.enable_derivation_output_ = false;
-    SymbolRecord *func_record = new SymbolRecord();
-    ExpressionTree* tree = new ExpressionTree();
-    parser.expr(func_record, tree);
-    EXPECT_EQ(tree->post_order_print(), "10 19 MULTI 12 5 MULTI 4 100 MULTI 12 15 SUB ADD ADD ADD ");
-}
-
-TEST(ExpressionTreeExpression, SemanticVerification)
-{
-    Parser parser = common_setup("10 * ( 7 + 5 );", "<arithExpr>");
-    parser.enable_derivation_output_ = false;
-    SymbolRecord *func_record = new SymbolRecord();
-    ExpressionTree* tree = new ExpressionTree();
-    parser.expr(func_record, tree);
-    EXPECT_EQ(tree->post_order_print(), "10 7 5 ADD MULTI ");
-}
-TEST(ExpressionTreeExpressionTwo, SemanticVerification)
-{
-    Parser parser = common_setup("4 + ( 2 * 7 + 5 ) + 99 * 133;", "<arithExpr>");
-    parser.enable_derivation_output_ = false;
-    SymbolRecord *func_record = new SymbolRecord();
-    ExpressionTree* tree = new ExpressionTree();
-    parser.expr(func_record, tree);
-    EXPECT_EQ(tree->post_order_print(), "4 2 7 MULTI 5 ADD 99 133 MULTI ADD ADD ");
-    EXPECT_EQ(tree->calculate_total(), 13190);
-}
-TEST(ExpressionTreeExpressionThree, SemanticVerification)
-{
-    Parser parser = common_setup("3 * 4 + ( 2 * 7 + 5 ) + 99 * 133;", "<arithExpr>");
-    parser.enable_derivation_output_ = false;
-    SymbolRecord *func_record = new SymbolRecord();
-    ExpressionTree* tree = new ExpressionTree();
-    parser.expr(func_record, tree);
-    EXPECT_EQ(tree->post_order_print(), "3 4 MULTI 2 7 MULTI 5 ADD 99 133 MULTI ADD ADD ");
-    EXPECT_EQ(tree->calculate_total(), 13198);
-}
-TEST(ExpressionTreeExpressionFour, SemanticVerification)
-{
-    Parser parser = common_setup("3 * 4 + ( 2 * 7 + 5 ) + 99 * ( 1 + 2 * 6 ) + 133;", "<arithExpr>");
-    parser.enable_derivation_output_ = false;
-    SymbolRecord *func_record = new SymbolRecord();
-    ExpressionTree* tree = new ExpressionTree();
-    parser.expr(func_record, tree);
-    EXPECT_EQ(tree->post_order_print(), "3 4 MULTI 2 7 MULTI 5 ADD 99 1 2 6 MULTI ADD MULTI 133 ADD ADD ADD ");
-    EXPECT_EQ(tree->calculate_total(), 1451);
-}
-
-TEST(ExpressionTreeExpressionFive, SemanticVerification)
-{
-    Parser parser = common_setup("3 * 4 + ( 2 * 7 + 5 * ( 2 + 5));", "<arithExpr>");
-    parser.enable_derivation_output_ = false;
-    SymbolRecord *func_record = new SymbolRecord();
-    ExpressionTree* tree = new ExpressionTree();
-    parser.expr(func_record, tree);
-    EXPECT_EQ(tree->post_order_print(), "3 4 MULTI 2 7 MULTI 5 2 5 ADD MULTI ADD ADD ");
-    EXPECT_EQ(tree->calculate_total(), 61);
-}
-
-TEST(ExpressionTreeExpressionSix, SemanticVerification)
-{
-    Parser parser = common_setup("3 * 4 + ( 2 * 7 + 6 * ( 2 + 5)) + 99 * 133;", "<arithExpr>");
-    parser.enable_derivation_output_ = false;
-    SymbolRecord *func_record = new SymbolRecord();
-    ExpressionTree* tree = new ExpressionTree();
-    parser.expr(func_record, tree);
-    EXPECT_EQ(tree->post_order_print(), "3 4 MULTI 2 7 MULTI 6 2 5 ADD MULTI ADD 99 133 MULTI ADD ADD ");
-    EXPECT_EQ(tree->calculate_total(), 13235);
-}
-TEST(ExpressionTreeExpressionSeven, SemanticVerification)
-{
-    Parser parser = common_setup("3 - 4;", "<arithExpr>");
-    parser.enable_derivation_output_ = false;
-    SymbolRecord *func_record = new SymbolRecord();
-    ExpressionTree* tree = new ExpressionTree();
-    parser.expr(func_record, tree);
-    EXPECT_EQ(tree->post_order_print(), "3 4 SUB ");
-    EXPECT_EQ(tree->calculate_total(), -1);
-}
-TEST(ExpressionTreeExpressionEight, SemanticVerification)
-{
-    Parser parser = common_setup("10 / 5 - 2 + 5;", "<arithExpr>");
-    parser.enable_derivation_output_ = false;
-    SymbolRecord *func_record = new SymbolRecord();
-    ExpressionTree* tree = new ExpressionTree();
-    parser.expr(func_record, tree);
-    EXPECT_EQ(tree->post_order_print(), "10 5 DIV 2 SUB 5 ADD ");
-    EXPECT_EQ(tree->calculate_total(), 5);
-}
-
-TEST(ExpressionTreeExpressionNine, SemanticVerification)
-{
-    Parser parser = common_setup("10 / 5 * 2;", "<arithExpr>");
-    parser.enable_derivation_output_ = false;
-    SymbolRecord *func_record = new SymbolRecord();
-    ExpressionTree* tree = new ExpressionTree();
-    parser.expr(func_record, tree);
-    EXPECT_EQ(tree->post_order_print(), "10 5 DIV 2 MULTI ");
-    EXPECT_EQ(tree->calculate_total(), 4);
-}
-
-TEST(ExpressionTreeExpressionTen, SemanticVerification)
-{
-    Parser parser = common_setup("10 / 5 * 2 - 5 * 5;", "<arithExpr>");
-    parser.enable_derivation_output_ = false;
-    SymbolRecord *func_record = new SymbolRecord();
-    ExpressionTree* tree = new ExpressionTree();
-    parser.expr(func_record, tree);
-    EXPECT_EQ(tree->post_order_print(), "10 5 DIV 2 MULTI 5 5 MULTI SUB ");
-    EXPECT_EQ(tree->calculate_total(), -21);
-}
-
-TEST(ExpressionTreeExpressionEleven, SemanticVerification)
-{
-    Parser parser = common_setup("10 * 50 / 25 * 2 / 2 - 40;", "<arithExpr>");
-    parser.enable_derivation_output_ = false;
-    SymbolRecord *func_record = new SymbolRecord();
-    ExpressionTree* tree = new ExpressionTree();
-    parser.expr(func_record, tree);
-    EXPECT_EQ(tree->post_order_print(), "10 50 25 DIV 2 2 DIV MULTI MULTI 40 SUB ");
-    EXPECT_EQ(tree->calculate_total(), -20);
-}
-
-TEST(ExpressionTreeExpressionTwelve, SemanticVerification)
-{
-    Parser parser = common_setup("10 * 50 / 25 * (2 + 6 + ( 2 + 8) * (2 + 2)) / 2 - 40;", "<arithExpr>");
-    parser.enable_derivation_output_ = false;
-    SymbolRecord *func_record = new SymbolRecord();
-    ExpressionTree* tree = new ExpressionTree();
-    parser.expr(func_record, tree);
-    EXPECT_EQ(tree->post_order_print(), "10 50 25 DIV 2 6 2 8 ADD 2 2 ADD MULTI ADD ADD 2 DIV MULTI MULTI 40 SUB ");
-    EXPECT_EQ(tree->calculate_total(), 440);
-}
-TEST(ExpressionTreeExpressionThirteen, SemanticVerification)
-{
-    Parser parser = common_setup("( 10 ) + 5;", "<arithExpr>");
-    parser.enable_derivation_output_ = false;
-    SymbolRecord *func_record = new SymbolRecord();
-    ExpressionTree* tree = new ExpressionTree();
-    parser.expr(func_record, tree);
-    EXPECT_EQ(tree->post_order_print(), "10 5 ADD ");
-    EXPECT_EQ(tree->calculate_total(), 15);
-}
+//TEST(ExpressionTreeSimpleAdd, SemanticVerification)
+//{
+//    Parser parser = common_setup("10 + 11;", "<arithExpr>");
+//    parser.enable_derivation_output_ = false;
+//    SymbolRecord *func_record = new SymbolRecord();
+//    ExpressionTree* tree = new ExpressionTree();
+//    parser.expr(func_record, tree);
+//    EXPECT_EQ(tree->post_order_print(), "10 11 ADD ");
+//}
+//TEST(ExpressionTreeSimpleMulti, SemanticVerification)
+//{
+//    Parser parser = common_setup("10 * 19;", "<arithExpr>");
+//    parser.enable_derivation_output_ = false;
+//    SymbolRecord *func_record = new SymbolRecord();
+//    ExpressionTree* tree = new ExpressionTree();
+//    parser.expr(func_record, tree);
+//    EXPECT_EQ(tree->post_order_print(), "10 19 MULTI ");
+//}
+//
+//TEST(ExpressionTreeMultiAndAdd, SemanticVerification)
+//{
+//    Parser parser = common_setup("10 * 19 + 12;", "<arithExpr>");
+//    parser.enable_derivation_output_ = false;
+//    SymbolRecord *func_record = new SymbolRecord();
+//    ExpressionTree* tree = new ExpressionTree();
+//    parser.expr(func_record, tree);
+//    EXPECT_EQ(tree->post_order_print(), "10 19 MULTI 12 ADD ");
+//}
+//TEST(ExpressionTreeMultiAndAddTwo, SemanticVerification)
+//{
+//    Parser parser = common_setup("10 * 19 + 12 * 5 + 4 * 100 + 12 - 15;", "<arithExpr>");
+//    parser.enable_derivation_output_ = false;
+//    SymbolRecord *func_record = new SymbolRecord();
+//    ExpressionTree* tree = new ExpressionTree();
+//    parser.expr(func_record, tree);
+//    EXPECT_EQ(tree->post_order_print(), "10 19 MULTI 12 5 MULTI 4 100 MULTI 12 15 SUB ADD ADD ADD ");
+//}
+//
+//TEST(ExpressionTreeExpression, SemanticVerification)
+//{
+//    Parser parser = common_setup("10 * ( 7 + 5 );", "<arithExpr>");
+//    parser.enable_derivation_output_ = false;
+//    SymbolRecord *func_record = new SymbolRecord();
+//    ExpressionTree* tree = new ExpressionTree();
+//    parser.expr(func_record, tree);
+//    EXPECT_EQ(tree->post_order_print(), "10 7 5 ADD MULTI ");
+//}
+//TEST(ExpressionTreeExpressionTwo, SemanticVerification)
+//{
+//    Parser parser = common_setup("4 + ( 2 * 7 + 5 ) + 99 * 133;", "<arithExpr>");
+//    parser.enable_derivation_output_ = false;
+//    SymbolRecord *func_record = new SymbolRecord();
+//    ExpressionTree* tree = new ExpressionTree();
+//    parser.expr(func_record, tree);
+//    EXPECT_EQ(tree->post_order_print(), "4 2 7 MULTI 5 ADD 99 133 MULTI ADD ADD ");
+//    EXPECT_EQ(tree->calculate_total(), 13190);
+//}
+//TEST(ExpressionTreeExpressionThree, SemanticVerification)
+//{
+//    Parser parser = common_setup("3 * 4 + ( 2 * 7 + 5 ) + 99 * 133;", "<arithExpr>");
+//    parser.enable_derivation_output_ = false;
+//    SymbolRecord *func_record = new SymbolRecord();
+//    ExpressionTree* tree = new ExpressionTree();
+//    parser.expr(func_record, tree);
+//    EXPECT_EQ(tree->post_order_print(), "3 4 MULTI 2 7 MULTI 5 ADD 99 133 MULTI ADD ADD ");
+//    EXPECT_EQ(tree->calculate_total(), 13198);
+//}
+//TEST(ExpressionTreeExpressionFour, SemanticVerification)
+//{
+//    Parser parser = common_setup("3 * 4 + ( 2 * 7 + 5 ) + 99 * ( 1 + 2 * 6 ) + 133;", "<arithExpr>");
+//    parser.enable_derivation_output_ = false;
+//    SymbolRecord *func_record = new SymbolRecord();
+//    ExpressionTree* tree = new ExpressionTree();
+//    parser.expr(func_record, tree);
+//    EXPECT_EQ(tree->post_order_print(), "3 4 MULTI 2 7 MULTI 5 ADD 99 1 2 6 MULTI ADD MULTI 133 ADD ADD ADD ");
+//    EXPECT_EQ(tree->calculate_total(), 1451);
+//}
+//
+//TEST(ExpressionTreeExpressionFive, SemanticVerification)
+//{
+//    Parser parser = common_setup("3 * 4 + ( 2 * 7 + 5 * ( 2 + 5));", "<arithExpr>");
+//    parser.enable_derivation_output_ = false;
+//    SymbolRecord *func_record = new SymbolRecord();
+//    ExpressionTree* tree = new ExpressionTree();
+//    parser.expr(func_record, tree);
+//    EXPECT_EQ(tree->post_order_print(), "3 4 MULTI 2 7 MULTI 5 2 5 ADD MULTI ADD ADD ");
+//    EXPECT_EQ(tree->calculate_total(), 61);
+//}
+//
+//TEST(ExpressionTreeExpressionSix, SemanticVerification)
+//{
+//    Parser parser = common_setup("3 * 4 + ( 2 * 7 + 6 * ( 2 + 5)) + 99 * 133;", "<arithExpr>");
+//    parser.enable_derivation_output_ = false;
+//    SymbolRecord *func_record = new SymbolRecord();
+//    ExpressionTree* tree = new ExpressionTree();
+//    parser.expr(func_record, tree);
+//    EXPECT_EQ(tree->post_order_print(), "3 4 MULTI 2 7 MULTI 6 2 5 ADD MULTI ADD 99 133 MULTI ADD ADD ");
+//    EXPECT_EQ(tree->calculate_total(), 13235);
+//}
+//TEST(ExpressionTreeExpressionSeven, SemanticVerification)
+//{
+//    Parser parser = common_setup("3 - 4;", "<arithExpr>");
+//    parser.enable_derivation_output_ = false;
+//    SymbolRecord *func_record = new SymbolRecord();
+//    ExpressionTree* tree = new ExpressionTree();
+//    parser.expr(func_record, tree);
+//    EXPECT_EQ(tree->post_order_print(), "3 4 SUB ");
+//    EXPECT_EQ(tree->calculate_total(), -1);
+//}
+//TEST(ExpressionTreeExpressionEight, SemanticVerification)
+//{
+//    Parser parser = common_setup("10 / 5 - 2 + 5;", "<arithExpr>");
+//    parser.enable_derivation_output_ = false;
+//    SymbolRecord *func_record = new SymbolRecord();
+//    ExpressionTree* tree = new ExpressionTree();
+//    parser.expr(func_record, tree);
+//    EXPECT_EQ(tree->post_order_print(), "10 5 DIV 2 SUB 5 ADD ");
+//    EXPECT_EQ(tree->calculate_total(), 5);
+//}
+//
+//TEST(ExpressionTreeExpressionNine, SemanticVerification)
+//{
+//    Parser parser = common_setup("10 / 5 * 2;", "<arithExpr>");
+//    parser.enable_derivation_output_ = false;
+//    SymbolRecord *func_record = new SymbolRecord();
+//    ExpressionTree* tree = new ExpressionTree();
+//    parser.expr(func_record, tree);
+//    EXPECT_EQ(tree->post_order_print(), "10 5 DIV 2 MULTI ");
+//    EXPECT_EQ(tree->calculate_total(), 4);
+//}
+//
+//TEST(ExpressionTreeExpressionTen, SemanticVerification)
+//{
+//    Parser parser = common_setup("10 / 5 * 2 - 5 * 5;", "<arithExpr>");
+//    parser.enable_derivation_output_ = false;
+//    SymbolRecord *func_record = new SymbolRecord();
+//    ExpressionTree* tree = new ExpressionTree();
+//    parser.expr(func_record, tree);
+//    EXPECT_EQ(tree->post_order_print(), "10 5 DIV 2 MULTI 5 5 MULTI SUB ");
+//    EXPECT_EQ(tree->calculate_total(), -21);
+//}
+//
+//TEST(ExpressionTreeExpressionEleven, SemanticVerification)
+//{
+//    Parser parser = common_setup("10 * 50 / 25 * 2 / 2 - 40;", "<arithExpr>");
+//    parser.enable_derivation_output_ = false;
+//    SymbolRecord *func_record = new SymbolRecord();
+//    ExpressionTree* tree = new ExpressionTree();
+//    parser.expr(func_record, tree);
+//    EXPECT_EQ(tree->post_order_print(), "10 50 25 DIV 2 2 DIV MULTI MULTI 40 SUB ");
+//    EXPECT_EQ(tree->calculate_total(), -20);
+//}
+//
+//TEST(ExpressionTreeExpressionTwelve, SemanticVerification)
+//{
+//    Parser parser = common_setup("10 * 50 / 25 * (2 + 6 + ( 2 + 8) * (2 + 2)) / 2 - 40;", "<arithExpr>");
+//    parser.enable_derivation_output_ = false;
+//    SymbolRecord *func_record = new SymbolRecord();
+//    ExpressionTree* tree = new ExpressionTree();
+//    parser.expr(func_record, tree);
+//    EXPECT_EQ(tree->post_order_print(), "10 50 25 DIV 2 6 2 8 ADD 2 2 ADD MULTI ADD ADD 2 DIV MULTI MULTI 40 SUB ");
+//    EXPECT_EQ(tree->calculate_total(), 440);
+//}
+//TEST(ExpressionTreeExpressionThirteen, SemanticVerification)
+//{
+//    Parser parser = common_setup("( 10 ) + 5;", "<arithExpr>");
+//    parser.enable_derivation_output_ = false;
+//    SymbolRecord *func_record = new SymbolRecord();
+//    ExpressionTree* tree = new ExpressionTree();
+//    parser.expr(func_record, tree);
+//    EXPECT_EQ(tree->post_order_print(), "10 5 ADD ");
+//    EXPECT_EQ(tree->calculate_total(), 15);
+//}
 // ----------------------------------------------------------------------------------------------------------------
 // type checking of an assignment statement
 

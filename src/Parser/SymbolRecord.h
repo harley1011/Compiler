@@ -42,6 +42,8 @@ public:
     bool add_nested_property(string property);
 
     string type_with_array_dimensions();
+
+    bool add_function_record(SymbolRecord *pRecord);
 };
 
 

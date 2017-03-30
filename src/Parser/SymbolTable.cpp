@@ -140,7 +140,6 @@ bool SymbolTable::check_expression_tree_for_correct_type(SymbolRecord *variable_
 }
 
 bool SymbolTable::check_if_record_is_num_type(SymbolRecord *record) {
-
     if (record == NULL)
         return true;
 
@@ -228,7 +227,11 @@ bool SymbolTable::check_if_func_exists_and_parameters_are_valid(SymbolRecord *fu
     if (!second_pass_)
         return true;
     if (check_if_func_exists(func_record)) {
-
+        SymbolRecord* local_record = search(func_record->name_);
+        if (local_record == NULL)
+            local_record = find_nested_record(func_record, local_record);
+        if (function_expression_parameters->size() != local_record->function_parameters_.size())
+        report_error_to_highest_symbol_table("Error: " + func_record->name_ + " is being invoked with " + to_string(function_expression_parameters->size()) + " parameters but needs " + to_string(local_record->function_parameters_.size()) + ":");
     }
 
 
