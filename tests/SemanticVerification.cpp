@@ -909,22 +909,22 @@ TEST(AssignIntVariableWithWrongIdentifier, SemanticVerification)
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
     parser.global_symbol_table_->print(true);
 }
-TEST(FunctionCallWithInvalidExpression, SemanticVerification)
-{
-    vector<Token*> tokens;
-    Scanner scanner;
-    tokens = scanner.generate_tokens("class A { }; class B { A testFunc() { A a; return (a); }; }; program { B b; int x; x = funcTest(b.testFunc * 5); }; int funcTest(int x) { return (x); };", false);
-
-    Parser parser;
-    parser.enable_double_pass_parse_ = true;
-
-    EXPECT_EQ(parser.parse(tokens), true);
-    EXPECT_EQ(parser.semantic_errors_.size(), 1);
-    EXPECT_EQ(parser.print_semantic_errors(), "Error: can't perform arithmetic operations with variable b.testFunc that is not of type int or float:1:102\n");
-
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 4);
-    parser.global_symbol_table_->print(true);
-}
+//TEST(FunctionCallWithInvalidExpression, SemanticVerification)
+//{
+//    vector<Token*> tokens;
+//    Scanner scanner;
+//    tokens = scanner.generate_tokens("class A { }; class B { A testFunc() { A a; return (a); }; }; program { B b; int x; x = funcTest(b.testFunc * 5); }; int funcTest(int x) { return (x); };", false);
+//
+//    Parser parser;
+//    parser.enable_double_pass_parse_ = true;
+//
+//    EXPECT_EQ(parser.parse(tokens), true);
+//    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+//    EXPECT_EQ(parser.print_semantic_errors(), "Error: can't perform arithmetic operations with variable b.testFunc that is not of type int or float:1:102\n");
+//
+//    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 4);
+//    parser.global_symbol_table_->print(true);
+//}
 
 
 //TEST(ExpressionTreeSimpleAdd, SemanticVerification)
