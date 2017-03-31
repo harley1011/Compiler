@@ -71,11 +71,11 @@ bool SymbolTable::check_expression_is_valid(ExpressionTree *tree) {
         ExpressionNode* right_expression = tree->root_node_->right_tree_;
 
         if (check_valid_relational_expression(left_expression) && check_valid_relational_expression(right_expression))
-            get_code_generator()->create_expression_code(tree);
+            get_code_generator()->create_relational_expression_code(tree);
 
     } else if (tree->root_node_->record_->kind_ == "ADDOP" || tree->root_node_->record_->kind_ == "MULTOP") {
         check_valid_arithmetic_expression(tree->root_node_);
-        get_code_generator()->create_expression_code(tree);
+        get_code_generator()->create_expression_code(tree->root_node_);
     }
     return true;
 }
@@ -92,6 +92,7 @@ bool SymbolTable::check_valid_relational_expression(ExpressionNode *expression) 
                     report_error_to_highest_symbol_table("Error: variable " + current_found_record->name_ + " of type " + current_found_record->type_ + " can't be in a relational expression it needs to be of type int or float:");
             }
         }
+    return true;
 }
 
 bool SymbolTable::check_valid_arithmetic_expression(ExpressionNode *node) {

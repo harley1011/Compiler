@@ -19,7 +19,7 @@ public:
     bool in_para_;
 
     vector<SymbolRecord *> all_identifiers_in_expression();
-    void generate_queue(ExpressionNode *node, stack<SymbolRecord*>* queue)
+    void generate_queue(ExpressionNode *node, stack<SymbolRecord*>* queue);
     void all_identifiers_in_expression(vector<SymbolRecord*>* identifiers, ExpressionNode *node);
 
 };

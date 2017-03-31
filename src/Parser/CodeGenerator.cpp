@@ -39,10 +39,24 @@ bool CodeGenerator::create_program_halt(bool double_pass) {
 }
 void CodeGenerator::create_relational_expression_code(ExpressionTree * expression) {
     ExpressionNode* left_expression = expression->root_node_->left_tree_;
-    create_expression_code();
+    create_expression_code(left_expression);
     code_generation_.push_back("addi r2,r1,r0");
     ExpressionNode* right_expression = expression->root_node_->right_tree_;
     create_expression_code(right_expression);
+    string operator_type = expression->root_node_->record_->type_;
+    if (operator_type == "EQUIV") {
+        code_generation_.push_back("ceq r1,r1,r2");
+    } else if (operator_type == "NOTEQ") {
+        code_generation_.push_back("cne r1,r1,r2");
+    } if (operator_type == "LT") {
+        code_generation_.push_back("cle r1,r1,r2");
+    } if (operator_type == "GT") {
+        code_generation_.push_back("cgt r1,r1,r2");
+    } if (operator_type == "LTEQ") {
+        code_generation_.push_back("cle r1,r1,r2");
+     }if (operator_type == "GTEQ") {
+        code_generation_.push_back("cge r1,r1,r2");
+    }
 
 
 }
@@ -75,13 +89,15 @@ void CodeGenerator::create_expression_code(ExpressionNode *expression) {
             if (operator_type == "MULTI") {
                 code_generation_.push_back("mult r1,r1,r2");
             } else if (operator_type == "DIV") {
-
+                code_generation_.push_back("div r1,r1,r2");
             } else if (operator_type == "AND") {
+                code_generation_.push_back("and r1,r1,r2");
             } else if (operator_type == "ADD") {
                 code_generation_.push_back("add r1,r1,r2");
             } else if (operator_type == "SUB") {
                 code_generation_.push_back("sub r1,r1,r2");
             } else if (operator_type == "OR") {
+                code_generation_.push_back("or r1,r1,r2");
 
             }
 
