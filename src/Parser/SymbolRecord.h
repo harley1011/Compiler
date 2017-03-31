@@ -41,6 +41,8 @@ public:
 
     bool add_nested_property(string property);
 
+    int compute_class_byte_size();
+
     string type_with_array_dimensions();
 
     bool add_function_record(SymbolRecord *pRecord, bool second_pass);

@@ -68,11 +68,12 @@ bool SymbolTable::check_expression_is_valid(ExpressionTree *tree) {
         ExpressionNode* left_expression = tree->root_node_->left_tree_;
         ExpressionNode* right_expression = tree->root_node_->right_tree_;
 
-        check_valid_relational_expression(left_expression);
-        check_valid_relational_expression(right_expression);
+        if (check_valid_relational_expression(left_expression) && check_valid_relational_expression(right_expression))
+            get_code_generator()->create_expression_code(tree);
 
     } else if (tree->root_node_->record_->kind_ == "ADDOP" || tree->root_node_->record_->kind_ == "MULTOP") {
         check_valid_arithmetic_expression(tree->root_node_);
+        get_code_generator()->create_expression_code(tree);
     }
     return true;
 }
@@ -148,6 +149,10 @@ bool SymbolTable::check_expression_tree_for_correct_type(SymbolRecord *variable_
         if (variable_property != assign_record->type_ && (assign_record->type_ == "int" || assign_record->type_ == "float")) {
             report_error_to_highest_symbol_table("Error: can't assign variable " + record->name_ + " a value of type " + assign_record->type_ + " it needs type " + record->type_ + ":");
         } else {
+            if (assign_record->kind_ != "variable") {
+
+            }
+
             SymbolRecord *found_assign_record;
             found_assign_record = search(assign_record->name_);
 
@@ -161,9 +166,11 @@ bool SymbolTable::check_expression_tree_for_correct_type(SymbolRecord *variable_
                             "Error: can't assign variable " + record->name_ + " a value of type " +
                             found_assign_record->type_ + " it needs type " + record->type_ + ":");
                 else
-                    get_code_generator()->create_variable_assignment_code(record, found_assign_record);
+                    get_code_generator()->create_variable_assignment_with_variable_code(record, found_assign_record);
 
             }
+            else
+                get_code_generator()->create_variable_assignment_with_variable_code(record, assign_record);
         }
     }
 
@@ -460,8 +467,8 @@ bool SymbolTable::create_variable_entry(SymbolRecord** record) {
         delete (*record);
         (*record) = found_record;
         set_properly_declared((*record));
-
-        get_code_generator()->create_variable_code(record);
+        if (symbol_record_->name_ == "program")
+            get_code_generator()->create_variable_code(record);
         return true;
     }
 
@@ -529,11 +536,11 @@ void determine_record_fields(SymbolRecord* record) {
     if (record->type_ == "int" || record->type_ == "float") {
         if (record->array_sizes.size() > 0) {
             record->properly_declared_ = true;
-            record->set_structure("array");
+            record->structure_ = "array";
         }
         else {
             record->properly_declared_ = true;
-            record->set_structure("simple");
+            record->structure_ = "simple";
         }
     }
     else {

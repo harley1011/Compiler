@@ -96,3 +96,19 @@ bool SymbolRecord::add_function_record(SymbolRecord *pRecord, bool second_pass) 
         function_parameters_.push_back(pRecord->name_);
     return true;
 }
+
+int SymbolRecord::compute_class_byte_size() {
+    int size = 0;
+    for(SymbolRecord* record: symbol_table_->symbol_records_) {
+        if (record->type_ == "int" || record->type_ == "float") {
+            if (record->array_sizes.size() > 0) {
+                for(int i : record->array_sizes)
+                    size += i;
+            } else
+                size++;
+        }
+        else
+            size += record->compute_class_byte_size();
+    }
+    return size;
+}

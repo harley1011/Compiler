@@ -7,7 +7,7 @@
 #include "gtest/gtest.h"
 #include "../src/Parser/Parser.h"
 
-//memory allocation: int and float variable declarations
+
 
 
 #endif //COMPILER_CODEGENERATIONTESTS_H
