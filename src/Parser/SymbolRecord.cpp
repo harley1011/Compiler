@@ -110,5 +110,11 @@ int SymbolRecord::compute_class_byte_size() {
         else
             size += record->compute_class_byte_size();
     }
-    return size;
+    return size * 8;
+}
+int SymbolRecord::compute_array_size() {
+    int size = 0;
+    for (int i : array_sizes)
+        size += i;
+    return size * 8;
 }

@@ -23,8 +23,10 @@ bool SymbolTable::check_if_assign_variable_exist(SymbolRecord *record) {
             report_error_to_highest_symbol_table("Error: " + record->name_ + " variable is being used without being declared:");
         } else if (record->nested_properties_.size() > 0 ) {
             check_nested_property(record, found_record);
+            record->address = found_record->address;
         } else {
             check_correct_number_of_array_dimensions(found_record, record, record->nested_properties_dimensions_[found_record->name_]);
+            record->address = found_record->address;
         }
     }
     return true;

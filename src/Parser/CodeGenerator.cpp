@@ -6,7 +6,7 @@
 #include "SymbolTable.h"
 
 CodeGenerator::CodeGenerator() {
-
+    current_stack_address_ = 0;
 }
 
 
@@ -14,7 +14,7 @@ void CodeGenerator::create_variable_code(SymbolRecord **record) {
     SymbolRecord* local_record = (*record);
     string code_variable_name = local_record->name_ + "_" + local_record->symbol_table_->parent_symbol_table_->symbol_record_->name_;
     if (local_record->array_sizes.size() > 0)
-        variable_declaration_generation_.push_back(code_variable_name + " res " + to_string(local_record->array_sizes.size()));
+        variable_declaration_generation_.push_back(code_variable_name + " res " + to_string(local_record->compute_array_size()));
     else if (local_record->structure_ == "class" || local_record->structure_ == "class array") {
         SymbolRecord* found_record = local_record->symbol_table_->search(local_record->type_);
         variable_declaration_generation_.push_back(
@@ -60,31 +60,50 @@ void CodeGenerator::create_expression_code(ExpressionTree * expression) {
             SymbolRecord* second_record = tmp_post_fix_queue->top();
             tmp_post_fix_queue->pop();
 
-            if (first_record->type_ == "int") {
-
-            }
-
+            load_record_into_register(first_record, "r1");
+            load_record_into_register(second_record, "r2");
 
             if (operator_type == "MULTI") {
-
+                code_generation_.push_back("mult r1,r1,r2");
             } else if (operator_type == "DIV") {
 
             } else if (operator_type == "AND") {
-
             } else if (operator_type == "ADD") {
-
+                code_generation_.push_back("add r1,r1,r2");
             } else if (operator_type == "SUB") {
-
+                code_generation_.push_back("sub r1,r1,r2");
             } else if (operator_type == "OR") {
 
             }
+
+            code_generation_.push_back("addi r2,r0," + to_string(current_stack_address_));
+            code_generation_.push_back("sw topaddr(r2),r1");
+            SymbolRecord* record = new SymbolRecord();
+            record->address = to_string(current_stack_address_);
+            record->kind_ = "stack_variable";
+            tmp_post_fix_queue->push(record);
+            current_stack_address_+= 32;
         }
-        tmp_post_fix_queue->push(first_record);
+        else
+            tmp_post_fix_queue->push(first_record);
 
     }
-    SymbolRecord* return_record = tmp_post_fix_queue->top();
+    load_record_into_register(tmp_post_fix_queue->top(), "r1");
     delete tmp_post_fix_queue;
     delete post_fix_queue;
+}
+
+void CodeGenerator::load_record_into_register(SymbolRecord *record, string reg) {
+    if (record->kind_ == "")
+        code_generation_.push_back("addi " + reg + ",r0," + to_string(record->integer_value_));
+    else if (record->kind_ == "stack_variable") {
+        code_generation_.push_back("addi r3,r0," + record->address);
+        code_generation_.push_back("lw " + reg + ",topaddr(r3)");
+        current_stack_address_ -= 32;
+    }
+    else {
+        code_generation_.push_back("lw " + reg + "," + record->address + "(r0)");
+    }
 }
 
 void CodeGenerator::create_variable_assignment_with_variable_code(SymbolRecord *variable_record,
@@ -95,7 +114,7 @@ void CodeGenerator::create_variable_assignment_with_variable_code(SymbolRecord *
     if (assign_record->kind_ == "variable")
         code_generation_.push_back("lw r1," + assign_record->address + "(r0)");
     else if (assign_record->type_ == "int")
-        code_generation_.push_back("lw r1," + to_string(assign_record->integer_value_));
+        code_generation_.push_back("addi r1,r0," + to_string(assign_record->integer_value_));
 
     code_generation_.push_back("sw " + variable_record_address + "(r0),r1");
 

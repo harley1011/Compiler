@@ -13,6 +13,8 @@ class CodeGenerator {
 
 
 public:
+    int current_stack_address_;
+
     CodeGenerator();
     vector<string> code_generation_;
     vector<string> variable_declaration_generation_;
@@ -28,6 +30,7 @@ public:
 
     bool create_program_halt(bool double_pass);
 
+    void load_record_into_register(SymbolRecord *record, string reg);
 };
 
 
