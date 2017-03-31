@@ -25,6 +25,7 @@ public:
     Parser(string derivation_output_path, string syntax_error_output_path);
 
     SymbolTable *global_symbol_table_;
+    CodeGenerator* code_generator_;
 
     bool enable_double_pass_parse_;
     string current_rhs_derivation_;
@@ -32,6 +33,7 @@ public:
     vector<string> syntax_errors;
     vector<string> semantic_errors_;
     vector<string> derivations_;
+
     Token*   current_token_;
     vector<Token*> tokens_;
     int current_token_position_;

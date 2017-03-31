@@ -1,6 +1,7 @@
 #include <vector>
 #include "SymbolRecord.h"
 #include "ExpressionTree.h"
+#include "CodeGenerator.h"
 
 #ifndef COMPILER_SYMBOLTABLE_H
 #define COMPILER_SYMBOLTABLE_H
@@ -15,7 +16,9 @@ public:
     vector<string> errors_;
     vector<SymbolRecord*> symbol_records_;
     SymbolTable* parent_symbol_table_;
+    SymbolRecord* symbol_record_;
     SymbolRecord* current_symbol_record_;
+    CodeGenerator* code_generator_;
 
     SymbolTable();
     bool create_class_entry_and_table(string kind, string type, string name);
@@ -72,6 +75,8 @@ public:
     bool check_valid_relational_expression(ExpressionNode *expression);
 
     bool check_if_matching_types(string variable_property, string assign_type);
+
+    CodeGenerator *get_code_generator();
 };
 
 

@@ -65,6 +65,8 @@ bool Parser::parse(vector<Token*> tokens) {
     tokens_ = tokens;
     next_token();
     global_symbol_table_->second_pass_ = false;
+    global_symbol_table_->code_generator_ = new CodeGenerator();
+    code_generator_ = global_symbol_table_->code_generator_;
     if (output_to_file_) {
         syntax_error_output_file_.open(syntax_error_output_path_);
         derivation_output_file_.open(derivation_output_path_);
@@ -102,9 +104,18 @@ bool Parser::parse(vector<Token*> tokens) {
         syntax_error_output_file_.close();
         derivation_output_file_.close();
     }
+    if (syntax_errors.size() == 0 && semantic_errors_.size() == 0) {
+        ofstream program_out;
+        program_out.open("C:\\Users\\Harley\\Desktop\\moon\\program_out.m");
+
+        program_out << code_generator_->generate_variable_declaration();
+        program_out << code_generator_->generate_code();
+
+    }
     if (syntax_errors.size() > 1) {
         return false;
     }
+
 
     return result;
 }
@@ -210,7 +221,7 @@ bool Parser::progBody() {
         return false;
     if (lookahead_ == "PROGRAM") {
         form_derivation_string("<progBody>", "program <funcBody> ; <funcDefLst>");
-        if (match("PROGRAM") && global_symbol_table_->create_program_entry_and_table() && funcBody(global_symbol_table_->current_symbol_record_) && match("DELI") && funcDefLst())
+        if (match("PROGRAM") && global_symbol_table_->create_program_entry_and_table() && funcBody(global_symbol_table_->current_symbol_record_) && code_generator_->create_program_halt(global_symbol_table_->second_pass_) && match("DELI") && funcDefLst())
             return true;
     }
     return false;

@@ -13,6 +13,7 @@ void determine_record_fields(SymbolRecord* record);
 SymbolTable::SymbolTable() {
     second_pass_ = false;
     parent_symbol_table_ = NULL;
+    code_generator_ = NULL;
 }
 
 bool SymbolTable::check_if_assign_variable_exist(SymbolRecord *record) {
@@ -113,7 +114,6 @@ bool SymbolTable::check_valid_arithmetic_expression(ExpressionNode *node) {
     return true;
 }
 
-
 bool SymbolTable::check_expression_tree_for_correct_type(SymbolRecord *variable_record, ExpressionTree *tree) {
     if (!second_pass_) {
         return true;
@@ -160,6 +160,9 @@ bool SymbolTable::check_expression_tree_for_correct_type(SymbolRecord *variable_
                     report_error_to_highest_symbol_table(
                             "Error: can't assign variable " + record->name_ + " a value of type " +
                             found_assign_record->type_ + " it needs type " + record->type_ + ":");
+                else
+                    get_code_generator()->create_variable_assignment_code(record, found_assign_record);
+
             }
         }
     }
@@ -335,6 +338,7 @@ bool SymbolTable::create_class_entry_and_table(string kind, string type, string 
     }
 
     record = new SymbolRecord(kind, type, name);
+    record->symbol_table_->symbol_record_ = record;
     record->structure_ = "class";
     current_symbol_record_ = record;
     record->properly_declared_ = false;
@@ -348,9 +352,11 @@ bool SymbolTable::create_program_entry_and_table() {
     {
         record = search("program");
         current_symbol_record_ = record;
+        get_code_generator()->create_program_entry(&record);
         return true;
     }
     record = new SymbolRecord();
+    record->symbol_table_->symbol_record_ = record;
     record->kind_ = "function";
     record->name_ = "program";
     current_symbol_record_ = record;
@@ -386,6 +392,7 @@ bool SymbolTable::create_function_entry_and_table(SymbolRecord** record) {
     }
     (*record)->kind_ = "function";
     current_symbol_record_ = (*record);
+    (*record)->symbol_table_->symbol_record_ = (*record);
     if ((*record)->type_.substr(0,3) == "int" || (*record)->type_.substr(0, 5) == "float") {
         if (((*record)->type_.size() > 3 && ((*record) ->type_.substr(3,1) == "[" || (*record) ->type_.substr(3,1) == " "))
             || (*record)->type_.size() > 5 && ((*record)->type_.substr(5,1) == "[" || (*record)->type_.substr(5,1) == " " ) ) {
@@ -453,6 +460,8 @@ bool SymbolTable::create_variable_entry(SymbolRecord** record) {
         delete (*record);
         (*record) = found_record;
         set_properly_declared((*record));
+
+        get_code_generator()->create_variable_code(record);
         return true;
     }
 
@@ -460,6 +469,12 @@ bool SymbolTable::create_variable_entry(SymbolRecord** record) {
     determine_record_fields(*record);
     insert(*record);
     return true;
+}
+
+CodeGenerator* SymbolTable::get_code_generator() {
+    if (code_generator_ == NULL)
+        return parent_symbol_table_->get_code_generator();
+    return code_generator_;
 }
 
 bool SymbolTable::create_function_class_entry_and_function_table(SymbolRecord **record) {
@@ -473,6 +488,7 @@ bool SymbolTable::create_function_class_entry_and_function_table(SymbolRecord **
     }
     (*record)->kind_ = "function";
     (*record)->symbol_table_->parent_symbol_table_ = this;
+    (*record)->symbol_table_->symbol_record_ = (*record);
     if ((*record)->type_.substr(0,3) == "int" || (*record)->type_.substr(0, 5) == "float") {
         if (((*record)->type_.size() > 3 && (*record) ->type_.substr(3,1) == "[") || (*record)->type_.size() > 5 && (*record)->type_.substr(5,1) == "[" ) {
             (*record)->properly_declared_ = true;
