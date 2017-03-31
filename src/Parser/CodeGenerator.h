@@ -23,14 +23,17 @@ public:
     string generate_variable_declaration();
 
     void create_program_entry(SymbolRecord **record);
-    void create_expression_code(ExpressionTree* expression);
+    void create_expression_code(ExpressionNode *expression);
     void create_variable_assignment_with_variable_code(SymbolRecord *variable_record, SymbolRecord *assign_record);
     void create_variable_assignment_with_value_code(SymbolRecord *variable_record, SymbolRecord *assign_record);
+    void create_variable_assignment_with_register_code(SymbolRecord *variable_record, string reg);
     string generate_code();
 
     bool create_program_halt(bool double_pass);
 
     void load_record_into_register(SymbolRecord *record, string reg);
+
+    void create_relational_expression_code(ExpressionTree *expression);
 };
 
 

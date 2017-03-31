@@ -122,34 +122,36 @@ bool SymbolTable::check_expression_tree_for_correct_type(SymbolRecord *variable_
         return true;
     }
     string variable_property;
-    SymbolRecord* record = search(variable_record->name_);
-    if (record == NULL) {
+    SymbolRecord* found_variable_record = search(variable_record->name_);
+    if (found_variable_record == NULL) {
         report_error_to_highest_symbol_table("Error: " + variable_record->name_ + " variable is being used without being declared:");
     } else {
-        variable_property = record->type_;
+        variable_property = found_variable_record->type_;
         if (variable_record->nested_properties_.size() > 0) {
-            SymbolRecord* nested_variable = check_nested_property(variable_record, record);
+            SymbolRecord* nested_variable = check_nested_property(variable_record, found_variable_record);
             if (nested_variable == NULL)
                 return true;
             else
                 variable_property = nested_variable->type_;
         } else {
-            check_correct_number_of_array_dimensions(record, variable_record, variable_record->nested_properties_dimensions_[variable_record->name_]);
+            check_correct_number_of_array_dimensions(found_variable_record, variable_record, variable_record->nested_properties_dimensions_[variable_record->name_]);
         }
     }
 
     if (tree->root_node_->record_->kind_ == "ADDOP" || tree->root_node_->record_->kind_ == "MULTOP" || tree->root_node_->record_->kind_ == "RELOP") {
 
-        if (record->type_ != "float" && record->type_ != "int") {
-            report_error_to_highest_symbol_table("Error: can't assign variable " + record->name_ + " of type " + record->type_  + " an arithmetic expression, it must be of type int or float:");
+        if (found_variable_record->type_ != "float" && found_variable_record->type_ != "int") {
+            report_error_to_highest_symbol_table("Error: can't assign variable " + found_variable_record->name_ + " of type " + found_variable_record->type_  + " an arithmetic expression, it must be of type int or float:");
         }
         check_expression_is_valid(tree);
+        get_code_generator()->create_variable_assignment_with_register_code(found_variable_record, "r1");
+
     }
-    else if (record != NULL) {
+    else if (found_variable_record != NULL) {
         SymbolRecord* assign_record = tree->root_node_->record_;
 
         if (variable_property != assign_record->type_ && (assign_record->type_ == "int" || assign_record->type_ == "float")) {
-            report_error_to_highest_symbol_table("Error: can't assign variable " + record->name_ + " a value of type " + assign_record->type_ + " it needs type " + record->type_ + ":");
+            report_error_to_highest_symbol_table("Error: can't assign variable " + found_variable_record->name_ + " a value of type " + assign_record->type_ + " it needs type " + found_variable_record->type_ + ":");
         } else {
             if (assign_record->kind_ != "variable") {
 
@@ -165,14 +167,14 @@ bool SymbolTable::check_expression_tree_for_correct_type(SymbolRecord *variable_
                 string assign_type = found_assign_record->type_;
                 if (check_if_matching_types(variable_property, assign_type))
                     report_error_to_highest_symbol_table(
-                            "Error: can't assign variable " + record->name_ + " a value of type " +
-                            found_assign_record->type_ + " it needs type " + record->type_ + ":");
+                            "Error: can't assign variable " + found_variable_record->name_ + " a value of type " +
+                            found_assign_record->type_ + " it needs type " + found_variable_record->type_ + ":");
                 else
-                    get_code_generator()->create_variable_assignment_with_variable_code(record, found_assign_record);
+                    get_code_generator()->create_variable_assignment_with_variable_code(found_variable_record, found_assign_record);
 
             }
             else
-                get_code_generator()->create_variable_assignment_with_variable_code(record, assign_record);
+                get_code_generator()->create_variable_assignment_with_variable_code(found_variable_record, assign_record);
         }
     }
 

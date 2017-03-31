@@ -2,6 +2,7 @@
 // Created by Harley on 3/26/2017.
 //
 #include "SymbolRecord.h"
+#include <stack>
 #ifndef COMPILER_NODEEXPRESSION_H
 #define COMPILER_NODEEXPRESSION_H
 
@@ -18,7 +19,7 @@ public:
     bool in_para_;
 
     vector<SymbolRecord *> all_identifiers_in_expression();
-
+    void generate_queue(ExpressionNode *node, stack<SymbolRecord*>* queue)
     void all_identifiers_in_expression(vector<SymbolRecord*>* identifiers, ExpressionNode *node);
 
 };

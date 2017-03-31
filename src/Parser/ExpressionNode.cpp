@@ -25,7 +25,18 @@ vector<SymbolRecord *> ExpressionNode::all_identifiers_in_expression() {
     all_identifiers_in_expression(identifiers, this);
     return (*identifiers);
 }
+void ExpressionNode::generate_queue(ExpressionNode *node, stack<SymbolRecord*>* queue) {
+    if (node == NULL)
+        return;
 
+    generate_queue(node->left_tree_, queue);
+    generate_queue(node->right_tree_, queue);
+
+    if (node->record_ == NULL )
+        return;
+    queue->push(node->record_);
+
+}
 
 void ExpressionNode::all_identifiers_in_expression(vector<SymbolRecord*>* identifiers, ExpressionNode *node) {
     if (node == NULL)

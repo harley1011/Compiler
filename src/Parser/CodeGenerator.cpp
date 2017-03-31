@@ -37,11 +37,20 @@ bool CodeGenerator::create_program_halt(bool double_pass) {
     return true;
 
 }
+void CodeGenerator::create_relational_expression_code(ExpressionTree * expression) {
+    ExpressionNode* left_expression = expression->root_node_->left_tree_;
+    create_expression_code();
+    code_generation_.push_back("addi r2,r1,r0");
+    ExpressionNode* right_expression = expression->root_node_->right_tree_;
+    create_expression_code(right_expression);
 
-void CodeGenerator::create_expression_code(ExpressionTree * expression) {
+
+}
+
+void CodeGenerator::create_expression_code(ExpressionNode *expression) {
 
     stack<SymbolRecord*>* tmp_post_fix_queue = new stack<SymbolRecord*>;
-    expression->calculate_total(expression->root_node_, tmp_post_fix_queue);
+    expression->generate_queue(expression, tmp_post_fix_queue);
     stack<SymbolRecord*>* post_fix_queue = new stack<SymbolRecord*>;;
 
     while (!tmp_post_fix_queue->empty()) {
@@ -104,6 +113,10 @@ void CodeGenerator::load_record_into_register(SymbolRecord *record, string reg) 
     else {
         code_generation_.push_back("lw " + reg + "," + record->address + "(r0)");
     }
+}
+
+void CodeGenerator::create_variable_assignment_with_register_code(SymbolRecord *variable_record, string reg) {
+    code_generation_.push_back("sw " + variable_record->address + "(r0)," + reg);
 }
 
 void CodeGenerator::create_variable_assignment_with_variable_code(SymbolRecord *variable_record,
