@@ -66,6 +66,7 @@ bool Parser::parse(vector<Token*> tokens) {
     next_token();
     global_symbol_table_->second_pass_ = false;
     global_symbol_table_->code_generator_ = new CodeGenerator();
+    global_symbol_table_->code_generator_->second_pass_ = false;
     code_generator_ = global_symbol_table_->code_generator_;
     if (output_to_file_) {
         syntax_error_output_file_.open(syntax_error_output_path_);
@@ -82,6 +83,7 @@ bool Parser::parse(vector<Token*> tokens) {
     {
         current_token_position_ = 0;
         global_symbol_table_->set_second_pass(true);
+        code_generator_->second_pass_ = true;
         next_token();
         prog();
     }
@@ -106,7 +108,7 @@ bool Parser::parse(vector<Token*> tokens) {
     }
     if (syntax_errors.size() == 0 && semantic_errors_.size() == 0) {
         ofstream program_out;
-        program_out.open("C:\\Users\\Harley\\Desktop\\moon\\program_out.m");
+        program_out.open("program_out.m");
 
         program_out << code_generator_->generate_variable_declaration();
         program_out << code_generator_->generate_code();
@@ -388,8 +390,9 @@ bool Parser::statementRes(SymbolRecord* func_record) {
         form_derivation_string("<statementRes>", "for ( <type> id <assignOp> <expr> ; <relExpr> ; <assignStat> ) <statBlock>");
         SymbolRecord* assign_record = new SymbolRecord(global_symbol_table_->second_pass_);
         if (match("FOR") && match("OPENPARA") && type(*local_record) && match("ID") && (*local_record)->set_name(get_last_token().lexeme_) &&
-                func_record->symbol_table_->create_variable_entry(local_record) && assignOp() && expr(func_record, tree) && match("DELI") && func_record->symbol_table_->check_expression_tree_for_correct_type(*local_record, tree) &&
-            relExpr(func_record) && match("DELI") && assignStat(func_record, assign_record) && match("CLOSEPARA") && statBlock(func_record)) {
+                func_record->symbol_table_->create_variable_entry(local_record) && assignOp() && expr(func_record, tree) && match("DELI") &&
+                func_record->symbol_table_->check_expression_tree_for_correct_type(*local_record, tree) && code_generator_->create_for_loop() &&
+            relExpr(func_record) && code_generator_->create_for_relation_loop() && match("DELI") && assignStat(func_record, assign_record) && match("CLOSEPARA") && statBlock(func_record) && code_generator_->create_end_for_loop()) {
             return true;
         }
     } else if (lookahead_ == "GET") {
@@ -399,7 +402,7 @@ bool Parser::statementRes(SymbolRecord* func_record) {
         }
     } else if (lookahead_ == "PUT") {
         form_derivation_string("<statementRes>", "put ( <expr> ) ;");
-        if (match("PUT") && match("OPENPARA") && expr(func_record, tree) && func_record->symbol_table_->check_expression_is_valid(tree) && match("CLOSEPARA") && match("DELI")) {
+        if (match("PUT") && match("OPENPARA") && expr(func_record, tree) && func_record->symbol_table_->check_expression_is_valid(tree) && code_generator_->create_put_code() && match("CLOSEPARA") && match("DELI")) {
             return true;
         }
     } else if (lookahead_ == "RETURN") {
@@ -533,8 +536,12 @@ bool Parser::relExpr(SymbolRecord* func_record) {
         SymbolRecord* operation_record = new SymbolRecord();
         ExpressionTree* left_abstract_expression_tree = new ExpressionTree();
         ExpressionTree* right_abstract_expression_tree = new ExpressionTree();
-        if (arithExpr(func_record, left_abstract_expression_tree) && relOp(operation_record) && arithExpr(func_record, right_abstract_expression_tree))
+        if (arithExpr(func_record, left_abstract_expression_tree) && relOp(operation_record) && arithExpr(func_record, right_abstract_expression_tree)) {
+            left_abstract_expression_tree->split_tree_with_rel_operator(right_abstract_expression_tree, operation_record);
+            func_record->symbol_table_->check_expression_is_valid(left_abstract_expression_tree);
             return true;
+        }
+
     }
     return false;
 

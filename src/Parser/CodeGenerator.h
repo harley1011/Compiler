@@ -14,13 +14,14 @@ class CodeGenerator {
 
 public:
     int current_stack_address_;
-
+    bool second_pass_;
     CodeGenerator();
     vector<string> code_generation_;
     vector<string> variable_declaration_generation_;
     void create_variable_code(SymbolRecord** record);
 
     string generate_variable_declaration();
+    int loop_count = 0;
 
     void create_program_entry(SymbolRecord **record);
     void create_expression_code(ExpressionNode *expression);
@@ -34,6 +35,14 @@ public:
     void load_record_into_register(SymbolRecord *record, string reg);
 
     void create_relational_expression_code(ExpressionTree *expression);
+
+    bool create_put_code();
+
+    bool create_for_loop();
+
+    bool create_end_for_loop();
+
+    bool create_for_relation_loop();
 };
 
 
