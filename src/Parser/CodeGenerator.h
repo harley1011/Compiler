@@ -24,6 +24,8 @@ public:
 
     string generate_variable_declaration();
     int loop_count_ = 0;
+    int class_func_count = 0;
+    int func_count = 0;
 
     void create_program_entry(SymbolRecord **record);
     void create_expression_code(ExpressionNode *expression);
@@ -45,6 +47,10 @@ public:
     bool create_end_for_loop();
 
     bool create_for_relation_loop();
+
+    bool create_class_func_code(SymbolRecord* record);
+
+    bool create_func_code(SymbolRecord *record);
 };
 
 

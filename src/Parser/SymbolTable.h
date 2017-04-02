@@ -38,13 +38,9 @@ public:
 
     bool check_if_assign_variable_exist(SymbolRecord *record);
 
-    bool check_if_func_exists_and_parameters_are_valid(SymbolRecord *func_record,
-                                                       vector<ExpressionTree *> *function_expression_parameters);
+    bool check_if_func_exists_and_parameters_are_valid(SymbolRecord *func_record, vector<ExpressionTree *> *function_expression_parameters);
 
-
-    bool check_if_assign_variable_exist_and_correct_assign_type(SymbolRecord *variable_record, SymbolRecord *assign_record);
     bool check_expression_tree_for_correct_type(SymbolRecord *variable_record, ExpressionTree* tree);
-
 
     SymbolRecord *search_type(string type);
 
@@ -64,11 +60,7 @@ public:
 
     bool check_expression_is_valid(ExpressionTree *tree);
 
-    bool check_if_func_parameter_is_valid_expression(SymbolRecord *func_record, ExpressionTree *tree);
-
     bool check_if_func_exists(SymbolRecord *func_record);
-
-    bool check_if_return_type_is_correct_type(SymbolRecord *func_record);
 
     bool check_valid_arithmetic_expression(ExpressionNode *node);
 

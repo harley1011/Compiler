@@ -402,6 +402,7 @@ bool SymbolTable::create_function_entry_and_table(SymbolRecord** record) {
         (*record) = search(name);
         current_symbol_record_ = (*record);
         set_properly_declared(*record);
+        code_generator_->create_func_code(*record);
         return true;
     }
     (*record)->kind_ = "function";
@@ -497,6 +498,7 @@ bool SymbolTable::create_function_class_entry_and_function_table(SymbolRecord **
         *record = search(name);
         set_properly_declared(*record);
         check_for_circular_references(*record);
+        get_code_generator()->create_class_func_code((*record));
         return true;
     }
     (*record)->kind_ = "function";

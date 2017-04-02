@@ -108,7 +108,7 @@ bool Parser::parse(vector<Token*> tokens) {
     }
     if (syntax_errors.size() == 0 && semantic_errors_.size() == 0) {
         ofstream program_out;
-        program_out.open("C:\\Users\\Harley\\Desktop\\moon\\program_out.m");
+        program_out.open("program_out.m");
 
         program_out << code_generator_->generate_variable_declaration();
         program_out << code_generator_->generate_code();

@@ -150,6 +150,22 @@ bool CodeGenerator::create_for_loop() {
     return true;
 }
 
+bool CodeGenerator::create_class_func_code(SymbolRecord* record) {
+    if (!second_pass_)
+        return true;
+    code_generation_.push_back("class_func" + to_string(class_func_count));
+    record->address == "class_func" + to_string(class_func_count++);
+    return true;
+}
+
+bool CodeGenerator::create_func_code(SymbolRecord* record) {
+    code_generation_.push_back("func" + to_string(func_count));
+    record->address == "func" + to_string(func_count++);
+    return true;
+}
+
+
+
 bool CodeGenerator::create_for_relation_loop() {
     if (!second_pass_)
         return true;
@@ -160,7 +176,7 @@ bool CodeGenerator::create_for_relation_loop() {
 bool CodeGenerator::create_end_for_loop() {
     if (!second_pass_)
         return true;
-    code_generation_.push_back("bnz r14,for" + to_string(loop_count++));
+    code_generation_.push_back("bnz r14,for" + to_string(loop_count_++));
     current_for_loop_.pop();
     return true;
 }
