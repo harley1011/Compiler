@@ -241,7 +241,7 @@ TEST(SimpleAdditionWithAllVariableInFunction, CodeGeneration)
 {
     vector<Token*> tokens;
     Scanner scanner;
-    tokens = scanner.generate_tokens("program { int x; int y; int z; int kl k = 10; z = 85; y = 20; x = y + z + k;};", false);
+    tokens = scanner.generate_tokens("program { int x; int y; int z; int k; k = 10; z = 85; y = 20; x = y + z + k;};", false);
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;

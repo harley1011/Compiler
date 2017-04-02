@@ -14,7 +14,6 @@ class CodeGenerator {
 
 
 public:
-    int current_stack_address_;
     bool second_pass_;
     CodeGenerator();
     vector<string> code_generation_;
@@ -29,9 +28,8 @@ public:
 
     void create_program_entry(SymbolRecord **record);
     void create_expression_code(ExpressionNode *expression);
-    void create_variable_assignment_with_variable_code(SymbolRecord *variable_record, SymbolRecord *assign_record);
-    void create_variable_assignment_with_value_code(SymbolRecord *variable_record, SymbolRecord *assign_record);
-    void create_variable_assignment_with_register_code(SymbolRecord *variable_record, string reg);
+    void load_or_call_record_into_reg(SymbolRecord *load_record, string load_reg);
+    void create_variable_assignment_with_register(SymbolRecord *variable_record, string reg);
     string generate_code();
 
     bool create_program_halt(bool double_pass);
@@ -51,6 +49,14 @@ public:
     bool create_class_func_code(SymbolRecord* record);
 
     bool create_func_code(SymbolRecord *record);
+
+    void determine_func_stack_variable_offsets(SymbolRecord **record);
+
+    bool assign_func_address(SymbolRecord *record);
+
+    void create_function_call_code(SymbolRecord *func_record, string return_register);
+
+    bool create_func_return_code();
 };
 
 

@@ -6,12 +6,27 @@
 #include "SymbolTable.h"
 
 CodeGenerator::CodeGenerator() {
-    current_stack_address_ = 0;
 }
 
+void CodeGenerator::determine_func_stack_variable_offsets(SymbolRecord **record) {
+    SymbolRecord* local_record = (*record);
+    int offset = 0;
+    int variable_size = local_record->compute_record_size();
+    int size = local_record->symbol_table_->parent_symbol_table_->symbol_records_.size();
+    local_record->symbol_table_->parent_symbol_table_->symbol_record_->offset_address_ += variable_size;
+
+    if (size > 1) {
+        SymbolRecord* previous_record = local_record->symbol_table_->parent_symbol_table_->symbol_records_[size - 2];
+        offset = previous_record->offset_address_ + previous_record->compute_record_size();
+    }
+
+    local_record->offset_address_ = offset + 8;
+    local_record->is_stack_variable_ = true;
+}
 
 void CodeGenerator::create_variable_code(SymbolRecord **record) {
     SymbolRecord* local_record = (*record);
+    local_record->is_stack_variable_ = false;
     string code_variable_name = local_record->name_ + "_" + local_record->symbol_table_->parent_symbol_table_->symbol_record_->name_;
     if (local_record->array_sizes.size() > 0)
         variable_declaration_generation_.push_back(code_variable_name + " res " + to_string(local_record->compute_array_size()));
@@ -29,6 +44,9 @@ void CodeGenerator::create_variable_code(SymbolRecord **record) {
 void CodeGenerator::create_program_entry(SymbolRecord **record) {
     code_generation_.push_back("program entry");
     (*record)->address = "program";
+
+    // load the stack address in r13
+    code_generation_.push_back("addi r13,r0,topaddr");
 
 }
 bool CodeGenerator::create_program_halt(bool double_pass) {
@@ -98,16 +116,14 @@ void CodeGenerator::create_expression_code(ExpressionNode *expression) {
                 code_generation_.push_back("sub r1,r2,r1");
             } else if (operator_type == "OR") {
                 code_generation_.push_back("or r1,r2,r1");
-
             }
 
-            code_generation_.push_back("addi r2,r0," + to_string(current_stack_address_));
-            code_generation_.push_back("sw topaddr(r2),r1");
+            code_generation_.push_back("sw 0(r13),r1");
+            code_generation_.push_back("addi r13,r13,8");
             SymbolRecord* record = new SymbolRecord();
-            record->address = to_string(current_stack_address_);
+            //record->address = to_string(current_stack_address_);
             record->kind_ = "stack_variable";
             tmp_post_fix_queue->push(record);
-            current_stack_address_+= 32;
         }
         else
             tmp_post_fix_queue->push(first_record);
@@ -119,20 +135,13 @@ void CodeGenerator::create_expression_code(ExpressionNode *expression) {
 }
 
 void CodeGenerator::load_record_into_register(SymbolRecord *record, string reg) {
-    if (record->kind_ == "")
-        code_generation_.push_back("addi " + reg + ",r0," + to_string(record->integer_value_));
-    else if (record->kind_ == "stack_variable") {
-        code_generation_.push_back("addi r3,r0," + record->address);
-        code_generation_.push_back("lw " + reg + ",topaddr(r3)");
-        current_stack_address_ -= 32;
+    if (record->kind_ == "stack_variable") {
+        code_generation_.push_back("subi r13,r13,8");
+        code_generation_.push_back("lw " + reg + ",0(r13)");
     }
     else {
-        code_generation_.push_back("lw " + reg + "," + record->address + "(r0)");
+        load_or_call_record_into_reg(record, reg);
     }
-}
-
-void CodeGenerator::create_variable_assignment_with_register_code(SymbolRecord *variable_record, string reg) {
-    code_generation_.push_back("sw " + variable_record->address + "(r0)," + reg);
 }
 
 bool CodeGenerator::create_put_code() {
@@ -159,12 +168,26 @@ bool CodeGenerator::create_class_func_code(SymbolRecord* record) {
 }
 
 bool CodeGenerator::create_func_code(SymbolRecord* record) {
-    code_generation_.push_back("func" + to_string(func_count));
-    record->address == "func" + to_string(func_count++);
+    code_generation_.push_back(record->address);
+    // store return address in r12 in memory
+    code_generation_.push_back("sw 0(r13),r11");
     return true;
 }
 
-
+bool CodeGenerator::create_func_return_code() {
+    if (!second_pass_)
+        return true;
+    // load return address in memory
+    code_generation_.push_back("lw r11,0(r13)");
+    code_generation_.push_back("jr r11");
+    return true;
+}
+bool CodeGenerator::assign_func_address(SymbolRecord* record) {
+    record->address = "func" + to_string(func_count++);
+    //reserve space for the return address in the stack
+    record->offset_address_ = 8;
+    return true;
+}
 
 bool CodeGenerator::create_for_relation_loop() {
     if (!second_pass_)
@@ -181,17 +204,51 @@ bool CodeGenerator::create_end_for_loop() {
     return true;
 }
 
-void CodeGenerator::create_variable_assignment_with_variable_code(SymbolRecord *variable_record,
-                                                                  SymbolRecord *assign_record) {
-    string assign_record_address = assign_record->address;
-    string variable_record_address = variable_record->address;
+void CodeGenerator::create_function_call_code(SymbolRecord* func_record, string return_register) {
+    //r13 is start of stack for func
+    //r12 is end of stack
+    code_generation_.push_back("addi r13,r13," + to_string(func_record->offset_address_));
+    code_generation_.push_back("jl r11," + func_record->address);
+    code_generation_.push_back("subi r13,r13," + to_string(func_record->offset_address_));
+    code_generation_.push_back("addi " + return_register + ",r1,r0");
+}
 
-    if (assign_record->kind_ == "variable")
-        code_generation_.push_back("lw r1," + assign_record->address + "(r0)");
-    else if (assign_record->type_ == "int")
-        code_generation_.push_back("addi r1,r0," + to_string(assign_record->integer_value_));
 
-    code_generation_.push_back("sw " + variable_record_address + "(r0),r1");
+void CodeGenerator::create_variable_assignment_with_register(SymbolRecord *variable_record, string reg) {
+    if (variable_record->is_stack_variable_) {
+        //load offset address of variable i.e function start address + variable offset within function
+      //  code_generation_.push_back("addi r5,r0," + to_string(variable_record->offset_address_));
+      //  code_generation_.push_back("add r5,r5,r13");
+        code_generation_.push_back("subi r12,r13," + to_string(variable_record->symbol_table_->parent_symbol_table_->symbol_record_->offset_address_ - variable_record->offset_address_));
+        code_generation_.push_back("sw 0(r12)," + reg);
+    } else {
+        code_generation_.push_back("sw " + variable_record->address + "(r0)," + reg);
+    }
+}
+
+
+void CodeGenerator::load_or_call_record_into_reg(SymbolRecord *load_record, string load_reg) {
+    if (load_record->is_stack_variable_) {
+
+        if (load_record->kind_ == "variable") {
+          //  code_generation_.push_back("addi r5,r0," + to_string(load_record->offset_address_));
+            code_generation_.push_back("subi r12,r13," + to_string(load_record->symbol_table_->parent_symbol_table_->symbol_record_->offset_address_ - load_record->offset_address_));
+           // code_generation_.push_back("add r5,r5,r12");
+            code_generation_.push_back("lw " + load_reg + ",0(r12)");
+        }
+        else if (load_record->type_ == "int")
+            code_generation_.push_back("addi " + load_reg + ",r0," + to_string(load_record->integer_value_));
+    } else {
+
+        if (load_record->kind_ == "variable")
+            code_generation_.push_back("lw " + load_reg +"," + load_record->address + "(r0)");
+        else if (load_record->kind_ == "function") {
+            create_function_call_code(load_record, load_reg);
+        }
+        else if (load_record->type_ == "int")
+            code_generation_.push_back("addi r1,r0," + to_string(load_record->integer_value_));
+
+    }
 
 }
 

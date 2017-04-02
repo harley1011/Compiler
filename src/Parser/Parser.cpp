@@ -260,8 +260,10 @@ bool Parser::funcDef() {
     if (is_lookahead_a_type()) {
         form_derivation_string("<funcDef>", "<funcHead> <funcBody> ;");
         SymbolRecord** record = create_new_symbol_record();
-        if (funcHead(record) && funcBody(*record) && match("DELI"))
+        if (funcHead(record) && funcBody(*record) && match("DELI")) {
+            code_generator_->create_func_return_code();
             return true;
+        }
     }
     return false;
 }

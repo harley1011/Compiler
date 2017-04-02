@@ -12,6 +12,8 @@ SymbolRecord::SymbolRecord(string kind, string type, string name) {
     type_ = type;
     name_ = name;
     symbol_table_ = new SymbolTable();
+    is_stack_variable_ = false;
+    offset_address_ = 0;
 }
 
 SymbolRecord::SymbolRecord() {
@@ -19,6 +21,8 @@ SymbolRecord::SymbolRecord() {
     type_ = "";
     name_ ="";
     symbol_table_ = new SymbolTable();
+    is_stack_variable_ = false;
+    offset_address_ = 0;
 }
 
 SymbolRecord::SymbolRecord(bool second_pass) {
@@ -26,7 +30,18 @@ SymbolRecord::SymbolRecord(bool second_pass) {
     type_ = "";
     name_ ="";
     symbol_table_ = new SymbolTable();
+    is_stack_variable_ = false;
     symbol_table_->second_pass_ = second_pass;
+    offset_address_ = 0;
+}
+
+int SymbolRecord::compute_record_size() {
+    if (array_sizes.size() > 0)
+         return compute_array_size();
+    else if (structure_ == "class" || structure_ == "class array")
+        return compute_class_byte_size();
+    else
+        return 8;
 }
 
 bool SymbolRecord::set_kind(string kind) {

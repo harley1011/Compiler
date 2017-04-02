@@ -24,9 +24,11 @@ bool SymbolTable::check_if_assign_variable_exist(SymbolRecord *record) {
         } else if (record->nested_properties_.size() > 0 ) {
             check_nested_property(record, found_record);
             record->address = found_record->address;
+            record->is_stack_variable_ = found_record->is_stack_variable_;
         } else {
             check_correct_number_of_array_dimensions(found_record, record, record->nested_properties_dimensions_[found_record->name_]);
             record->address = found_record->address;
+            record->is_stack_variable_ = found_record->is_stack_variable_;
         }
     }
     return true;
@@ -147,7 +149,7 @@ bool SymbolTable::check_expression_tree_for_correct_type(SymbolRecord *variable_
             report_error_to_highest_symbol_table("Error: can't assign variable " + found_variable_record->name_ + " of type " + found_variable_record->type_  + " an arithmetic expression, it must be of type int or float:");
         }
         check_expression_is_valid(tree);
-        get_code_generator()->create_variable_assignment_with_register_code(found_variable_record, "r1");
+        get_code_generator()->create_variable_assignment_with_register(found_variable_record, "r1");
 
     }
     else if (found_variable_record != NULL) {
@@ -172,12 +174,16 @@ bool SymbolTable::check_expression_tree_for_correct_type(SymbolRecord *variable_
                     report_error_to_highest_symbol_table(
                             "Error: can't assign variable " + found_variable_record->name_ + " a value of type " +
                             found_assign_record->type_ + " it needs type " + found_variable_record->type_ + ":");
-                else
-                    get_code_generator()->create_variable_assignment_with_variable_code(found_variable_record, found_assign_record);
+                else {
+                    get_code_generator()->load_or_call_record_into_reg(found_assign_record, "r1");
+                    get_code_generator()->create_variable_assignment_with_register(found_variable_record, "r1");
+                }
+
 
             }
             else
-                get_code_generator()->create_variable_assignment_with_variable_code(found_variable_record, assign_record);
+                get_code_generator()->load_or_call_record_into_reg(assign_record, "r1");
+                get_code_generator()->create_variable_assignment_with_register(found_variable_record, "r1");
         }
     }
 
@@ -423,6 +429,7 @@ bool SymbolTable::create_function_entry_and_table(SymbolRecord** record) {
     else {
         (*record)->properly_declared_ = false;
     }
+    code_generator_->assign_func_address(*record);
     insert((*record));
     return true;
 }
@@ -476,12 +483,17 @@ bool SymbolTable::create_variable_entry(SymbolRecord** record) {
         set_properly_declared((*record));
         if (symbol_record_->name_ == "program")
             get_code_generator()->create_variable_code(record);
+
         return true;
     }
 
     (*record)->kind_ = "variable";
     determine_record_fields(*record);
     insert(*record);
+
+    if (symbol_record_->name_ != "program")
+        get_code_generator()->determine_func_stack_variable_offsets(record);
+
     return true;
 }
 

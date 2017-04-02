@@ -26,6 +26,7 @@ public:
     bool properly_declared_;
     vector<int> array_sizes;
     string address;
+    int offset_address_;
     int integer_value_;
     float float_value_;
 
@@ -41,6 +42,8 @@ public:
 
     bool add_nested_property(string property);
 
+    bool is_stack_variable_;
+
     int compute_class_byte_size();
 
     string type_with_array_dimensions();
@@ -48,6 +51,8 @@ public:
     bool add_function_record(SymbolRecord *pRecord, bool second_pass);
 
     int compute_array_size();
+
+    int compute_record_size();
 };
 
 
