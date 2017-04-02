@@ -110,7 +110,7 @@ TEST(SimpleForLoopInFunc, CodeGeneration)
 {
     vector<Token*> tokens;
     Scanner scanner;
-    tokens = scanner.generate_tokens("program { int x; for (int i = 0; i < 10; i = i + 1) { x = x + 10; }; };", false);
+    tokens = scanner.generate_tokens("program { int x; for (int i = 0; i < 10; i = i + 1) { x = x + 10; }; put(x); };", false);
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
@@ -151,7 +151,7 @@ TEST(SimpleWriteIntInFunc, CodeGeneration)
 {
     vector<Token*> tokens;
     Scanner scanner;
-    tokens = scanner.generate_tokens("program { put(100};", false);
+    tokens = scanner.generate_tokens("program { put(100); };", false);
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
@@ -305,3 +305,13 @@ TEST(SimpleLessInFunction, CodeGeneration)
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
     parser.global_symbol_table_->print(true);
 }
+
+// expressions: composite expressions and intermediate result
+
+// function declaration code block (alias to jump to, jump back)
+
+// function call mechanism: jump on call, return value
+
+// parameter passing mechanism
+
+// offset calculation mechanism: arrays processing (uni- and multi-dimensional), using data members

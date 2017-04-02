@@ -76,6 +76,8 @@ bool SymbolTable::check_expression_is_valid(ExpressionTree *tree) {
     } else if (tree->root_node_->record_->kind_ == "ADDOP" || tree->root_node_->record_->kind_ == "MULTOP") {
         check_valid_arithmetic_expression(tree->root_node_);
         get_code_generator()->create_expression_code(tree->root_node_);
+    } else {
+        get_code_generator()->create_expression_code(tree->root_node_);
     }
     return true;
 }
@@ -460,7 +462,6 @@ bool SymbolTable::check_for_circular_references(SymbolRecord *record) {
             if (member_record != NULL) {
                 check_for_circular_references(record, member_record, vector<string>());
             }
-
         }
     }
 }

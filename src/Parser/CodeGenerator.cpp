@@ -37,7 +37,7 @@ bool CodeGenerator::create_program_halt(bool double_pass) {
     return true;
 
 }
-void CodeGenerator::create_relational_expression_code(ExpressionTree * expression) {
+void CodeGenerator:: create_relational_expression_code(ExpressionTree * expression) {
     ExpressionNode* left_expression = expression->root_node_->left_tree_;
     create_expression_code(left_expression);
     code_generation_.push_back("add r2,r1,r0");
@@ -154,14 +154,14 @@ bool CodeGenerator::create_for_loop() {
 bool CodeGenerator::create_for_relation_loop() {
     if (!second_pass_)
         return true;
-    code_generation_.push_back("addi r14,r1,r0");
+    code_generation_.push_back("add r14,r1,r0");
     return true;
 }
 
 bool CodeGenerator::create_end_for_loop() {
     if (!second_pass_)
         return true;
-    code_generation_.push_back("bz r14,for" + to_string(loop_count++));
+    code_generation_.push_back("bnz r14,for" + to_string(loop_count++));
     return true;
 }
 
