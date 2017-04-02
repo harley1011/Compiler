@@ -3,6 +3,7 @@
 //
 #include <string>
 #include <vector>
+#include <stack>
 #include "SymbolRecord.h"
 #include "ExpressionTree.h"
 #ifndef COMPILER_CODEGENERATOR_H
@@ -18,10 +19,11 @@ public:
     CodeGenerator();
     vector<string> code_generation_;
     vector<string> variable_declaration_generation_;
+    stack<int> current_for_loop_;
     void create_variable_code(SymbolRecord** record);
 
     string generate_variable_declaration();
-    int loop_count = 0;
+    int loop_count_ = 0;
 
     void create_program_entry(SymbolRecord **record);
     void create_expression_code(ExpressionNode *expression);
