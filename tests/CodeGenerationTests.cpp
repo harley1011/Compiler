@@ -412,7 +412,7 @@ TEST(ArrayAccess, CodeGeneration)
 {
     vector<Token*> tokens;
     Scanner scanner;
-    tokens = scanner.generate_tokens("program { int x[5]; x[4] = 5; put(x[4]); };", false);
+    tokens = scanner.generate_tokens("program { int x[5]; x[4] = 100; put(x[4]); };", false);
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;

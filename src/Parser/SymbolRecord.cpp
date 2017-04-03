@@ -34,7 +34,11 @@ SymbolRecord::SymbolRecord(bool second_pass) {
     symbol_table_->second_pass_ = second_pass;
     offset_address_ = 0;
 }
-
+int SymbolRecord::compute_type_size() {
+    if (type_ == "int" || type_ == "float")
+        return 8;
+    return 8;
+}
 int SymbolRecord::compute_record_size() {
     if (array_sizes.size() > 0)
          return compute_array_size();

@@ -226,6 +226,8 @@ void CodeGenerator::create_variable_assignment_with_register(SymbolRecord *varia
         code_generation_.push_back("sw 0(r12)," + reg);
     } else if (variable_record->structure_ == "array"){
         code_generation_.push_back("sw " + variable_record->address + "(r9)," + reg);
+        //clear indice access register
+        code_generation_.push_back("add r8,r0,r0");
     }
     else {
         code_generation_.push_back("sw " + variable_record->address + "(r0)," + reg);
@@ -244,7 +246,11 @@ void CodeGenerator::load_or_call_record_into_reg(SymbolRecord *load_record, stri
             code_generation_.push_back("addi " + load_reg + ",r0," + to_string(load_record->integer_value_));
     } else {
 
-        if (load_record->kind_ == "variable")
+        if (load_record->structure_ == "array" && load_record->kind_ == "variable") {
+            code_generation_.push_back("lw " + load_reg + "," + load_record->address + "(r9)");
+            //clear indice access register
+            code_generation_.push_back("add r8,r0,r0");
+        } else if (load_record->kind_ == "variable")
             code_generation_.push_back("lw " + load_reg +"," + load_record->address + "(r0)");
         else if (load_record->kind_ == "function") {
             create_function_call_code(load_record, load_reg);
@@ -258,12 +264,18 @@ void CodeGenerator::load_or_call_record_into_reg(SymbolRecord *load_record, stri
 void CodeGenerator::create_array_indice_storage_code(SymbolRecord* record) {
     if (!second_pass_)
         return;
-    int size = record->compute_record_size();
+    int size = record->compute_type_size();
     int array_dimension_size = record->array_sizes[0];
     record->array_sizes.erase(record->array_sizes.begin());
-    code_generation_.push_back("mult r9,r9,r8");
-    code_generation_.push_back("mult r1,r1," + to_string(size));
+    //increase dimension access
+    code_generation_.push_back("mul r9,r9,r8");
+
+    //times the last calculated expression by type size
+    code_generation_.push_back("muli r1,r1," + to_string(size));
+
+    // add new dimension access to offset register
     code_generation_.push_back("add r9,r9,r1");
+    // store
     code_generation_.push_back("addi r8,r0," + to_string(array_dimension_size * size));
 
 }

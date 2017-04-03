@@ -716,5 +716,8 @@ string SymbolTable::generate_symbol_table_string(SymbolTable *table, string tabl
 void SymbolTable::load_array_sizes(SymbolRecord *record) {
     if (!second_pass_)
         return;
-    record->array_sizes =  search(record->name_)->array_sizes;
+    SymbolRecord* found_record = search(record->name_);
+    record->array_sizes =  found_record->array_sizes;
+    record->structure_ = "array";
+    record->type_ = found_record->type_;
 }

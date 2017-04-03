@@ -53,6 +53,8 @@ public:
     int compute_array_size();
 
     int compute_record_size();
+
+    int compute_type_size();
 };
 
 
