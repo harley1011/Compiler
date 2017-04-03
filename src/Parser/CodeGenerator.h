@@ -57,6 +57,8 @@ public:
     void create_function_call_code(SymbolRecord *func_record, string return_register);
 
     bool create_func_return_code(SymbolRecord* record);
+
+    void load_function_parameters_into_stack_memory_code(SymbolRecord *record);
 };
 
 

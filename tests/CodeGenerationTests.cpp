@@ -392,7 +392,7 @@ TEST(FunctionParameter, CodeGeneration)
 {
     vector<Token*> tokens;
     Scanner scanner;
-    tokens = scanner.generate_tokens("program { int x; int y; y = 0; x = funcTest(10, y); }; int funcTest(int k, int x) { int i; i = 5; return(i); };", false);
+    tokens = scanner.generate_tokens("program { int x; int y; y = 40; x = funcTest(60, y); put(x);}; int funcTest(int k, int x) { int i; i = k + x; return(i); };", false);
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;

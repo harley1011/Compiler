@@ -10,17 +10,15 @@ CodeGenerator::CodeGenerator() {
 
 void CodeGenerator::determine_func_stack_variable_offsets(SymbolRecord **record) {
     SymbolRecord* local_record = (*record);
-    int offset = 0;
     int variable_size = local_record->compute_record_size();
     int size = local_record->symbol_table_->parent_symbol_table_->symbol_records_.size();
     local_record->symbol_table_->parent_symbol_table_->symbol_record_->offset_address_ += variable_size;
 
     if (size > 1) {
         SymbolRecord* previous_record = local_record->symbol_table_->parent_symbol_table_->symbol_records_[size - 2];
-        offset = previous_record->offset_address_ + previous_record->compute_record_size();
-    }
-
-    local_record->offset_address_ = offset + 8;
+        local_record->offset_address_ = previous_record->offset_address_ + previous_record->compute_record_size();
+    } else
+        local_record->offset_address_ = 8;
     local_record->is_stack_variable_ = true;
 }
 
@@ -132,6 +130,12 @@ void CodeGenerator::create_expression_code(ExpressionNode *expression) {
     load_record_into_register(tmp_post_fix_queue->top(), "r1");
     delete tmp_post_fix_queue;
     delete post_fix_queue;
+}
+
+void CodeGenerator::load_function_parameters_into_stack_memory_code(SymbolRecord* record) {
+    code_generation_.push_back("addi r12,r13," + to_string(record->offset_address_));
+    code_generation_.push_back("sw 0(r12),r1");
+
 }
 
 void CodeGenerator::load_record_into_register(SymbolRecord *record, string reg) {

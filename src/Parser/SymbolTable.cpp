@@ -348,7 +348,11 @@ bool SymbolTable::check_if_func_exists_and_parameters_are_valid(SymbolRecord *fu
                     current_expression_found_parameter = search(current_expression_parameter->root_node_->record_->name_);
                 if (check_if_matching_types(current_expression_found_parameter->type_, current_func_parameter->type_))
                     report_error_to_highest_symbol_table("Error: parameter " + current_func_parameter->name_ + " is of type " + current_func_parameter->type_ + " but type " + current_expression_found_parameter->type_ + " is being passed on function call " + func_record->name_ +":");
+                get_code_generator()->load_or_call_record_into_reg(current_expression_found_parameter, "r1");
+
             }
+
+            get_code_generator()->load_function_parameters_into_stack_memory_code(current_func_parameter);
 
         }
     }
@@ -559,8 +563,9 @@ bool SymbolTable::create_parameter_entry(SymbolRecord* record) {
     }
     record->kind_ = "parameter";
     determine_record_fields(record);
-
+    record->symbol_table_->parent_symbol_table_ = this;
     insert(record);
+    get_code_generator()->determine_func_stack_variable_offsets(&record);
     return true;
 }
 
