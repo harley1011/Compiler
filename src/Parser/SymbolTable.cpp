@@ -25,10 +25,14 @@ bool SymbolTable::check_if_assign_variable_exist(SymbolRecord *record) {
             check_nested_property(record, found_record);
             record->address = found_record->address;
             record->is_stack_variable_ = found_record->is_stack_variable_;
+            record->symbol_table_ = found_record->symbol_table_;
+            record->offset_address_ = found_record->offset_address_;
         } else {
             check_correct_number_of_array_dimensions(found_record, record, record->nested_properties_dimensions_[found_record->name_]);
             record->address = found_record->address;
             record->is_stack_variable_ = found_record->is_stack_variable_;
+            record->symbol_table_ = found_record->symbol_table_;
+            record->offset_address_ = found_record->offset_address_;
         }
     }
     return true;
@@ -181,9 +185,10 @@ bool SymbolTable::check_expression_tree_for_correct_type(SymbolRecord *variable_
 
 
             }
-            else
+            else {
                 get_code_generator()->load_or_call_record_into_reg(assign_record, "r1");
                 get_code_generator()->create_variable_assignment_with_register(found_variable_record, "r1");
+            }
         }
     }
 

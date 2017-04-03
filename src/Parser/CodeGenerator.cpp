@@ -46,7 +46,7 @@ void CodeGenerator::create_program_entry(SymbolRecord **record) {
     (*record)->address = "program";
 
     // load the stack address in r13
-    code_generation_.push_back("addi r13,r0,topaddr");
+    code_generation_.push_back("addi r13,r0,stack");
 
 }
 bool CodeGenerator::create_program_halt(bool double_pass) {
@@ -170,15 +170,17 @@ bool CodeGenerator::create_class_func_code(SymbolRecord* record) {
 bool CodeGenerator::create_func_code(SymbolRecord* record) {
     code_generation_.push_back(record->address);
     // store return address in r12 in memory
-    code_generation_.push_back("sw 0(r13),r11");
+    code_generation_.push_back("subi r12,r13," + to_string(record->offset_address_ ));
+    code_generation_.push_back("sw 0(r12),r11");
     return true;
 }
 
-bool CodeGenerator::create_func_return_code() {
+bool CodeGenerator::create_func_return_code(SymbolRecord* record) {
     if (!second_pass_)
         return true;
     // load return address in memory
-    code_generation_.push_back("lw r11,0(r13)");
+    code_generation_.push_back("subi r12,r13," + to_string(record->offset_address_ ));
+    code_generation_.push_back("lw r11,0(r12)");
     code_generation_.push_back("jr r11");
     return true;
 }
@@ -205,20 +207,17 @@ bool CodeGenerator::create_end_for_loop() {
 }
 
 void CodeGenerator::create_function_call_code(SymbolRecord* func_record, string return_register) {
-    //r13 is start of stack for func
-    //r12 is end of stack
+    //r13 is start of stack
     code_generation_.push_back("addi r13,r13," + to_string(func_record->offset_address_));
     code_generation_.push_back("jl r11," + func_record->address);
     code_generation_.push_back("subi r13,r13," + to_string(func_record->offset_address_));
-    code_generation_.push_back("addi " + return_register + ",r1,r0");
+    code_generation_.push_back("add " + return_register + ",r1,r0");
 }
 
 
 void CodeGenerator::create_variable_assignment_with_register(SymbolRecord *variable_record, string reg) {
     if (variable_record->is_stack_variable_) {
         //load offset address of variable i.e function start address + variable offset within function
-      //  code_generation_.push_back("addi r5,r0," + to_string(variable_record->offset_address_));
-      //  code_generation_.push_back("add r5,r5,r13");
         code_generation_.push_back("subi r12,r13," + to_string(variable_record->symbol_table_->parent_symbol_table_->symbol_record_->offset_address_ - variable_record->offset_address_));
         code_generation_.push_back("sw 0(r12)," + reg);
     } else {
@@ -231,9 +230,7 @@ void CodeGenerator::load_or_call_record_into_reg(SymbolRecord *load_record, stri
     if (load_record->is_stack_variable_) {
 
         if (load_record->kind_ == "variable") {
-          //  code_generation_.push_back("addi r5,r0," + to_string(load_record->offset_address_));
             code_generation_.push_back("subi r12,r13," + to_string(load_record->symbol_table_->parent_symbol_table_->symbol_record_->offset_address_ - load_record->offset_address_));
-           // code_generation_.push_back("add r5,r5,r12");
             code_generation_.push_back("lw " + load_reg + ",0(r12)");
         }
         else if (load_record->type_ == "int")

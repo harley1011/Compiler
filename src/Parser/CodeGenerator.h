@@ -56,7 +56,7 @@ public:
 
     void create_function_call_code(SymbolRecord *func_record, string return_register);
 
-    bool create_func_return_code();
+    bool create_func_return_code(SymbolRecord* record);
 };
 
 

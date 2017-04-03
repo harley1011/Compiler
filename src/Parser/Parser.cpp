@@ -109,7 +109,7 @@ bool Parser::parse(vector<Token*> tokens) {
     if (syntax_errors.size() == 0 && semantic_errors_.size() == 0) {
         ofstream program_out;
         program_out.open("program_out.m");
-
+        code_generator_->code_generation_.push_back("stack");
         program_out << code_generator_->generate_variable_declaration();
         program_out << code_generator_->generate_code();
 
@@ -261,7 +261,7 @@ bool Parser::funcDef() {
         form_derivation_string("<funcDef>", "<funcHead> <funcBody> ;");
         SymbolRecord** record = create_new_symbol_record();
         if (funcHead(record) && funcBody(*record) && match("DELI")) {
-            code_generator_->create_func_return_code();
+            code_generator_->create_func_return_code(*record);
             return true;
         }
     }
