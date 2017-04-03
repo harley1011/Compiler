@@ -167,7 +167,7 @@ bool CodeGenerator::create_class_func_code(SymbolRecord* record) {
     if (!second_pass_)
         return true;
     code_generation_.push_back("class_func" + to_string(class_func_count));
-    record->address == "class_func" + to_string(class_func_count++);
+    record->address = "class_func" + to_string(class_func_count++);
     return true;
 }
 
@@ -224,7 +224,10 @@ void CodeGenerator::create_variable_assignment_with_register(SymbolRecord *varia
         //load offset address of variable i.e function start address + variable offset within function
         code_generation_.push_back("subi r12,r13," + to_string(variable_record->symbol_table_->parent_symbol_table_->symbol_record_->offset_address_ - variable_record->offset_address_));
         code_generation_.push_back("sw 0(r12)," + reg);
-    } else {
+    } else if (variable_record->structure_ == "array"){
+        code_generation_.push_back("sw " + variable_record->address + "(r9)," + reg);
+    }
+    else {
         code_generation_.push_back("sw " + variable_record->address + "(r0)," + reg);
     }
 }
@@ -252,7 +255,18 @@ void CodeGenerator::load_or_call_record_into_reg(SymbolRecord *load_record, stri
     }
 
 }
+void CodeGenerator::create_array_indice_storage_code(SymbolRecord* record) {
+    if (!second_pass_)
+        return;
+    int size = record->compute_record_size();
+    int array_dimension_size = record->array_sizes[0];
+    record->array_sizes.erase(record->array_sizes.begin());
+    code_generation_.push_back("mult r9,r9,r8");
+    code_generation_.push_back("mult r1,r1," + to_string(size));
+    code_generation_.push_back("add r9,r9,r1");
+    code_generation_.push_back("addi r8,r0," + to_string(array_dimension_size * size));
 
+}
 string CodeGenerator::generate_variable_declaration() {
     string result = "";
     for (string declaration: variable_declaration_generation_)

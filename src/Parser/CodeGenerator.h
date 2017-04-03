@@ -59,6 +59,8 @@ public:
     bool create_func_return_code(SymbolRecord* record);
 
     void load_function_parameters_into_stack_memory_code(SymbolRecord *record);
+
+    void create_array_indice_storage_code(SymbolRecord* record);
 };
 
 
