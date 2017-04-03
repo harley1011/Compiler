@@ -243,7 +243,7 @@ void CodeGenerator::load_or_call_record_into_reg(SymbolRecord *load_record, stri
             create_function_call_code(load_record, load_reg);
         }
         else if (load_record->type_ == "int")
-            code_generation_.push_back("addi r1,r0," + to_string(load_record->integer_value_));
+            code_generation_.push_back("addi " + load_reg + ",r0," + to_string(load_record->integer_value_));
 
     }
 

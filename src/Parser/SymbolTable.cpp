@@ -179,6 +179,7 @@ bool SymbolTable::check_expression_tree_for_correct_type(SymbolRecord *variable_
                             "Error: can't assign variable " + found_variable_record->name_ + " a value of type " +
                             found_assign_record->type_ + " it needs type " + found_variable_record->type_ + ":");
                 else {
+                    found_assign_record->function_parameters_ = assign_record->function_parameters_;
                     get_code_generator()->load_or_call_record_into_reg(found_assign_record, "r1");
                     get_code_generator()->create_variable_assignment_with_register(found_variable_record, "r1");
                 }
@@ -277,6 +278,13 @@ bool SymbolTable::check_if_func_exists(SymbolRecord *func_record) {
     if (!second_pass_)
         return true;
     SymbolRecord* local_record = search(func_record->name_);
+
+    if (local_record != NULL) {
+        func_record->address = local_record->address;
+        func_record->is_stack_variable_ = local_record->is_stack_variable_;
+        func_record->symbol_table_ = local_record->symbol_table_;
+        func_record->offset_address_ = local_record->offset_address_;
+    }
 
     if (func_record->nested_properties_.size() > 0 ) {
         if (local_record == NULL) {
