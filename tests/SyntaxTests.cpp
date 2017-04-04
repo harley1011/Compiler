@@ -976,6 +976,7 @@ Parser common_setup(string test_program, string derivation_string) {
     tokens = scanner.generate_tokens(test_program, false);
     Parser parser(tokens);
     parser.global_symbol_table_->current_symbol_record_ = new SymbolRecord();
+    parser.global_symbol_table_->code_generator_ = parser.code_generator_;
     parser.current_rhs_derivation_ = derivation_string;
     return parser;
 }

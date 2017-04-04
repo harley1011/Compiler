@@ -14,7 +14,7 @@ SymbolTable::SymbolTable() {
     second_pass_ = false;
     parent_symbol_table_ = NULL;
     code_generator_ = NULL;
-    circular_references_deteced_ = false;
+    symbol_record_ = NULL;
 }
 
 bool SymbolTable::check_if_assign_variable_exist(SymbolRecord *record) {
@@ -473,7 +473,6 @@ void SymbolTable::check_for_circular_references(SymbolRecord *record, SymbolReco
         if (current_record->kind_ == "variable" && current_record->structure_ == "class" && current_record->type_ == record->name_) {
             already_checked_types.push_back(member_type_record->name_);
             report_error_to_highest_symbol_table("Error: circular reference in class " + record->name_ + " variable " + member_record->name_  + " is of type " + member_type_record->name_ + " which also has one or more variables or nested variables of type " + record->name_);
-            circular_references_deteced_ = true;
         } else {
             already_checked_types.push_back(member_type_record->name_);
             check_for_circular_references(record, current_record, already_checked_types);
@@ -510,7 +509,7 @@ bool SymbolTable::create_variable_entry(SymbolRecord** record) {
     determine_record_fields(*record);
     insert(*record);
 
-    if (symbol_record_->name_ != "program" && symbol_record_->kind_ != "class") {
+    if (symbol_record_ != NULL && symbol_record_->name_ != "program" && symbol_record_->kind_ != "class") {
         //get_code_generator()->determine_func_stack_variable_offsets(record);
 
         SymbolRecord* local_record = (*record);
@@ -538,12 +537,14 @@ bool SymbolTable::create_variable_entry(SymbolRecord** record) {
 bool SymbolTable::calculate_class_offsets() {
     if (second_pass_)
         return true;
-    if (circular_references_deteced_)
-        return true;
     int offset_calculation_remain = false;
+    int previous_loop_count = symbol_records_.size();
+    int loop_count = 0;
     while(true) {
+        previous_loop_count = loop_count;
         for (SymbolRecord *record: symbol_records_) {
             if (record->kind_ == "class" && !record->offset_calculated_) {
+
                 int first_offset = 0;
                 int offset_count = 0;
                 int set_class_address = true;
@@ -553,6 +554,10 @@ bool SymbolTable::calculate_class_offsets() {
 
                         if (class_record->structure_ == "class") {
                             SymbolRecord* found_class_record = search(class_record->type_);
+                            if (found_class_record == NULL) {
+                                offset_calculation_remain = false;
+                                break;
+                            }
                             if (!found_class_record->offset_calculated_) {
                                 offset_calculation_remain = true;
                                 set_class_address = false;
@@ -571,12 +576,13 @@ bool SymbolTable::calculate_class_offsets() {
                     }
                 }
                 if (set_class_address) {
+                    loop_count++;
                     record->offset_address_ = offset_count;
                     record->offset_calculated_ = true;
                 }
             }
         }
-        if (!offset_calculation_remain)
+        if (!offset_calculation_remain || previous_loop_count == loop_count)
             break;
         offset_calculation_remain = false;
     }
@@ -587,7 +593,10 @@ bool SymbolTable::calculate_class_offsets() {
 
 CodeGenerator* SymbolTable::get_code_generator() {
     if (code_generator_ == NULL)
-        return parent_symbol_table_->get_code_generator();
+        if (parent_symbol_table_ == NULL)
+            return NULL;
+        else
+            return parent_symbol_table_->get_code_generator();
     return code_generator_;
 }
 
@@ -788,6 +797,8 @@ void SymbolTable::load_array_sizes(SymbolRecord *record) {
     if (!second_pass_)
         return;
     SymbolRecord* found_record = search(record->name_);
+    if (found_record == NULL)
+        return;
     record->array_sizes =  found_record->array_sizes;
     record->structure_ = "array";
     record->type_ = found_record->type_;

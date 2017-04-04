@@ -6,12 +6,15 @@
 #include "SymbolTable.h"
 
 CodeGenerator::CodeGenerator() {
+    func_count = 0;
 }
 
 void CodeGenerator::determine_func_stack_variable_offsets(SymbolRecord **record) {
     SymbolRecord* local_record = (*record);
     int variable_size = local_record->compute_record_size();
     int size = local_record->symbol_table_->parent_symbol_table_->symbol_records_.size();
+    if (local_record->symbol_table_->parent_symbol_table_->symbol_record_ == NULL)
+        return;
     local_record->symbol_table_->parent_symbol_table_->symbol_record_->offset_address_ += variable_size;
 
     if (size > 1) {
@@ -30,6 +33,8 @@ void CodeGenerator::create_variable_code(SymbolRecord **record) {
         variable_declaration_generation_.push_back(code_variable_name + " res " + to_string(local_record->compute_array_size()));
     else if (local_record->structure_ == "class" || local_record->structure_ == "class array") {
         SymbolRecord* found_record = local_record->symbol_table_->search(local_record->type_);
+        if (found_record == NULL)
+            return;
         variable_declaration_generation_.push_back(
                 code_variable_name + " res " + to_string(found_record->compute_class_byte_size()));
     }
@@ -262,7 +267,7 @@ void CodeGenerator::load_or_call_record_into_reg(SymbolRecord *load_record, stri
 
 }
 void CodeGenerator::create_array_indice_storage_code(SymbolRecord* record) {
-    if (!second_pass_)
+    if (!second_pass_ || record->array_sizes.size() == 0)
         return;
     int size = record->compute_type_size();
     int array_dimension_size = record->array_sizes[0];

@@ -7,6 +7,7 @@ Parser::Parser() {
     enable_derivation_output_ = false;
     global_symbol_table_ = new SymbolTable();
     enable_double_pass_parse_ = true;
+    code_generator_ = new CodeGenerator();
 }
 
 Parser::Parser(string derivation_output_path, string symbol_table_output_path,  string syntax_error_output_path, string semantic_error_output_path) {
@@ -20,6 +21,7 @@ Parser::Parser(string derivation_output_path, string symbol_table_output_path,  
     output_to_file_ = true;
     global_symbol_table_ = new SymbolTable();
     enable_double_pass_parse_ = true;
+    code_generator_ = new CodeGenerator();
 }
 
 Parser::Parser(string derivation_output_path,  string syntax_error_output_path) {
@@ -31,6 +33,7 @@ Parser::Parser(string derivation_output_path,  string syntax_error_output_path) 
     output_to_file_ = true;
     global_symbol_table_ = new SymbolTable();
     enable_double_pass_parse_ = true;
+    code_generator_ = new CodeGenerator();
 }
 
 Parser::Parser(bool enable_derivation_output) {
@@ -40,6 +43,7 @@ Parser::Parser(bool enable_derivation_output) {
     enable_derivation_output_ = enable_derivation_output;
     global_symbol_table_ = new SymbolTable();
     enable_double_pass_parse_ = true;
+    code_generator_ = new CodeGenerator();
 }
 
 Parser::Parser(vector<Token*> tokens) {
@@ -49,6 +53,7 @@ Parser::Parser(vector<Token*> tokens) {
     enable_double_pass_parse_ = true;
     global_symbol_table_ = new SymbolTable();
     next_token();
+    code_generator_ = new CodeGenerator();
 }
 
 SymbolRecord** create_new_symbol_record() {
@@ -65,9 +70,8 @@ bool Parser::parse(vector<Token*> tokens) {
     tokens_ = tokens;
     next_token();
     global_symbol_table_->second_pass_ = false;
-    global_symbol_table_->code_generator_ = new CodeGenerator();
+    global_symbol_table_->code_generator_ = code_generator_;
     global_symbol_table_->code_generator_->second_pass_ = false;
-    code_generator_ = global_symbol_table_->code_generator_;
     if (output_to_file_) {
         syntax_error_output_file_.open(syntax_error_output_path_);
         derivation_output_file_.open(derivation_output_path_);

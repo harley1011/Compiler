@@ -1339,7 +1339,7 @@ TEST(FuncWithWrongReturnType, SemanticVerification)
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
     EXPECT_EQ(parser.print_semantic_errors(), "Error: function funcTest has a return type of A but is returning type int:1:96\n");
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
     parser.global_symbol_table_->print(true);
 }
 
