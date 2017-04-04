@@ -19,6 +19,7 @@ public:
     SymbolRecord* symbol_record_;
     SymbolRecord* current_symbol_record_;
     CodeGenerator* code_generator_;
+    bool circular_references_deteced_;
 
     SymbolTable();
     bool create_class_entry_and_table(string kind, string type, string name);
@@ -70,6 +71,8 @@ public:
     bool check_if_matching_types(string variable_property, string assign_type);
 
     CodeGenerator *get_code_generator();
+
+    bool calculate_class_offsets();
 };
 
 

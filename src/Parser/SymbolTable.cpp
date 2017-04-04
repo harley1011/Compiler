@@ -14,6 +14,7 @@ SymbolTable::SymbolTable() {
     second_pass_ = false;
     parent_symbol_table_ = NULL;
     code_generator_ = NULL;
+    circular_references_deteced_ = false;
 }
 
 bool SymbolTable::check_if_assign_variable_exist(SymbolRecord *record) {
@@ -472,6 +473,7 @@ void SymbolTable::check_for_circular_references(SymbolRecord *record, SymbolReco
         if (current_record->kind_ == "variable" && current_record->structure_ == "class" && current_record->type_ == record->name_) {
             already_checked_types.push_back(member_type_record->name_);
             report_error_to_highest_symbol_table("Error: circular reference in class " + record->name_ + " variable " + member_record->name_  + " is of type " + member_type_record->name_ + " which also has one or more variables or nested variables of type " + record->name_);
+            circular_references_deteced_ = true;
         } else {
             already_checked_types.push_back(member_type_record->name_);
             check_for_circular_references(record, current_record, already_checked_types);
@@ -508,11 +510,80 @@ bool SymbolTable::create_variable_entry(SymbolRecord** record) {
     determine_record_fields(*record);
     insert(*record);
 
-    if (symbol_record_->name_ != "program")
-        get_code_generator()->determine_func_stack_variable_offsets(record);
+    if (symbol_record_->name_ != "program" && symbol_record_->kind_ != "class") {
+        //get_code_generator()->determine_func_stack_variable_offsets(record);
+
+        SymbolRecord* local_record = (*record);
+        int variable_size;
+        if (local_record->structure_ == "class") {
+            SymbolRecord* found_class_record = search(local_record->type_);
+            if (found_class_record == NULL)
+                return true;
+            variable_size = found_class_record->offset_address_;
+        } else
+            variable_size = local_record->compute_record_size();
+        int size = local_record->symbol_table_->parent_symbol_table_->symbol_records_.size();
+        local_record->symbol_table_->parent_symbol_table_->symbol_record_->offset_address_ += variable_size;
+
+        if (size > 1) {
+            SymbolRecord* previous_record = local_record->symbol_table_->parent_symbol_table_->symbol_records_[size - 2];
+            local_record->offset_address_ = previous_record->offset_address_ + previous_record->compute_record_size();
+        } else
+            local_record->offset_address_ = 8;
+        local_record->is_stack_variable_ = true;
+    }
 
     return true;
 }
+bool SymbolTable::calculate_class_offsets() {
+    if (second_pass_)
+        return true;
+    if (circular_references_deteced_)
+        return true;
+    int offset_calculation_remain = false;
+    while(true) {
+        for (SymbolRecord *record: symbol_records_) {
+            if (record->kind_ == "class" && !record->offset_calculated_) {
+                int first_offset = 0;
+                int offset_count = 0;
+                int set_class_address = true;
+                for (SymbolRecord* class_record: record->symbol_table_->symbol_records_) {
+
+                    if (class_record->kind_ == "variable") {
+
+                        if (class_record->structure_ == "class") {
+                            SymbolRecord* found_class_record = search(class_record->type_);
+                            if (!found_class_record->offset_calculated_) {
+                                offset_calculation_remain = true;
+                                set_class_address = false;
+                                break;
+                            }
+
+                            offset_count += found_class_record->offset_address_;
+
+                        } else
+                            offset_count += class_record->compute_record_size();
+
+                        if (first_offset == 0)
+                            first_offset = offset_count;
+
+                        class_record->offset_address_ = offset_count - first_offset;
+                    }
+                }
+                if (set_class_address) {
+                    record->offset_address_ = offset_count;
+                    record->offset_calculated_ = true;
+                }
+            }
+        }
+        if (!offset_calculation_remain)
+            break;
+        offset_calculation_remain = false;
+    }
+    return true;
+
+}
+
 
 CodeGenerator* SymbolTable::get_code_generator() {
     if (code_generator_ == NULL)

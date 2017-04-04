@@ -53,7 +53,7 @@ Parser::Parser(vector<Token*> tokens) {
 
 SymbolRecord** create_new_symbol_record() {
     SymbolRecord** record = new SymbolRecord*;
-    *record = new SymbolRecord;
+    *record = new SymbolRecord();
     return record;
 }
 
@@ -127,7 +127,7 @@ bool Parser::prog() {
     if (!skip_errors({"CLASS", "PROGRAM"}, {}, false))
         return false;
     if (lookahead_ == "CLASS" || lookahead_ == "PROGRAM") {
-        if (classDeclLst() && progBody()) {
+        if (classDeclLst() && global_symbol_table_->calculate_class_offsets() && progBody()) {
             return true;
         }
 
@@ -184,7 +184,7 @@ bool Parser::classInDecl() {
     if (is_lookahead_a_type()) {
         form_derivation_string("<classInDecl>", "<type> id <postTypeId>");
         SymbolRecord** record = create_new_symbol_record();
-        (*record)->symbol_table_->parent_symbol_table_ = global_symbol_table_;
+       // (*record)->symbol_table_->parent_symbol_table_ = global_symbol_table_;
         if (type(*record) && match("ID", {"OPENBRA", "OPENPARA", "DELI", "CLOSECURL"}) && (*record)->set_name(get_last_token().lexeme_) && postTypeId(record)) {
             return true;
         }

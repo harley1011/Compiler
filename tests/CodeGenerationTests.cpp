@@ -347,6 +347,23 @@ TEST(FunctionDeclaration, CodeGeneration)
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
     parser.global_symbol_table_->print(true);
 }
+TEST(FunctionWithClassVariableDeclaration, CodeGeneration)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class B { int k; A a; }; class A {int i; int k; int p; }; program { int x; }; int funcTest() { int i; i = 5; A a; return(i); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
 
 // function call mechanism: jump on call, return value
 
@@ -354,7 +371,7 @@ TEST(FunctionCall, CodeGeneration)
 {
     vector<Token*> tokens;
     Scanner scanner;
-    tokens = scanner.generate_tokens("program { int x; x = funcTest(); }; int funcTest() { int i; i = 5; return(i); };", false);
+    tokens = scanner.generate_tokens("program { int x; x = funcTest(); putc(x); }; int funcTest() { int i; i = 100; return(i); };", false);
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
@@ -413,6 +430,25 @@ TEST(ArrayAccess, CodeGeneration)
     vector<Token*> tokens;
     Scanner scanner;
     tokens = scanner.generate_tokens("program { int x[5]; x[4] = 100; put(x[4]); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
+
+
+TEST(DoubleArrayAccess, CodeGeneration)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("program { int x[5][4]; x[4][3] = 120; put(x[4][3]); };", false);
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
