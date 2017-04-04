@@ -13,8 +13,9 @@ SymbolRecord::SymbolRecord(string kind, string type, string name) {
     name_ = name;
     symbol_table_ = new SymbolTable();
     is_stack_variable_ = false;
-    offset_calculated_ = false;
+    size_calculated_ = false;
     offset_address_ = 0;
+    size_calculated_ = 0;
 }
 
 SymbolRecord::SymbolRecord() {
@@ -23,8 +24,9 @@ SymbolRecord::SymbolRecord() {
     name_ ="";
     symbol_table_ = new SymbolTable();
     is_stack_variable_ = false;
-    offset_calculated_ = false;
+    size_calculated_ = false;
     offset_address_ = 0;
+    size_calculated_ = 0;
 }
 
 SymbolRecord::SymbolRecord(bool second_pass) {
@@ -35,7 +37,8 @@ SymbolRecord::SymbolRecord(bool second_pass) {
     is_stack_variable_ = false;
     symbol_table_->second_pass_ = second_pass;
     offset_address_ = 0;
-    offset_calculated_ = false;
+    size_calculated_ = false;
+    size_calculated_ = 0;
 }
 int SymbolRecord::compute_type_size() {
     if (type_ == "int" || type_ == "float")

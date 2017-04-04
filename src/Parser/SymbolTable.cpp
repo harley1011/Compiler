@@ -29,6 +29,7 @@ bool SymbolTable::check_if_assign_variable_exist(SymbolRecord *record) {
             record->symbol_table_ = found_record->symbol_table_;
             record->offset_address_ = found_record->offset_address_;
             record->data_member_offset_address_ = found_record->data_member_offset_address_;
+            record->structure_ = found_record->structure_;
         } else {
             check_correct_number_of_array_dimensions(found_record, record, record->nested_properties_dimensions_[found_record->name_]);
             record->address = found_record->address;
@@ -36,6 +37,7 @@ bool SymbolTable::check_if_assign_variable_exist(SymbolRecord *record) {
             record->symbol_table_ = found_record->symbol_table_;
             record->offset_address_ = found_record->offset_address_;
             record->data_member_offset_address_ = found_record->data_member_offset_address_;
+            record->structure_ = found_record->structure_;
         }
     }
     return true;
@@ -519,7 +521,6 @@ bool SymbolTable::create_variable_entry(SymbolRecord** record) {
     insert(*record);
 
     if (symbol_record_ != NULL && symbol_record_->name_ != "program" && symbol_record_->kind_ != "class") {
-        //get_code_generator()->determine_func_stack_variable_offsets(record);
 
         SymbolRecord* local_record = (*record);
         int variable_size;
@@ -527,15 +528,20 @@ bool SymbolTable::create_variable_entry(SymbolRecord** record) {
             SymbolRecord* found_class_record = search(local_record->type_);
             if (found_class_record == NULL)
                 return true;
-            variable_size = found_class_record->offset_address_;
+            variable_size = found_class_record->record_size_;
         } else
             variable_size = local_record->compute_record_size();
         int size = local_record->symbol_table_->parent_symbol_table_->symbol_records_.size();
-        local_record->symbol_table_->parent_symbol_table_->symbol_record_->offset_address_ += variable_size;
+        SymbolRecord* parent_record = local_record->symbol_table_->parent_symbol_table_->symbol_record_;
+        parent_record->record_size_ += variable_size;
 
         if (size > 1) {
             SymbolRecord* previous_record = local_record->symbol_table_->parent_symbol_table_->symbol_records_[size - 2];
-            local_record->offset_address_ = previous_record->offset_address_ + previous_record->compute_record_size();
+            if (previous_record->structure_ == "class") {
+                SymbolRecord * found_class_record = search(previous_record->type_);
+                local_record->offset_address_ = found_class_record->offset_address_;
+            } else
+                local_record->offset_address_ = previous_record->offset_address_ + previous_record->compute_record_size();
         } else
             local_record->offset_address_ = 8;
         local_record->is_stack_variable_ = true;
@@ -552,7 +558,7 @@ bool SymbolTable::calculate_class_offsets() {
     while(true) {
         previous_loop_count = loop_count;
         for (SymbolRecord *record: symbol_records_) {
-            if (record->kind_ == "class" && !record->offset_calculated_) {
+            if (record->kind_ == "class" && !record->size_calculated_) {
 
                 int first_offset = 0;
                 int offset_count = 0;
@@ -567,13 +573,13 @@ bool SymbolTable::calculate_class_offsets() {
                                 offset_calculation_remain = false;
                                 break;
                             }
-                            if (!found_class_record->offset_calculated_) {
+                            if (!found_class_record->size_calculated_) {
                                 offset_calculation_remain = true;
                                 set_class_address = false;
                                 break;
                             }
 
-                            offset_count += found_class_record->offset_address_;
+                            offset_count += found_class_record->record_size_;
 
                         } else
                             offset_count += class_record->compute_record_size();
@@ -586,8 +592,8 @@ bool SymbolTable::calculate_class_offsets() {
                 }
                 if (set_class_address) {
                     loop_count++;
-                    record->offset_address_ = offset_count;
-                    record->offset_calculated_ = true;
+                    record->record_size_ = offset_count;
+                    record->size_calculated_ = true;
                 }
             }
         }

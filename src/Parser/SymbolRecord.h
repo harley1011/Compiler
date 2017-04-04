@@ -27,8 +27,9 @@ public:
     vector<int> array_sizes;
     string address;
     int offset_address_;
+    int record_size_;
     int data_member_offset_address_;
-    bool offset_calculated_;
+    bool size_calculated_;
     int integer_value_;
     float float_value_;
 

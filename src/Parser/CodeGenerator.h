@@ -15,6 +15,7 @@ class CodeGenerator {
 
 public:
     bool second_pass_;
+    bool enable_comments_;
     CodeGenerator();
     vector<string> code_generation_;
     vector<string> variable_declaration_generation_;
@@ -61,6 +62,9 @@ public:
     void load_function_parameters_into_stack_memory_code(SymbolRecord *record);
 
     void create_array_indice_storage_code(SymbolRecord* record);
+
+    string add_comment_string(string comment);
+
 };
 
 
