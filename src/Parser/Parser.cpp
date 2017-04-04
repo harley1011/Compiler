@@ -343,7 +343,7 @@ bool Parser::varOrStat(SymbolRecord* func_record, SymbolRecord** record) {
         form_derivation_string("<varOrStat>", "<indiceLst> <idnest> <assignOp> <expr> ;");
         (*record)->set_name((*record)->type_);
         ExpressionTree* tree = new ExpressionTree();
-        func_record->symbol_table_->load_array_sizes(*record);
+        func_record->symbol_table_->load_record_details(*record);
         if (indiceLst(func_record, *record) && idnest(func_record, *record) && assignOp() && expr(func_record, tree) && func_record->symbol_table_->check_expression_tree_for_correct_type(*record, tree) && match("DELI", {"INT", "ID", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN", "CLOSECURL"}, ";", "<missingSemiColon>")) {
             return true;
         }
@@ -706,7 +706,7 @@ bool Parser::factorVarArray(SymbolRecord* func_record, SymbolRecord* record) {
         return false;
     if (lookahead_ == "OPENBRA") {
         form_derivation_string("<factorVarArray>", "<indice> <indiceLst> <factorVarArrayNestId>");
-        func_record->symbol_table_->load_array_sizes(record);
+        func_record->symbol_table_->load_record_details(record);
         if (indice(func_record, record) && indiceLst(func_record, record) && factorVarArrayNestId(func_record, record))
             return true;
     }

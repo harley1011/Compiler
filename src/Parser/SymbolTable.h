@@ -24,7 +24,7 @@ public:
     bool create_class_entry_and_table(string kind, string type, string name);
     bool create_program_entry_and_table();
     bool create_function_entry_and_table(SymbolRecord** record);
-    void load_array_sizes(SymbolRecord* record);
+    void load_record_details(SymbolRecord *record);
     string print(bool output_to_console);
     bool create_variable_entry(SymbolRecord** record);
     bool create_function_class_entry_and_function_table(SymbolRecord **record);
@@ -45,7 +45,7 @@ public:
 
     SymbolRecord *search_type(string type);
 
-    SymbolRecord * check_nested_property(SymbolRecord *record, SymbolRecord *found_record);
+    SymbolRecord * check_nested_property_and_compute_offset(SymbolRecord *record, SymbolRecord *found_record);
 
 
     bool check_for_circular_references(SymbolRecord *record);

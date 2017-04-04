@@ -23,28 +23,31 @@ bool SymbolTable::check_if_assign_variable_exist(SymbolRecord *record) {
         if (found_record == NULL) {
             report_error_to_highest_symbol_table("Error: " + record->name_ + " variable is being used without being declared:");
         } else if (record->nested_properties_.size() > 0 ) {
-            check_nested_property(record, found_record);
+            check_nested_property_and_compute_offset(record, found_record);
             record->address = found_record->address;
             record->is_stack_variable_ = found_record->is_stack_variable_;
             record->symbol_table_ = found_record->symbol_table_;
             record->offset_address_ = found_record->offset_address_;
+            record->data_member_offset_address_ = found_record->data_member_offset_address_;
         } else {
             check_correct_number_of_array_dimensions(found_record, record, record->nested_properties_dimensions_[found_record->name_]);
             record->address = found_record->address;
             record->is_stack_variable_ = found_record->is_stack_variable_;
             record->symbol_table_ = found_record->symbol_table_;
             record->offset_address_ = found_record->offset_address_;
+            record->data_member_offset_address_ = found_record->data_member_offset_address_;
         }
     }
     return true;
 }
 
-SymbolRecord * SymbolTable::check_nested_property(SymbolRecord *record, SymbolRecord *found_record) {
+SymbolRecord * SymbolTable::check_nested_property_and_compute_offset(SymbolRecord *record, SymbolRecord *found_record) {
     if (found_record->type_ == "int")
         report_error_to_highest_symbol_table("Error: " + record->name_ + " is of type int and doesn't have any properties to access:");
     else if (found_record->type_ == "float")
         report_error_to_highest_symbol_table("Error: " + record->name_ + " is of type float and doesn't have any properties to access:");
     else {
+        int offset_count = 0;
         SymbolRecord* current_record = found_record;
         SymbolRecord* current_found_record;
         SymbolTable* top_symbol_table = found_record->symbol_table_->parent_symbol_table_;
@@ -59,11 +62,13 @@ SymbolRecord * SymbolTable::check_nested_property(SymbolRecord *record, SymbolRe
                 report_error_to_highest_symbol_table("Error: invalid nested property " + property + " on variable " + record->name_ + ":");
                 return current_record;
             } else {
+                offset_count += current_record->offset_address_;
                 check_correct_number_of_array_dimensions(current_record, current_record, record->nested_properties_dimensions_[current_record->name_]);
             }
 
 
         }
+        found_record->data_member_offset_address_ = offset_count;
         return current_record;
     }
     return NULL;
@@ -138,7 +143,8 @@ bool SymbolTable::check_expression_tree_for_correct_type(SymbolRecord *variable_
     } else {
         variable_property = found_variable_record->type_;
         if (variable_record->nested_properties_.size() > 0) {
-            SymbolRecord* nested_variable = check_nested_property(variable_record, found_variable_record);
+            SymbolRecord* nested_variable = check_nested_property_and_compute_offset(variable_record,
+                                                                                     found_variable_record);
             if (nested_variable == NULL)
                 return true;
             else
@@ -232,6 +238,7 @@ SymbolRecord* find_nested_record(SymbolRecord* record, SymbolRecord* found_recor
     SymbolTable* top_symbol_table = found_record->symbol_table_->parent_symbol_table_;
     if (top_symbol_table->parent_symbol_table_ != NULL)
         top_symbol_table = top_symbol_table->parent_symbol_table_;
+    int offset_count = 0;
     for (int i = 0; i < record->nested_properties_.size(); i++) {
         string property = record->nested_properties_[i];
         current_record = top_symbol_table->search(current_record->type_);
@@ -240,8 +247,10 @@ SymbolRecord* find_nested_record(SymbolRecord* record, SymbolRecord* found_recor
         if (current_record == NULL) {
             return NULL;
         }
+        offset_count += current_record->offset_address_;
 
     }
+    found_record->data_member_offset_address_ = offset_count;
     return  current_record;
 }
 
@@ -793,13 +802,14 @@ string SymbolTable::generate_symbol_table_string(SymbolTable *table, string tabl
     return return_string;
 }
 
-void SymbolTable::load_array_sizes(SymbolRecord *record) {
+void SymbolTable::load_record_details(SymbolRecord *record) {
     if (!second_pass_)
         return;
     SymbolRecord* found_record = search(record->name_);
     if (found_record == NULL)
         return;
-    record->array_sizes =  found_record->array_sizes;
-    record->structure_ = "array";
-    record->type_ = found_record->type_;
+    if (found_record->array_sizes.size() > 0) {
+        record->array_sizes = found_record->array_sizes;
+    }
+    record->structure_ = found_record->structure_;
 }

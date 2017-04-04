@@ -233,6 +233,9 @@ void CodeGenerator::create_variable_assignment_with_register(SymbolRecord *varia
         code_generation_.push_back("sw " + variable_record->address + "(r9)," + reg);
         //clear indice access register
         code_generation_.push_back("add r8,r0,r0");
+    } else if (variable_record->structure_ == "class") {
+        code_generation_.push_back("addi r7,r0," + to_string(variable_record->data_member_offset_address_));
+        code_generation_.push_back("sw " +  variable_record->address + "(r7)," + reg);
     }
     else {
         code_generation_.push_back("sw " + variable_record->address + "(r0)," + reg);
@@ -255,6 +258,9 @@ void CodeGenerator::load_or_call_record_into_reg(SymbolRecord *load_record, stri
             code_generation_.push_back("lw " + load_reg + "," + load_record->address + "(r9)");
             //clear indice access register
             code_generation_.push_back("add r8,r0,r0");
+        } else if (load_record->kind_ == "variable" && load_record->structure_ == "class") {
+            code_generation_.push_back("addi r7,r0," + to_string(load_record->data_member_offset_address_));
+            code_generation_.push_back("lw " + load_reg + "," + load_record->address + "(r7)");
         } else if (load_record->kind_ == "variable")
             code_generation_.push_back("lw " + load_reg +"," + load_record->address + "(r0)");
         else if (load_record->kind_ == "function") {
