@@ -265,7 +265,6 @@ bool Parser::funcDef() {
         form_derivation_string("<funcDef>", "<funcHead> <funcBody> ;");
         SymbolRecord** record = create_new_symbol_record();
         if (funcHead(record) && funcBody(*record) && match("DELI")) {
-            code_generator_->create_func_return_code(*record);
             return true;
         }
     }
@@ -414,7 +413,7 @@ bool Parser::statementRes(SymbolRecord* func_record) {
         }
     } else if (lookahead_ == "RETURN") {
         form_derivation_string("<statementRes>", "return ( <expr> ) ;");
-        if (match("RETURN") && match("OPENPARA") && expr(func_record, tree) && func_record->symbol_table_->check_if_return_type_is_correct_type(func_record, tree) && match("CLOSEPARA") && match("DELI")) {
+        if (match("RETURN") && match("OPENPARA") && expr(func_record, tree) && func_record->symbol_table_->check_if_return_type_is_correct_type(func_record, tree) && match("CLOSEPARA") && code_generator_->create_func_return_code(func_record) && match("DELI")) {
             return true;
         }
     }

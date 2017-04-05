@@ -149,7 +149,7 @@ TEST(SimpleIfElseInFunc, CodeGeneration)
 {
     vector<Token*> tokens;
     Scanner scanner;
-    tokens = scanner.generate_tokens("program { int x; x = 90; if ( 10 == 9 ) then { x = x + 10; } else { x = x + 20; }; put(x); };", false);
+    tokens = scanner.generate_tokens("program { int x; x = 90; if ( 10 == 9 ) then { x = x + 40; x = x - 20;} else { x = x + 20; }; put(x); };", false);
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
@@ -163,6 +163,23 @@ TEST(SimpleIfElseInFunc, CodeGeneration)
     parser.global_symbol_table_->print(true);
 }
 
+TEST(SimpleIfElseOneLineInFunc, CodeGeneration)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("program { int x; x = 90; if ( 10 == 9 ) then x = x + 10; else x = x + 20; put(x); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
 //Input/output: read from keyboard, write to standard output
 
 TEST(SimpleWriteIntInFunc, CodeGeneration)
@@ -462,6 +479,25 @@ TEST(FunctioCallnWithArrayVariableDeclaration, CodeGeneration)
     vector<Token*> tokens;
     Scanner scanner;
     tokens = scanner.generate_tokens("program { int x; x = funcTest(); put(x); }; int funcTest() { int i[5]; i[2] = 100; return(i[2]); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
+
+
+TEST(FunctionCallWithIf, CodeGeneration)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("program { int x; x = funcTest(10, 10); put(x); }; int funcTest(int x, int y) { if ( x < y ) then return(100); else return(110); };", false);
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
