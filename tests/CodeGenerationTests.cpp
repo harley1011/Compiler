@@ -132,7 +132,7 @@ TEST(SimpleIfInFunc, CodeGeneration)
 {
     vector<Token*> tokens;
     Scanner scanner;
-    tokens = scanner.generate_tokens("program { int x; x = 0; if ( 10 == 10 ) { x = x + 10; }; };", false);
+    tokens = scanner.generate_tokens("program { int x; x = 90; if ( 10 == 10 ) then { x = x + 10; }; put(x); };", false);
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
@@ -145,6 +145,24 @@ TEST(SimpleIfInFunc, CodeGeneration)
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
     parser.global_symbol_table_->print(true);
 }
+TEST(SimpleIfElseInFunc, CodeGeneration)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("program { int x; x = 90; if ( 10 == 9 ) then { x = x + 10; } else { x = x + 20; }; put(x); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
+
 //Input/output: read from keyboard, write to standard output
 
 TEST(SimpleWriteIntInFunc, CodeGeneration)
@@ -371,7 +389,7 @@ TEST(FunctionCall, CodeGeneration)
 {
     vector<Token*> tokens;
     Scanner scanner;
-    tokens = scanner.generate_tokens("program { int x; x = funcTest(); putc(x); }; int funcTest() { int i; i = 100; return(i); };", false);
+    tokens = scanner.generate_tokens("program { int x; x = funcTest(); put(x); }; int funcTest() { int i; i = 100; return(i); };", false);
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
@@ -385,6 +403,24 @@ TEST(FunctionCall, CodeGeneration)
     parser.global_symbol_table_->print(true);
 }
 
+
+TEST(FunctionCallInFunctionCall, CodeGeneration)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("program { int x; x = funcTest(); put(x); }; int funcTest() { int i; i = funcTest2(); return(i); }; int funcTest2() { int k; k = 120; return(k); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
 TEST(FunctionCallInExpression, CodeGeneration)
 {
     vector<Token*> tokens;
@@ -504,6 +540,31 @@ TEST(ClassDataMemberAccess, CodeGeneration)
     vector<Token*> tokens;
     Scanner scanner;
     tokens = scanner.generate_tokens("class A { int x; int y; }; program { int k; A a; a.y = 110; put(a.y); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
+
+
+// passing array/object as parameter
+
+
+
+// function call stack implementation: recursive/circular function calls
+
+TEST(RecursiveFunctionCall, CodeGeneration)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("program { int x; x = countSum(10); put(x); }; int countSum(int x) { return(i); };", false);
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;

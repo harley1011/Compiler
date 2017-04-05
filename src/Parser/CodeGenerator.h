@@ -20,10 +20,12 @@ public:
     vector<string> code_generation_;
     vector<string> variable_declaration_generation_;
     stack<int> current_for_loop_;
+    stack<int> current_if_;
     void create_variable_code(SymbolRecord** record);
 
     string generate_variable_declaration();
     int loop_count_ = 0;
+    int if_count_ = 0;
     int class_func_count = 0;
     int func_count = 0;
 
@@ -65,6 +67,11 @@ public:
 
     string add_comment_string(string comment);
 
+    void convert_int_to_string(int number);
+
+    bool create_if();
+    bool create_if_else();
+    bool create_if_end();
 };
 
 

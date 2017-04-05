@@ -390,7 +390,7 @@ bool Parser::statementRes(SymbolRecord* func_record) {
     ExpressionTree* tree = new ExpressionTree();
     if (lookahead_ == "IF") {
         form_derivation_string("<statementRes>", "if ( <expr> ) then <statThenBlock>");
-        if (match("IF") && match("OPENPARA") && expr(func_record, tree) && func_record->symbol_table_->check_expression_is_valid(tree) && match("CLOSEPARA") && match("THEN") && statThenBlock(func_record)) {
+        if (match("IF") && match("OPENPARA") && expr(func_record, tree) && func_record->symbol_table_->check_expression_is_valid(tree) && code_generator_->create_if() && match("CLOSEPARA") && match("THEN") && statThenBlock(func_record) && code_generator_->create_if_end()) {
             return true;
         }
     } else if (lookahead_ == "FOR") {
@@ -426,11 +426,11 @@ bool Parser::statIfElseBlock(SymbolRecord* func_record) {
         return false;
     if (lookahead_ == "ELSE") {
         form_derivation_string("<statIfElseBlock>", "else <statBlock>");
-        if (match("ELSE") && statBlock(func_record))
+        if (code_generator_->create_if_else() && match("ELSE") && statBlock(func_record))
             return true;
     } else if (lookahead_ == "DELI") {
         form_derivation_string("<statIfElseBlock>", "");
-        if (match("DELI"))
+        if (match("DELI") && code_generator_->create_if_else())
             return true;
     }
     return false;
@@ -441,12 +441,12 @@ bool Parser::statElseBlock(SymbolRecord* func_record) {
         return false;
     if (lookahead_ == "ELSE") {
         form_derivation_string("<statElseBlock>", "else <statBlock>");
-        if (match("ELSE") && statBlock(func_record))
+        if (code_generator_->create_if_else() && match("ELSE") && statBlock(func_record))
             return true;
     } else if (lookahead_ == "DELI" || lookahead_ == "ELSE" || lookahead_ == "ID" || lookahead_ == "IF" ||
                lookahead_ == "FOR" || lookahead_ == "GET" || lookahead_ == "PUT" || lookahead_ == "RETURN") {
         form_derivation_string("<statElseBlock>", "");
-        if (match("DELI"))
+        if (match("DELI") && code_generator_->create_if_else())
             return true;
     }
     return true;

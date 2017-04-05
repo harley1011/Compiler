@@ -71,7 +71,7 @@ void CodeGenerator::create_relational_expression_code(ExpressionTree * expressio
     } else if (operator_type == "NOTEQ") {
         code_generation_.push_back("cne r1,r2,r1");
     } if (operator_type == "LT") {
-        code_generation_.push_back("cle r1,r2,r1");
+        code_generation_.push_back("clt r1,r2,r1");
     } if (operator_type == "GT") {
         code_generation_.push_back("cgt r1,r2,r1");
     } if (operator_type == "LTEQ") {
@@ -168,6 +168,27 @@ bool CodeGenerator::create_for_loop() {
     current_for_loop_.push(loop_count_);
     return true;
 }
+bool CodeGenerator::create_if() {
+    if (!second_pass_)
+        return true;
+    code_generation_.push_back("bz r1,else" + to_string(if_count_));
+    current_if_.push(if_count_++);
+    return true;
+}
+bool CodeGenerator::create_if_else() {
+    if (!second_pass_)
+        return true;
+    code_generation_.push_back("j ifend" + to_string(current_if_.top()));
+    code_generation_.push_back("else" + to_string(current_if_.top()));
+    return true;
+}
+bool CodeGenerator::create_if_end() {
+    if (!second_pass_)
+        return true;
+    code_generation_.push_back("ifend" + to_string(current_if_.top()));
+    current_if_.pop();
+    return true;
+}
 
 bool CodeGenerator::create_class_func_code(SymbolRecord* record) {
     if (!second_pass_)
@@ -178,7 +199,7 @@ bool CodeGenerator::create_class_func_code(SymbolRecord* record) {
 }
 
 bool CodeGenerator::create_func_code(SymbolRecord* record) {
-    code_generation_.push_back(record->address);
+    code_generation_.push_back(record->address + add_comment_string("func " + record->name_ + " entry point"));
     // store return address in r12 in memory
     code_generation_.push_back("subi r12,r13," + to_string(record->record_size_)  + add_comment_string("store the return address in stack memory"));
     code_generation_.push_back("sw 0(r12),r11");
@@ -204,14 +225,15 @@ bool CodeGenerator::assign_func_address(SymbolRecord* record) {
 bool CodeGenerator::create_for_relation_loop() {
     if (!second_pass_)
         return true;
-    code_generation_.push_back("add r14,r1,r0");
+    code_generation_.push_back("bz r1,forend" + to_string(current_for_loop_.top()));
     return true;
 }
 
 bool CodeGenerator::create_end_for_loop() {
     if (!second_pass_)
         return true;
-    code_generation_.push_back("bnz r14,for" + to_string(loop_count_++));
+    code_generation_.push_back("j for" + to_string(current_for_loop_.top()));
+    code_generation_.push_back("forend" + to_string(current_for_loop_.top()));
     current_for_loop_.pop();
     return true;
 }
@@ -221,6 +243,10 @@ string CodeGenerator::add_comment_string(string comment) {
         return " % " + comment;
     else
         return "";
+}
+
+void CodeGenerator::convert_int_to_string(int number) {
+
 }
 
 void CodeGenerator::create_function_call_code(SymbolRecord* func_record, string return_register) {
