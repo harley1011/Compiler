@@ -158,9 +158,20 @@ bool CodeGenerator::create_put_code() {
     if (!second_pass_)
         return true;
 
-    code_generation_.push_back("putc r1");
+    int_and_string_converter.put_int_required = true;
+    code_generation_.push_back("jl r15,putint");
     return true;
 }
+
+bool CodeGenerator::create_get_code() {
+    if (!second_pass_)
+        return true;
+
+    int_and_string_converter.get_int_required = true;
+    code_generation_.push_back("jl r15,getint");
+    return true;
+}
+
 bool CodeGenerator::create_for_loop() {
     if (!second_pass_)
         return true;
@@ -259,6 +270,8 @@ void CodeGenerator::create_function_call_code(SymbolRecord* func_record, string 
 
 
 void CodeGenerator::create_variable_assignment_with_register(SymbolRecord *variable_record, string reg) {
+    if (!second_pass_)
+        return;
     if (variable_record->is_stack_variable_) {
         int function_size = variable_record->symbol_table_->parent_symbol_table_->symbol_record_->record_size_;
         if (variable_record->structure_ == "class") {
@@ -357,5 +370,7 @@ string CodeGenerator::generate_code() {
     string result = "";
     for (string code: code_generation_)
         result += code + "\n";
+
+    result += int_and_string_converter.generate_required_functions();
     return result;
 }

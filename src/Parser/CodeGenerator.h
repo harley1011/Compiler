@@ -6,6 +6,7 @@
 #include <stack>
 #include "SymbolRecord.h"
 #include "ExpressionTree.h"
+#include "IntAndStringConversion.h"
 #ifndef COMPILER_CODEGENERATOR_H
 #define COMPILER_CODEGENERATOR_H
 
@@ -28,6 +29,8 @@ public:
     int if_count_ = 0;
     int class_func_count = 0;
     int func_count = 0;
+
+    IntAndStringConversion int_and_string_converter;
 
     void create_program_entry(SymbolRecord **record);
     void create_expression_code(ExpressionNode *expression);
@@ -72,6 +75,8 @@ public:
     bool create_if();
     bool create_if_else();
     bool create_if_end();
+
+    bool create_get_code();
 };
 
 

@@ -112,7 +112,7 @@ bool Parser::parse(vector<Token*> tokens) {
     }
     if (syntax_errors.size() == 0 && semantic_errors_.size() == 0) {
         ofstream program_out;
-        program_out.open("program_out.m");
+        program_out.open("C:\\Users\\Harley\\Desktop\\moon\\program_out.m");
         code_generator_->code_generation_.push_back("stack");
         program_out << code_generator_->generate_variable_declaration();
         program_out << code_generator_->generate_code();
@@ -403,7 +403,8 @@ bool Parser::statementRes(SymbolRecord* func_record) {
         }
     } else if (lookahead_ == "GET") {
         form_derivation_string("<statementRes>", "get ( <variable> ) ;");
-        if (match("GET") && match("OPENPARA") && variable(func_record, *local_record) && match("CLOSEPARA") && match("DELI")) {
+        if (match("GET") && match("OPENPARA") && code_generator_->create_get_code() && variable(func_record, *local_record) && match("CLOSEPARA") && match("DELI")) {
+            code_generator_->create_variable_assignment_with_register(*local_record, "r1");
             return true;
         }
     } else if (lookahead_ == "PUT") {
