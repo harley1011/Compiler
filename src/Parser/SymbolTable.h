@@ -72,6 +72,8 @@ public:
     CodeGenerator *get_code_generator();
 
     bool calculate_class_offsets();
+
+    void determine_func_stack_variable_offsets(SymbolRecord *record);
 };
 
 

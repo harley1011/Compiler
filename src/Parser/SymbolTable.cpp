@@ -521,34 +521,56 @@ bool SymbolTable::create_variable_entry(SymbolRecord** record) {
     insert(*record);
 
     if (symbol_record_ != NULL && symbol_record_->name_ != "program" && symbol_record_->kind_ != "class") {
-
         SymbolRecord* local_record = (*record);
-        int variable_size;
-        if (local_record->structure_ == "class") {
-            SymbolRecord* found_class_record = search(local_record->type_);
-            if (found_class_record == NULL)
-                return true;
-            variable_size = found_class_record->record_size_;
-        } else
-            variable_size = local_record->compute_record_size();
-        int size = local_record->symbol_table_->parent_symbol_table_->symbol_records_.size();
-        SymbolRecord* parent_record = local_record->symbol_table_->parent_symbol_table_->symbol_record_;
-        parent_record->record_size_ += variable_size;
-
-        if (size > 1) {
-            SymbolRecord* previous_record = local_record->symbol_table_->parent_symbol_table_->symbol_records_[size - 2];
-            if (previous_record->structure_ == "class") {
-                SymbolRecord * found_class_record = search(previous_record->type_);
-                local_record->offset_address_ = found_class_record->offset_address_;
-            } else
-                local_record->offset_address_ = previous_record->offset_address_ + previous_record->compute_record_size();
-        } else
-            local_record->offset_address_ = 8;
-        local_record->is_stack_variable_ = true;
+        determine_func_stack_variable_offsets(local_record);
     }
 
     return true;
 }
+
+bool SymbolTable::create_parameter_entry(SymbolRecord* record) {
+    if (second_pass_) {
+        string name = record->name_;
+        SymbolRecord* found_record = search(record->name_);
+        delete record;
+        record = found_record;
+        set_properly_declared(record);
+        return true;
+    }
+    record->kind_ = "parameter";
+    determine_record_fields(record);
+    record->symbol_table_->parent_symbol_table_ = this;
+    insert(record);
+    determine_func_stack_variable_offsets(record);
+    return true;
+}
+
+
+void SymbolTable::determine_func_stack_variable_offsets(SymbolRecord *local_record) {
+    int variable_size;
+    if (local_record->structure_ == "class") {
+        SymbolRecord* found_class_record = search(local_record->type_);
+        if (found_class_record == NULL)
+            return;
+        variable_size = found_class_record->record_size_;
+    } else
+        variable_size = local_record->compute_record_size();
+    int size = local_record->symbol_table_->parent_symbol_table_->symbol_records_.size();
+    SymbolRecord* parent_record = local_record->symbol_table_->parent_symbol_table_->symbol_record_;
+    parent_record->record_size_ += variable_size;
+
+    if (size > 1) {
+        SymbolRecord* previous_record = local_record->symbol_table_->parent_symbol_table_->symbol_records_[size - 2];
+        if (previous_record->structure_ == "class") {
+            SymbolRecord * found_class_record = search(previous_record->type_);
+            local_record->offset_address_ = found_class_record->offset_address_;
+        } else
+            local_record->offset_address_ = previous_record->offset_address_ + previous_record->compute_record_size();
+    } else
+        local_record->offset_address_ = 8;
+    local_record->is_stack_variable_ = true;
+}
+
 bool SymbolTable::calculate_class_offsets() {
     if (second_pass_)
         return true;
@@ -647,22 +669,6 @@ bool SymbolTable::create_function_class_entry_and_function_table(SymbolRecord **
     return true;
 }
 
-bool SymbolTable::create_parameter_entry(SymbolRecord* record) {
-    if (second_pass_) {
-        string name = record->name_;
-        SymbolRecord* found_record = search(record->name_);
-        delete record;
-        record = found_record;
-        set_properly_declared(record);
-        return true;
-    }
-    record->kind_ = "parameter";
-    determine_record_fields(record);
-    record->symbol_table_->parent_symbol_table_ = this;
-    insert(record);
-    get_code_generator()->determine_func_stack_variable_offsets(&record);
-    return true;
-}
 
 void determine_record_fields(SymbolRecord* record) {
 
@@ -819,3 +825,5 @@ void SymbolTable::load_record_details(SymbolRecord *record) {
     }
     record->structure_ = found_record->structure_;
 }
+
+
