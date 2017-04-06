@@ -217,6 +217,23 @@ TEST(SimpleWriteIntInFunc, CodeGeneration)
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
     parser.global_symbol_table_->print(true);
 }
+TEST(WriteExpressionInFunc, CodeGeneration)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("program { put(100 + 200 * 20 / 20 + 5); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
 TEST(SimpleWriteIntVarInFunc, CodeGeneration)
 {
     vector<Token*> tokens;
@@ -253,12 +270,83 @@ TEST(SimpleReadIntVarInFunc, CodeGeneration)
 }
 
 //expressions: arithmetic, relational and logic operators
+TEST(NotInFunction, CodeGeneration)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("program { int x; x = not 100; put(x); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
 
 TEST(SimpleAdditionInFunction, CodeGeneration)
 {
     vector<Token*> tokens;
     Scanner scanner;
     tokens = scanner.generate_tokens("program { int x; x = 20 + 85;};", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
+
+TEST(SimpleSubInFunction, CodeGeneration)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("program { int x; x = 20 - 85; put(x);};", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
+
+TEST(SimpleDivInFunction, CodeGeneration)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("program { int x; x = -40 / 5; put(x); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
+
+TEST(SimpleMultInFunction, CodeGeneration)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("program { int x; x = - 40 * 5; put(x);};", false);
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
@@ -343,6 +431,23 @@ TEST(SimpleLessInFunction, CodeGeneration)
     parser.global_symbol_table_->print(true);
 }
 
+TEST(ComplexExpressionInFunction, CodeGeneration)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("program { int x; x = 2 < y;};", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
 // expressions: composite expressions and intermediate result
 
 TEST(MultipleAdditionInFunction, CodeGeneration)

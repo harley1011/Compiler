@@ -113,7 +113,6 @@ bool Parser::parse(vector<Token*> tokens) {
     if (syntax_errors.size() == 0 && semantic_errors_.size() == 0) {
         ofstream program_out;
         program_out.open("C:\\Users\\Harley\\Desktop\\moon\\program_out.m");
-        code_generator_->code_generation_.push_back("stack");
         program_out << code_generator_->generate_variable_declaration();
         program_out << code_generator_->generate_code();
 
@@ -665,12 +664,11 @@ bool Parser::factor(SymbolRecord* func_record, SymbolRecord* record, ExpressionT
     } else if (lookahead_ == "NOT") {
         form_derivation_string("<factor>", "not <factor>");
         record->single_operators_before_.push_back("NOT");
-        if (match("NOT") && factor(func_record, record, abstract_expression_tree) && abstract_expression_tree->add_new_record(record))
+        if (match("NOT") && factor(func_record, record, abstract_expression_tree))
             return true;
     } else if (lookahead_ == "ADD" || lookahead_ == "SUB") {
         form_derivation_string("<factor>", "<sign> <factor>");
-        record->single_operators_before_.push_back(lookahead_);
-        if (sign(record) && factor(func_record, record, abstract_expression_tree) && abstract_expression_tree->add_new_record(record))
+        if (sign(record) && factor(func_record, record, abstract_expression_tree))
             return true;
     }
     return false;

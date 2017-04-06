@@ -77,6 +77,8 @@ public:
     bool create_if_end();
 
     bool create_get_code();
+
+    void create_single_operator_cdes(SymbolRecord *record, string reg);
 };
 
 

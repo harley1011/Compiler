@@ -319,6 +319,7 @@ void CodeGenerator::load_or_call_record_into_reg(SymbolRecord *load_record, stri
         }
         else if (load_record->type_ == "int")
             code_generation_.push_back("addi " + load_reg + ",r0," + to_string(load_record->integer_value_) + add_comment_string("load integer value"));
+        create_single_operator_cdes(load_record, load_reg);
     } else {
 
         if (load_record->structure_ == "array" && load_record->kind_ == "variable") {
@@ -337,10 +338,21 @@ void CodeGenerator::load_or_call_record_into_reg(SymbolRecord *load_record, stri
         }
         else if (load_record->type_ == "int")
             code_generation_.push_back("addi " + load_reg + ",r0," + to_string(load_record->integer_value_));
-
+        create_single_operator_cdes(load_record, load_reg);
     }
 
 }
+
+void CodeGenerator::create_single_operator_cdes(SymbolRecord * record, string reg) {
+    for(string operator_type: record->single_operators_before_) {
+        if (operator_type == "NOT") {
+            code_generation_.push_back("not " + reg + "," + reg);
+        }else if (operator_type == "SUB") {
+            code_generation_.push_back("sub " + reg + ",r0," + reg);
+        }
+    }
+}
+
 void CodeGenerator::create_array_indice_storage_code(SymbolRecord* record) {
     if (!second_pass_ || record->array_sizes.size() == 0)
         return;
@@ -372,5 +384,6 @@ string CodeGenerator::generate_code() {
         result += code + "\n";
 
     result += int_and_string_converter.generate_required_functions();
+    result += "stack";
     return result;
 }
