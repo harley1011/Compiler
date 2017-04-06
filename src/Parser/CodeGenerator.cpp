@@ -16,7 +16,7 @@ void CodeGenerator::determine_func_stack_variable_offsets(SymbolRecord **record)
     int size = local_record->symbol_table_->parent_symbol_table_->symbol_records_.size();
     if (local_record->symbol_table_->parent_symbol_table_->symbol_record_ == NULL)
         return;
-    local_record->symbol_table_->parent_symbol_table_->symbol_record_->size_calculated_ += variable_size;
+    local_record->symbol_table_->parent_symbol_table_->symbol_record_->record_size_ += variable_size;
 
     if (size > 1) {
         SymbolRecord* previous_record = local_record->symbol_table_->parent_symbol_table_->symbol_records_[size - 2];
