@@ -76,6 +76,8 @@ public:
     void determine_func_stack_variable_offsets(SymbolRecord *record);
 
     bool copy_stored_record(SymbolRecord *record);
+
+    bool check_indice_expression_is_valid(SymbolRecord* record, ExpressionTree *tree);
 };
 
 

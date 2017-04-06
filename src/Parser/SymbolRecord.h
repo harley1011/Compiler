@@ -16,7 +16,7 @@ public:
     SymbolRecord();
     string kind_;
     string type_;
-    vector<string> function_parameters_;
+  //  vector<string> function_parameters_;
     vector<string> single_operators_before_;
     map<string, int> nested_properties_dimensions_;
     vector<string> nested_properties_;
@@ -25,6 +25,7 @@ public:
     SymbolTable* symbol_table_;
     bool properly_declared_;
     vector<int> array_sizes;
+    int current_array_position_ = 0;
     string address;
     int offset_address_;
     int record_size_;
@@ -58,6 +59,8 @@ public:
     int compute_record_size();
 
     int compute_type_size();
+
+    vector<SymbolRecord *> get_all_function_parameters();
 };
 
 

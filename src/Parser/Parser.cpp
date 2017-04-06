@@ -341,7 +341,7 @@ bool Parser::varOrStat(SymbolRecord* func_record, SymbolRecord** record) {
         form_derivation_string("<varOrStat>", "<indiceLst> <idnest> <assignOp> <expr> ;");
         (*record)->set_name((*record)->type_);
         ExpressionTree* tree = new ExpressionTree();
-        func_record->symbol_table_->load_record_details(*record);
+        func_record->symbol_table_->copy_stored_record(*record);
         if (indiceLst(func_record, *record) && idnest(func_record, *record) && assignOp() && expr(func_record, tree) && func_record->symbol_table_->check_expression_tree_for_correct_type(*record, tree) && match("DELI", {"INT", "ID", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN", "CLOSECURL"}, ";", "<missingSemiColon>")) {
             return true;
         }
@@ -701,7 +701,7 @@ bool Parser::factorVarArray(SymbolRecord* func_record, SymbolRecord* record) {
         return false;
     if (lookahead_ == "OPENBRA") {
         form_derivation_string("<factorVarArray>", "<indice> <indiceLst> <factorVarArrayNestId>");
-        func_record->symbol_table_->load_record_details(record);
+        func_record->symbol_table_->copy_stored_record(record);
         if (indice(func_record, record) && indiceLst(func_record, record) && factorVarArrayNestId(func_record, record))
             return true;
     }
@@ -734,6 +734,7 @@ bool Parser::varOrFuncIdNest(SymbolRecord* func_record, SymbolRecord* record) {
     if (lookahead_ == "OPENPARA") {
         form_derivation_string("<varOrFuncIdNest>", "( <aParams> )");
         record->kind_ = "function";
+        func_record->symbol_table_->copy_stored_record(record);
         if (match("OPENPARA") && aParams(func_record, record) && match("CLOSEPARA"))
             return true;
     } else if (lookahead_ == "DOT") {
@@ -797,8 +798,8 @@ bool Parser::indice(SymbolRecord* func_record, SymbolRecord* record) {
     if (lookahead_ == "OPENBRA") {
         form_derivation_string("<indice>", "[ <arithExpr> ]");
         ExpressionTree* tree = new ExpressionTree();
-        if (match("OPENBRA") && record->add_nested_properties_dimension_to_last_porperty() && arithExpr(func_record, tree) && func_record->symbol_table_->check_expression_is_valid(tree) && match("CLOSEBRA")) {
-            code_generator_->create_array_indice_storage_code(record);
+        if (match("OPENBRA") && record->add_nested_properties_dimension_to_last_porperty() && arithExpr(func_record, tree) && func_record->symbol_table_->check_indice_expression_is_valid(record, tree) && match("CLOSEBRA")) {
+
             return true;
         }
     }

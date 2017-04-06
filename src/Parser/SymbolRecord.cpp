@@ -96,9 +96,17 @@ string SymbolRecord::type_with_array_dimensions() {
 
 bool SymbolRecord::generate_function_type() {
     for(SymbolRecord* record: symbol_table_->symbol_records_) {
-        function_parameters_.push_back(record->type_);
+      //  function_parameters_.push_back(record->type_);
     }
     return true;
+}
+vector<SymbolRecord*> SymbolRecord::get_all_function_parameters() {
+    vector<SymbolRecord*> params;
+    for(SymbolRecord* record: symbol_table_->symbol_records_) {
+        if (record->kind_ == "parameter")
+            params.push_back(record);
+    }
+    return params;
 }
 
 bool SymbolRecord::add_nested_properties_dimension_to_last_porperty() {
@@ -116,11 +124,6 @@ string SymbolRecord::generate_nested_properties_string() {
     return nested_property_string;
 }
 
-bool SymbolRecord::add_function_record(SymbolRecord *pRecord, bool second_pass) {
-    if (!second_pass)
-        function_parameters_.push_back(pRecord->name_);
-    return true;
-}
 
 int SymbolRecord::compute_class_byte_size() {
     int size = 0;

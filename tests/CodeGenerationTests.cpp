@@ -566,7 +566,7 @@ TEST(FunctionCallInExpression, CodeGeneration)
 {
     vector<Token*> tokens;
     Scanner scanner;
-    tokens = scanner.generate_tokens("program { int x; x = 95 + funcTest(); }; int funcTest() { int i; i = 5; return(i); };", false);
+    tokens = scanner.generate_tokens("program { int x; x = 95 + funcTest(); put(x); }; int funcTest() { int i; i = 5 + 100; return(i); };", false);
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
@@ -660,6 +660,42 @@ TEST(FunctionParameter, CodeGeneration)
     vector<Token*> tokens;
     Scanner scanner;
     tokens = scanner.generate_tokens("program { int x; int y; y = 40; x = funcTest(60, y); put(x);}; int funcTest(int k, int x) { int i; i = k + x; return(i); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
+
+TEST(FunctionParameterExpression, CodeGeneration)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("program { int x; int y; y = 40; x = funcTest(60 + 100 * 20, y + 10); put(x);}; int funcTest(int k, int x) { int i; i = k + x; return(i); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
+
+TEST(FunctionToOtherParameter, CodeGeneration)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("program { int x; int y; y = 40; x = funcTest(60, y); put(x);}; int funcTest(int k, int x) { int i; i = k + x; return(funcTest2(i)); }; int funcTest2(int k)  { return (k / 10); };", false);
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
@@ -768,11 +804,82 @@ TEST(ClassDataMemberAccess, CodeGeneration)
 }
 
 
+TEST(ClassInClassDataMemberAccess, CodeGeneration)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class A { int x; int y; }; class B { int k; int p; A a; }; program { int k; B b; b.a.x = 100; put(b.a.x); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
+TEST(ClassInClassArrayDataMemberAccess, CodeGeneration)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class A { int x[10]; int y; }; class B { int k[5]; int p; A a; }; program { int k; B b; b.a.x[5] = 100; put(b.a.x[5]); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
+
+
 TEST(ClassArrayDataMemberAccess, CodeGeneration)
 {
     vector<Token*> tokens;
     Scanner scanner;
-    tokens = scanner.generate_tokens("class A { int x; int y[10][5]; }; program { A a; a.y[8][4] = 1200; put(a.y[8][4]); };", false);
+    tokens = scanner.generate_tokens("class A { int x; int y[5]; }; program { A a; a.y[3] = 1200; put(a.y[3]); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
+TEST(ClassDoubleArrayDataMemberAccess, CodeGeneration)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class A { int x; int y[5][5]; }; program { A a; a.y[3][2] = 1200; put(a.y[3][2]); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
+
+TEST(ClassArrayDataMemberAccessInFunc, CodeGeneration)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class A { int x; int y[5]; }; program {int k; k = funcTest(); put(k); }; int funcTest() { A a; a.y[3] = 1200; return(a.y[3]); };", false);
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
@@ -798,7 +905,7 @@ TEST(RecursiveFunctionCall, CodeGeneration)
 {
     vector<Token*> tokens;
     Scanner scanner;
-    tokens = scanner.generate_tokens("program { int x; x = countSum(10); put(x); }; int countSum(int x) { return(i); };", false);
+    tokens = scanner.generate_tokens("program { int x; x = countSum(10); put(x); }; int countSum(int x) { if ( 0 == x) then return(0); else return ( x + countSum(x - 1)); };", false);
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;

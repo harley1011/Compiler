@@ -45,6 +45,7 @@ bool SymbolTable::copy_stored_record(SymbolRecord *record) {
     record->structure_ = found_record->structure_;
     record->array_sizes = found_record->array_sizes;
     record->type_ = found_record->type_;
+    record->record_size_ = found_record->record_size_;
     return true;
 }
 
@@ -80,6 +81,16 @@ SymbolRecord * SymbolTable::check_nested_property_and_compute_offset(SymbolRecor
         return current_record;
     }
     return NULL;
+}
+bool SymbolTable::check_indice_expression_is_valid(SymbolRecord* record, ExpressionTree *tree) {
+    check_expression_is_valid(tree);
+    SymbolRecord* nested_record;
+    SymbolRecord* found_record = search(record->name_);
+    nested_record = find_nested_record(record, found_record);
+    if (nested_record == NULL)
+        nested_record = record;
+    get_code_generator()->create_array_indice_storage_code(nested_record);
+    return true;
 }
 
 bool SymbolTable::check_expression_is_valid(ExpressionTree *tree) {
@@ -194,7 +205,7 @@ bool SymbolTable::check_expression_tree_for_correct_type(SymbolRecord *variable_
                             "Error: can't assign variable " + found_variable_record->name_ + " a value of type " +
                             found_assign_record->type_ + " it needs type " + found_variable_record->type_ + ":");
                 else {
-                    found_assign_record->function_parameters_ = assign_record->function_parameters_;
+                   // found_assign_record->function_parameters_ = assign_record->function_parameters_;
                     get_code_generator()->load_or_call_record_into_reg(found_assign_record, "r1");
                     get_code_generator()->create_variable_assignment_with_register(found_variable_record, "r1");
                 }
@@ -236,6 +247,7 @@ bool SymbolTable::check_correct_number_of_array_dimensions(SymbolRecord* found_r
         } else if (found_record->array_sizes.size() < number_of_accessed_dimensions) {
             report_error_to_highest_symbol_table("Error: array " + record->name_ + " is being accessed with too many dimensions:");
         }
+        found_record->current_array_position_ = 0;
 
     }
     return true;
@@ -243,6 +255,8 @@ bool SymbolTable::check_correct_number_of_array_dimensions(SymbolRecord* found_r
 
 SymbolRecord* find_nested_record(SymbolRecord* record, SymbolRecord* found_record) {
     SymbolRecord* current_record = found_record;
+    if (found_record == NULL)
+        return NULL;
     SymbolTable* top_symbol_table = found_record->symbol_table_->parent_symbol_table_;
     if (top_symbol_table->parent_symbol_table_ != NULL)
         top_symbol_table = top_symbol_table->parent_symbol_table_;
@@ -268,7 +282,7 @@ bool SymbolTable::check_if_return_type_is_correct_type(SymbolRecord *func_record
     int error_count = errors_.size();
     check_expression_is_valid(expression);
 
-    if (errors_.size() == error_count && expression->root_node_->record_->kind_ != "ADDOP" && expression->root_node_->record_->kind_ != "MULTIOP" && expression->root_node_->record_->kind_ != "RELOP" ) {
+    if (errors_.size() == error_count && expression->root_node_->record_->kind_ != "ADDOP" && expression->root_node_->record_->kind_ != "MULTOP" && expression->root_node_->record_->kind_ != "RELOP" ) {
         SymbolRecord* found_func_record = search(func_record->name_);
         SymbolRecord* return_record = expression->root_node_->record_;
         SymbolRecord* found_return_record = return_record;
@@ -347,10 +361,10 @@ bool SymbolTable::check_if_func_exists_and_parameters_are_valid(SymbolRecord *fu
         SymbolRecord* local_record = search(func_record->name_);
         if (func_record->nested_properties_.size() > 0)
             local_record = find_nested_record(func_record, local_record);
-        if (function_expression_parameters->size() != local_record->function_parameters_.size())
-            report_error_to_highest_symbol_table("Error: " + func_record->name_ + " is being invoked with " + to_string(function_expression_parameters->size()) + " parameters but needs " + to_string(local_record->function_parameters_.size()) + ":");
+        if (function_expression_parameters->size() != local_record->get_all_function_parameters().size())
+            report_error_to_highest_symbol_table("Error: " + func_record->name_ + " is being invoked with " + to_string(function_expression_parameters->size()) + " parameters but needs " + to_string(local_record->get_all_function_parameters().size()) + ":");
 
-        for(int i = 0; i < local_record->function_parameters_.size() && i < function_expression_parameters->size(); i++) {
+        for(int i = 0; i < local_record->get_all_function_parameters().size() && i < function_expression_parameters->size(); i++) {
             SymbolRecord* current_func_parameter = local_record->symbol_table_->symbol_records_[i];
             ExpressionTree* current_expression_parameter = function_expression_parameters->at(i);
 
@@ -587,9 +601,8 @@ bool SymbolTable::calculate_class_offsets() {
         previous_loop_count = loop_count;
         for (SymbolRecord *record: symbol_records_) {
             if (record->kind_ == "class" && !record->size_calculated_) {
-
-                int first_offset = 0;
                 int offset_count = 0;
+                int previous_off_set_count = 0;
                 int set_class_address = true;
                 for (SymbolRecord* class_record: record->symbol_table_->symbol_records_) {
 
@@ -612,10 +625,8 @@ bool SymbolTable::calculate_class_offsets() {
                         } else
                             offset_count += class_record->compute_record_size();
 
-                        if (first_offset == 0)
-                            first_offset = offset_count;
-
-                        class_record->offset_address_ = offset_count - first_offset;
+                        class_record->offset_address_ = previous_off_set_count;
+                        previous_off_set_count = offset_count;
                     }
                 }
                 if (set_class_address) {
