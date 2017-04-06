@@ -1165,6 +1165,18 @@ TEST(ExpressionTreeExpressionThirteen, SemanticVerification)
     EXPECT_EQ(tree->post_order_print(), "10 5 ADD ");
     EXPECT_EQ(tree->calculate_total(), 15);
 }
+
+
+TEST(ExpressionTreeExpressionFourteen, SemanticVerification)
+{
+    Parser parser = common_setup("5 * ( 10 + 12 ) - 200 + ((112 + 21) * 32);", "<arithExpr>");
+    parser.enable_derivation_output_ = false;
+    SymbolRecord *func_record = new SymbolRecord();
+    ExpressionTree* tree = new ExpressionTree();
+    parser.expr(func_record, tree);
+    EXPECT_EQ(tree->post_order_print(), "5 10 12 ADD MULTI 200 SUB 112 21 ADD 32 MULTI ADD ");
+    EXPECT_EQ(tree->calculate_total(), 4166);
+}
 // ----------------------------------------------------------------------------------------------------------------
 // type checking of an assignment statement
 

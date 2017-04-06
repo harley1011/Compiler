@@ -10,22 +10,6 @@ CodeGenerator::CodeGenerator() {
     enable_comments_ = true;
 }
 
-void CodeGenerator::determine_func_stack_variable_offsets(SymbolRecord **record) {
-    SymbolRecord* local_record = (*record);
-    int variable_size = local_record->compute_record_size();
-    int size = local_record->symbol_table_->parent_symbol_table_->symbol_records_.size();
-    if (local_record->symbol_table_->parent_symbol_table_->symbol_record_ == NULL)
-        return;
-    local_record->symbol_table_->parent_symbol_table_->symbol_record_->record_size_ += variable_size;
-
-    if (size > 1) {
-        SymbolRecord* previous_record = local_record->symbol_table_->parent_symbol_table_->symbol_records_[size - 2];
-        local_record->offset_address_ = previous_record->offset_address_ + previous_record->compute_record_size();
-    } else
-        local_record->offset_address_ = 8;
-    local_record->is_stack_variable_ = true;
-}
-
 void CodeGenerator::create_variable_code(SymbolRecord **record) {
     SymbolRecord* local_record = (*record);
     local_record->is_stack_variable_ = false;
@@ -109,7 +93,7 @@ void CodeGenerator::create_expression_code(ExpressionNode *expression) {
             load_record_into_register(second_record, "r2");
 
             if (operator_type == "MULTI") {
-                code_generation_.push_back("mult r1,r2,r1");
+                code_generation_.push_back("mul r1,r2,r1");
             } else if (operator_type == "DIV") {
                 code_generation_.push_back("div r1,r2,r1");
             } else if (operator_type == "AND") {
@@ -176,7 +160,7 @@ bool CodeGenerator::create_for_loop() {
     if (!second_pass_)
         return true;
     code_generation_.push_back("for" + to_string(loop_count_));
-    current_for_loop_.push(loop_count_);
+    current_for_loop_.push(loop_count_++);
     return true;
 }
 bool CodeGenerator::create_if() {
@@ -229,7 +213,7 @@ bool CodeGenerator::create_func_return_code(SymbolRecord* record) {
 bool CodeGenerator::assign_func_address(SymbolRecord* record) {
     record->address = "func" + to_string(func_count++);
     //reserve space for the return address in the stack
-    record->record_size_ = 8;
+    record->record_size_ = 4;
     return true;
 }
 
@@ -279,7 +263,7 @@ void CodeGenerator::create_variable_assignment_with_register(SymbolRecord *varia
             code_generation_.push_back("sw 0(r12)," + reg + add_comment_string("store register value into stack class data member"));
         } else if (variable_record->structure_ == "array") {
             code_generation_.push_back("subi r12,r13," + to_string(function_size -variable_record->offset_address_) + add_comment_string("load stack array  offset"));
-            code_generation_.push_back("add r12,r12,r8");
+            code_generation_.push_back("add r12,r12,r9");
             code_generation_.push_back("sw 0(r12)," + reg + add_comment_string("store register value in stack array indiex"));
         }
         else {
@@ -292,7 +276,7 @@ void CodeGenerator::create_variable_assignment_with_register(SymbolRecord *varia
     } else if (variable_record->structure_ == "array"){
         code_generation_.push_back("sw " + variable_record->address + "(r9)," + reg + add_comment_string("access array index"));
         //clear indice access register
-        code_generation_.push_back("add r8,r0,r0" + add_comment_string("clear array indices register"));
+        code_generation_.push_back("add r9,r0,r0" + add_comment_string("clear array indices register"));
     } else if (variable_record->structure_ == "class") {
         code_generation_.push_back("addi r7,r0," + to_string(variable_record->data_member_offset_address_) + add_comment_string("set register with class data member offset"));
         code_generation_.push_back("sw " +  variable_record->address + "(r7)," + reg + add_comment_string("store register value in class data member"));
@@ -311,7 +295,7 @@ void CodeGenerator::load_or_call_record_into_reg(SymbolRecord *load_record, stri
             code_generation_.push_back("lw " + load_reg + ",0(r12)" + add_comment_string("load stack class data member into register"));
         } else if (load_record->structure_ == "array") {
             code_generation_.push_back("subi r12,r13," + to_string(function_size -load_record->offset_address_) + add_comment_string("load stack array  offset"));
-            code_generation_.push_back("add r12,r12,r8");
+            code_generation_.push_back("add r12,r12,r9");
             code_generation_.push_back("lw " + load_reg + ",0(r12)" + add_comment_string("load stack array index value in function"));
         } else if (load_record->kind_ == "variable") {
             code_generation_.push_back("subi r12,r13," + to_string(function_size - load_record->offset_address_));
@@ -325,7 +309,7 @@ void CodeGenerator::load_or_call_record_into_reg(SymbolRecord *load_record, stri
         if (load_record->structure_ == "array" && load_record->kind_ == "variable") {
             code_generation_.push_back("lw " + load_reg + "," + load_record->address + "(r9)" + add_comment_string("load array index value into register"));
             //clear indice access register
-            code_generation_.push_back("add r8,r0,r0" + add_comment_string("clear array indices register"));
+            code_generation_.push_back("add r9,r0,r0" + add_comment_string("clear array indices register"));
         } else if (load_record->kind_ == "variable" && load_record->structure_ == "class") {
             code_generation_.push_back("addi r7,r0," + to_string(load_record->data_member_offset_address_));
             code_generation_.push_back("lw " + load_reg + "," + load_record->address + "(r7)" + add_comment_string("load class data member into register"));
@@ -356,19 +340,14 @@ void CodeGenerator::create_single_operator_cdes(SymbolRecord * record, string re
 void CodeGenerator::create_array_indice_storage_code(SymbolRecord* record) {
     if (!second_pass_ || record->array_sizes.size() == 0)
         return;
-    int size = record->compute_type_size();
     int array_dimension_size = record->array_sizes[0];
     record->array_sizes.erase(record->array_sizes.begin());
     //increase dimension access
-    code_generation_.push_back("mul r9,r9,r8");
 
-    //times the last calculated expression by type size
-    code_generation_.push_back("muli r1,r1," + to_string(size));
+    code_generation_.push_back("muli r9,r9," + to_string(array_dimension_size));
+    code_generation_.push_back("muli r1,r1," + to_string(4) + add_comment_string("multiply last evaluated expression stored in r1 by the arrays type size"));
+    code_generation_.push_back("add r9,r9,r1" + add_comment_string("add new dimension access to current offset counter"));
 
-    // add new dimension access to offset register
-    code_generation_.push_back("add r9,r9,r1");
-    // store
-    code_generation_.push_back("addi r8,r0," + to_string(array_dimension_size * size));
 
 }
 string CodeGenerator::generate_variable_declaration() {

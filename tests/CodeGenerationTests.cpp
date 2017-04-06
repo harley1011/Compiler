@@ -431,23 +431,6 @@ TEST(SimpleLessInFunction, CodeGeneration)
     parser.global_symbol_table_->print(true);
 }
 
-TEST(ComplexExpressionInFunction, CodeGeneration)
-{
-    vector<Token*> tokens;
-    Scanner scanner;
-    tokens = scanner.generate_tokens("program { int x; x = 2 < y;};", false);
-
-    Parser parser;
-    parser.enable_double_pass_parse_ = true;
-
-    EXPECT_EQ(parser.parse(tokens), true);
-    EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
-
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
-    parser.global_symbol_table_->print(true);
-}
 // expressions: composite expressions and intermediate result
 
 TEST(MultipleAdditionInFunction, CodeGeneration)
@@ -473,6 +456,24 @@ TEST(MultipleAdditionAndMultiInFunction, CodeGeneration)
     vector<Token*> tokens;
     Scanner scanner;
     tokens = scanner.generate_tokens("program { int x; x = 20 + 85 * 5; put(x); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
+
+TEST(ComplexExpressionInFunction, CodeGeneration)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("program { int x; x = 5 * ( 10 + 12 ) - 200 + ((112 + 21) * 32); put(x); };", false);
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
@@ -692,12 +693,48 @@ TEST(ArrayAccess, CodeGeneration)
     parser.global_symbol_table_->print(true);
 }
 
+TEST(ArrayAccessWithVar, CodeGeneration)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("program { int x[5]; int k; k = 4; x[k] = 100; put(x[4]); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
+
+TEST(ArrayForLoopAccess, CodeGeneration)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("program { int x[5]; for(int i = 0; i < 5; i = i + 1) x[i] = i; for(int p = 0; p < 5; p = p + 1) put(x[p]); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
+
 
 TEST(DoubleArrayAccess, CodeGeneration)
 {
     vector<Token*> tokens;
     Scanner scanner;
-    tokens = scanner.generate_tokens("program { int x[5][4]; x[4][3] = 120; put(x[4][3]); };", false);
+    tokens = scanner.generate_tokens("program { int x[4][3]; x[3][2] = 120; put(x[3][2]); };", false);
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
@@ -730,6 +767,26 @@ TEST(ClassDataMemberAccess, CodeGeneration)
     parser.global_symbol_table_->print(true);
 }
 
+
+TEST(ClassArrayDataMemberAccess, CodeGeneration)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class A { int x; int y[10][5]; }; program { A a; a.y[8][4] = 1200; put(a.y[8][4]); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
+
+// BONUS SECTION
 
 // passing array/object as parameter
 

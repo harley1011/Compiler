@@ -654,12 +654,9 @@ bool Parser::factor(SymbolRecord* func_record, SymbolRecord* record, ExpressionT
             return true;
     } else if (lookahead_ == "OPENPARA") {
         form_derivation_string("<factor>", "( <arithExpr> )");
-        ExpressionTree* nested_tree = abstract_expression_tree;
-        if (abstract_expression_tree->root_node_->record_ != NULL)
-            nested_tree = new ExpressionTree();
+        ExpressionTree* nested_tree = new ExpressionTree();
         if (match("OPENPARA") && arithExpr(func_record, nested_tree) && match("CLOSEPARA"))
-            if (abstract_expression_tree != nested_tree)
-                abstract_expression_tree->add_bracket_tree(nested_tree);
+            abstract_expression_tree->add_bracket_tree(nested_tree);
             return true;
     } else if (lookahead_ == "NOT") {
         form_derivation_string("<factor>", "not <factor>");
@@ -753,7 +750,7 @@ bool Parser::variable(SymbolRecord* func_record, SymbolRecord* record) {
         return false;
     if (lookahead_ == "ID") {
         form_derivation_string("<variable>", "id <variableIndice>");
-        if (match("ID") && record->set_name(get_last_token().lexeme_) && func_record->symbol_table_->check_if_assign_variable_exist(record) && variableIndice(func_record, record))
+        if (match("ID") && record->set_name(get_last_token().lexeme_) && func_record->symbol_table_->copy_stored_record(record) && variableIndice(func_record, record) && func_record->symbol_table_->check_if_assign_variable_exist(record) )
             return true;
     }
     return false;

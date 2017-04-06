@@ -24,24 +24,30 @@ bool SymbolTable::check_if_assign_variable_exist(SymbolRecord *record) {
             report_error_to_highest_symbol_table("Error: " + record->name_ + " variable is being used without being declared:");
         } else if (record->nested_properties_.size() > 0 ) {
             check_nested_property_and_compute_offset(record, found_record);
-            record->address = found_record->address;
-            record->is_stack_variable_ = found_record->is_stack_variable_;
-            record->symbol_table_ = found_record->symbol_table_;
-            record->offset_address_ = found_record->offset_address_;
-            record->data_member_offset_address_ = found_record->data_member_offset_address_;
-            record->structure_ = found_record->structure_;
+            copy_stored_record(record);
         } else {
             check_correct_number_of_array_dimensions(found_record, record, record->nested_properties_dimensions_[found_record->name_]);
-            record->address = found_record->address;
-            record->is_stack_variable_ = found_record->is_stack_variable_;
-            record->symbol_table_ = found_record->symbol_table_;
-            record->offset_address_ = found_record->offset_address_;
-            record->data_member_offset_address_ = found_record->data_member_offset_address_;
-            record->structure_ = found_record->structure_;
+            copy_stored_record(record);
         }
     }
     return true;
 }
+
+bool SymbolTable::copy_stored_record(SymbolRecord *record) {
+    SymbolRecord* found_record = search(record->name_);
+    if (found_record == NULL)
+        return true;
+    record->address = found_record->address;
+    record->is_stack_variable_ = found_record->is_stack_variable_;
+    record->symbol_table_ = found_record->symbol_table_;
+    record->offset_address_ = found_record->offset_address_;
+    record->data_member_offset_address_ = found_record->data_member_offset_address_;
+    record->structure_ = found_record->structure_;
+    record->array_sizes = found_record->array_sizes;
+    record->type_ = found_record->type_;
+    return true;
+}
+
 
 SymbolRecord * SymbolTable::check_nested_property_and_compute_offset(SymbolRecord *record, SymbolRecord *found_record) {
     if (found_record->type_ == "int")
@@ -267,7 +273,7 @@ bool SymbolTable::check_if_return_type_is_correct_type(SymbolRecord *func_record
         SymbolRecord* return_record = expression->root_node_->record_;
         SymbolRecord* found_return_record = return_record;
 
-        if (found_return_record->type_ == "") {
+        if (found_return_record->structure_ == "class") {
             found_return_record = search(return_record->name_);
 
             if (found_return_record == NULL)
@@ -567,7 +573,7 @@ void SymbolTable::determine_func_stack_variable_offsets(SymbolRecord *local_reco
         } else
             local_record->offset_address_ = previous_record->offset_address_ + previous_record->compute_record_size();
     } else
-        local_record->offset_address_ = 8;
+        local_record->offset_address_ = 4;
     local_record->is_stack_variable_ = true;
 }
 

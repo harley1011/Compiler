@@ -74,6 +74,8 @@ public:
     bool calculate_class_offsets();
 
     void determine_func_stack_variable_offsets(SymbolRecord *record);
+
+    bool copy_stored_record(SymbolRecord *record);
 };
 
 

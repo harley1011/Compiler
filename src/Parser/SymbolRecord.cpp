@@ -42,8 +42,8 @@ SymbolRecord::SymbolRecord(bool second_pass) {
 }
 int SymbolRecord::compute_type_size() {
     if (type_ == "int" || type_ == "float")
-        return 8;
-    return 8;
+        return 4;
+    return 4;
 }
 int SymbolRecord::compute_record_size() {
     if (array_sizes.size() > 0)
@@ -51,7 +51,7 @@ int SymbolRecord::compute_record_size() {
     else if (structure_ == "class" || structure_ == "class array")
         return compute_class_byte_size();
     else
-        return 8;
+        return 4;
 }
 
 bool SymbolRecord::set_kind(string kind) {
@@ -135,11 +135,11 @@ int SymbolRecord::compute_class_byte_size() {
         else
             size += record->compute_class_byte_size();
     }
-    return size * 8;
+    return size * 4;
 }
 int SymbolRecord::compute_array_size() {
-    int size = 0;
+    int size = 1;
     for (int i : array_sizes)
-        size += i;
-    return size * 8;
+        size *= i;
+    return size * 4;
 }
