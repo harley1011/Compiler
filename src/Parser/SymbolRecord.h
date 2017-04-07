@@ -20,6 +20,7 @@ public:
     vector<string> single_operators_before_;
     map<string, int> nested_properties_dimensions_;
     vector<string> nested_properties_;
+    vector<string> accessor_code_;
     string name_;
     string structure_;
     SymbolTable* symbol_table_;

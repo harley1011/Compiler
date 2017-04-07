@@ -45,10 +45,11 @@ bool CodeGenerator::create_program_halt(bool double_pass) {
 }
 void CodeGenerator::create_relational_expression_code(ExpressionTree * expression) {
     ExpressionNode* left_expression = expression->root_node_->left_tree_;
-    create_expression_code(left_expression);
+    create_expression_code(left_expression, NULL);
     code_generation_.push_back("add r2,r1,r0");
+    //todo store on stack
     ExpressionNode* right_expression = expression->root_node_->right_tree_;
-    create_expression_code(right_expression);
+    create_expression_code(right_expression, NULL);
     string operator_type = expression->root_node_->record_->type_;
     if (operator_type == "EQUIV") {
         code_generation_.push_back("ceq r1,r2,r1");
@@ -67,8 +68,10 @@ void CodeGenerator::create_relational_expression_code(ExpressionTree * expressio
 
 }
 
-void CodeGenerator::create_expression_code(ExpressionNode *expression) {
+void CodeGenerator::create_expression_code(ExpressionNode *expression, vector<string>* code_list) {
 
+    if (code_list == NULL)
+        code_list = &code_generation_;
     stack<SymbolRecord*>* tmp_post_fix_queue = new stack<SymbolRecord*>;
     expression->generate_queue(expression, tmp_post_fix_queue);
     stack<SymbolRecord*>* post_fix_queue = new stack<SymbolRecord*>;;
@@ -84,69 +87,75 @@ void CodeGenerator::create_expression_code(ExpressionNode *expression) {
         post_fix_queue->pop();
         if (first_record->kind_ == "MULTOP" || first_record->kind_ == "ADDOP") {
             string operator_type = first_record->type_;
-            first_record = tmp_post_fix_queue->top();
-            tmp_post_fix_queue->pop();
             SymbolRecord* second_record = tmp_post_fix_queue->top();
             tmp_post_fix_queue->pop();
 
-            load_record_into_register(first_record, "r1");
+            first_record = tmp_post_fix_queue->top();
+            tmp_post_fix_queue->pop();
+
+
+            code_list->push_back(add_comment_string("---evaluting " + operator_type + " expression below ---"));
+            load_record_into_register(first_record, "r2", code_list);
 
             if (second_record->kind_ == "function") // function call might contain expression and therefore clear r1 so we need to store it on the stack so we don't lose it
             {
-                code_generation_.push_back("sw 0(r13),r1");
-                code_generation_.push_back("addi r13,r13,4");
+                code_list->push_back("subi r8,r8,4");
+                code_list->push_back("sw topaddr(r8),r2");
             }
 
-            load_record_into_register(second_record, "r2");
+            load_record_into_register(second_record, "r1", code_list);
 
             if (second_record->kind_ == "function") {
-                code_generation_.push_back("subi r13,r13,4");
-                code_generation_.push_back("lw r1,0(r13)");
+                code_list->push_back("lw r2,topaddr(r8)");
+                code_list->push_back("addi r8,r8,4");
             }
 
             if (operator_type == "MULTI") {
-                code_generation_.push_back("mul r1,r2,r1");
+                code_list->push_back("mul r1,r2,r1");
             } else if (operator_type == "DIV") {
-                code_generation_.push_back("div r1,r2,r1");
+                code_list->push_back("div r1,r2,r1");
             } else if (operator_type == "AND") {
-                code_generation_.push_back("and r1,r2,r1");
+                code_list->push_back("and r1,r2,r1");
             } else if (operator_type == "ADD") {
-                code_generation_.push_back("add r1,r2,r1");
+                code_list->push_back("add r1,r2,r1");
             } else if (operator_type == "SUB") {
-                code_generation_.push_back("sub r1,r2,r1");
+                code_list->push_back("sub r1,r2,r1");
             } else if (operator_type == "OR") {
-                code_generation_.push_back("or r1,r2,r1");
+                code_list->push_back("or r1,r2,r1");
             }
 
-            code_generation_.push_back("sw 0(r13),r1");
-            code_generation_.push_back("addi r13,r13,4");
+            code_list->push_back("subi r8,r8,4");
+            code_list->push_back("sw topaddr(r8),r1");
             SymbolRecord* record = new SymbolRecord();
             //record->address = to_string(current_stack_address_);
             record->kind_ = "stack_variable";
             tmp_post_fix_queue->push(record);
+
+            code_list->push_back(add_comment_string("---evaluting " + operator_type + " expression over ---"));
+
         }
         else
             tmp_post_fix_queue->push(first_record);
 
     }
-    load_record_into_register(tmp_post_fix_queue->top(), "r1");
+    load_record_into_register(tmp_post_fix_queue->top(), "r1", code_list);
     delete tmp_post_fix_queue;
     delete post_fix_queue;
 }
 
-void CodeGenerator::load_function_parameters_into_stack_memory_code(SymbolRecord* record) {
-    code_generation_.push_back("addi r12,r13," + to_string(record->offset_address_) + add_comment_string("loading parameter offset"));
-    code_generation_.push_back("sw 0(r12),r1" + add_comment_string("storing value in function parameter stack"));
+void CodeGenerator:: load_function_parameters_into_stack_memory_code(SymbolRecord* record, vector<string> *code_list) {
+    code_list->push_back("addi r12,r13," + to_string(record->offset_address_) + add_comment_string("loading parameter offset"));
+    code_list->push_back("sw 0(r12),r1" + add_comment_string("storing value in function parameter stack"));
 
 }
 
-void CodeGenerator::load_record_into_register(SymbolRecord *record, string reg) {
+void CodeGenerator::load_record_into_register(SymbolRecord *record, string reg, vector<string>* code_list) {
     if (record->kind_ == "stack_variable") {
-        code_generation_.push_back("subi r13,r13,4");
-        code_generation_.push_back("lw " + reg + ",0(r13)");
+        code_list->push_back("lw " + reg + ",topaddr(r8)");
+        code_list->push_back("addi r8,r8,4" + add_comment_string("remove stack variable from arithmetic expression"));
     }
     else {
-        load_or_call_record_into_reg(record, reg);
+        load_or_call_record_into_reg(record, reg, code_list);
     }
 }
 
@@ -252,105 +261,115 @@ string CodeGenerator::add_comment_string(string comment) {
         return "";
 }
 
-void CodeGenerator::convert_int_to_string(int number) {
-
-}
-
 void CodeGenerator::create_function_call_code(SymbolRecord* func_record, string return_register) {
     //r13 is start of stack
+
+    if (func_record->accessor_code_.size() > 1)
+        code_generation_.insert(code_generation_.end(), func_record->accessor_code_.begin(), func_record->accessor_code_.end());
+
     code_generation_.push_back("addi r13,r13," + to_string(func_record->record_size_) + add_comment_string("allocate stack memory for function calls variables and parameters"));
     code_generation_.push_back("jl r11," + func_record->address);
     code_generation_.push_back("subi r13,r13," + to_string(func_record->record_size_) + add_comment_string("remove declared stack memory for function"));
     code_generation_.push_back("add " + return_register + ",r1,r0" + " % store return value in register");
 }
 
-
 void CodeGenerator::create_variable_assignment_with_register(SymbolRecord *variable_record, string reg) {
+    create_variable_assignment_with_register(variable_record, reg, &code_generation_);
+}
+
+void CodeGenerator::create_variable_assignment_with_register(SymbolRecord *variable_record, string reg, vector<string>* code_list) {
     if (!second_pass_)
         return;
+
     if (variable_record->is_stack_variable_) {
         int function_size = variable_record->symbol_table_->parent_symbol_table_->symbol_record_->record_size_;
         if (variable_record->structure_ == "class") {
-            code_generation_.push_back("subi r12,r13," + to_string(function_size - variable_record->offset_address_ - variable_record->data_member_offset_address_) + add_comment_string("load stack class data member offset"));
-            code_generation_.push_back("add r12,r12,r9");
-            code_generation_.push_back("add r9,r0,r0" + add_comment_string("clear array indices register"));
-            code_generation_.push_back("sw 0(r12)," + reg + add_comment_string("store register value into stack class data member"));
+            code_list->push_back("subi r12,r13," + to_string(function_size - variable_record->offset_address_ - variable_record->data_member_offset_address_) + add_comment_string("load stack class data member offset"));
+            code_list->push_back("add r12,r12,r9");
+            code_list->push_back("add r9,r0,r0" + add_comment_string("clear array indices register"));
+            code_list->push_back("sw 0(r12)," + reg + add_comment_string("store register value into stack class data member"));
         } else if (variable_record->structure_ == "array") {
-            code_generation_.push_back("subi r12,r13," + to_string(function_size -variable_record->offset_address_) + add_comment_string("load stack array  offset"));
-            code_generation_.push_back("add r12,r12,r9");
-            code_generation_.push_back("sw 0(r12)," + reg + add_comment_string("store register value in stack array indiex"));
+            code_list->push_back("subi r12,r13," + to_string(function_size -variable_record->offset_address_) + add_comment_string("load stack array  offset"));
+            code_list->push_back("add r12,r12,r9");
+            code_list->push_back("sw 0(r12)," + reg + add_comment_string("store register value in stack array indiex"));
         }
         else {
             //load offset address of variable i.e function start address + variable offset within function
-            code_generation_.push_back("subi r12,r13," + to_string(function_size - variable_record->offset_address_) + add_comment_string("load stack variable offset"));
-            code_generation_.push_back("sw 0(r12)," + reg + add_comment_string("store register value into stack variable"));
+            code_list->push_back("subi r12,r13," + to_string(function_size - variable_record->offset_address_) + add_comment_string("load stack variable offset"));
+            code_list->push_back("sw 0(r12)," + reg + add_comment_string("store register value into stack variable"));
         }
 
 
     } else if (variable_record->structure_ == "array"){
-        code_generation_.push_back("sw " + variable_record->address + "(r9)," + reg + add_comment_string("access array index"));
+        code_list->push_back("sw " + variable_record->address + "(r9)," + reg + add_comment_string("access array index"));
         //clear indice access register
-        code_generation_.push_back("add r9,r0,r0" + add_comment_string("clear array indices register"));
+        code_list->push_back("add r9,r0,r0" + add_comment_string("clear array indices register"));
     } else if (variable_record->structure_ == "class") {
-        code_generation_.push_back("addi r7,r9," + to_string(variable_record->data_member_offset_address_) + add_comment_string("set register with class data member offset"));
-        code_generation_.push_back("add r9,r0,r0" + add_comment_string("clear array indices register"));
-        code_generation_.push_back("sw " +  variable_record->address + "(r7)," + reg + add_comment_string("store register value in class data member"));
+        code_list->push_back("addi r7,r9," + to_string(variable_record->data_member_offset_address_) + add_comment_string("set register with class data member offset"));
+        code_list->push_back("add r9,r0,r0" + add_comment_string("clear array indices register"));
+        code_list->push_back("sw " +  variable_record->address + "(r7)," + reg + add_comment_string("store register value in class data member"));
     }
     else {
-        code_generation_.push_back("sw " + variable_record->address + "(r0)," + reg);
+        code_list->push_back("sw " + variable_record->address + "(r0)," + reg);
     }
 }
+void CodeGenerator::load_or_call_record_into_reg(SymbolRecord *load_record, string load_reg, vector<string>* code_list) {
 
-
-void CodeGenerator::load_or_call_record_into_reg(SymbolRecord *load_record, string load_reg) {
     if (load_record->is_stack_variable_) {
         int function_size = load_record->symbol_table_->parent_symbol_table_->symbol_record_->record_size_;
         if (load_record->structure_ == "class") {
-            code_generation_.push_back("subi r12,r13," + to_string(function_size - load_record->offset_address_ - load_record->data_member_offset_address_) + add_comment_string("load stack class data member offset"));
-            code_generation_.push_back("add r12,r12,r9");
-            code_generation_.push_back("add r9,r0,r0" + add_comment_string("clear array indices register"));
-            code_generation_.push_back("lw " + load_reg + ",0(r12)" + add_comment_string("load stack class data member into register"));
+            code_list->push_back("subi r12,r13," + to_string(function_size - load_record->offset_address_ - load_record->data_member_offset_address_) + add_comment_string("load stack class data member offset"));
+            code_list->push_back("add r12,r12,r9");
+            code_list->push_back("add r9,r0,r0" + add_comment_string("clear array indices register"));
+            code_list->push_back("lw " + load_reg + ",0(r12)" + add_comment_string("load stack class data member into register"));
         } else if (load_record->structure_ == "array") {
-            code_generation_.push_back("subi r12,r13," + to_string(function_size -load_record->offset_address_) + add_comment_string("load stack array  offset"));
-            code_generation_.push_back("add r12,r12,r9");
-            code_generation_.push_back("lw " + load_reg + ",0(r12)" + add_comment_string("load stack array index value in function"));
+            code_list->push_back("subi r12,r13," + to_string(function_size -load_record->offset_address_) + add_comment_string("load stack array  offset"));
+            code_list->push_back("add r12,r12,r9");
+            code_list->push_back("lw " + load_reg + ",0(r12)" + add_comment_string("load stack array index value in function"));
         } else if (load_record->kind_ == "variable") {
-            code_generation_.push_back("subi r12,r13," + to_string(function_size - load_record->offset_address_));
-            code_generation_.push_back("lw " + load_reg + ",0(r12)" + add_comment_string("load stack variable value in function"));
+            code_list->push_back("subi r12,r13," + to_string(function_size - load_record->offset_address_));
+            code_list->push_back("lw " + load_reg + ",0(r12)" + add_comment_string("load stack variable value in function"));
         }
         else if (load_record->type_ == "int")
-            code_generation_.push_back("addi " + load_reg + ",r0," + to_string(load_record->integer_value_) + add_comment_string("load integer value"));
-        create_single_operator_cdes(load_record, load_reg);
+            code_list->push_back("addi " + load_reg + ",r0," + to_string(load_record->integer_value_) + add_comment_string("load integer value"));
+        create_single_operator_codes(load_record, load_reg);
     } else {
 
         if (load_record->structure_ == "array" && load_record->kind_ == "variable") {
-            code_generation_.push_back("lw " + load_reg + "," + load_record->address + "(r9)" + add_comment_string("load array index value into register"));
+            code_list->push_back("lw " + load_reg + "," + load_record->address + "(r9)" + add_comment_string("load array index value into register"));
             //clear indice access register
-            code_generation_.push_back("add r9,r0,r0" + add_comment_string("clear array indices register"));
+            code_list->push_back("add r9,r0,r0" + add_comment_string("clear array indices register"));
         } else if (load_record->kind_ == "variable" && load_record->structure_ == "class") {
-            code_generation_.push_back("addi r7,r9," + to_string(load_record->data_member_offset_address_));
-            code_generation_.push_back("add r9,r0,r0" + add_comment_string("clear array indices register"));
-            code_generation_.push_back("lw " + load_reg + "," + load_record->address + "(r7)" + add_comment_string("load class data member into register"));
+            code_list->push_back("addi r7,r9," + to_string(load_record->data_member_offset_address_));
+            code_list->push_back("add r9,r0,r0" + add_comment_string("clear array indices register"));
+            code_list->push_back("lw " + load_reg + "," + load_record->address + "(r7)" + add_comment_string("load class data member into register"));
         } else if (load_record->kind_ == "variable")
-            code_generation_.push_back("lw " + load_reg +"," + load_record->address + "(r0)" + add_comment_string("load variable into register"));
+            code_list->push_back("lw " + load_reg +"," + load_record->address + "(r0)" + add_comment_string("load variable into register"));
         else if (load_record->kind_ == "function") {
-            code_generation_.push_back(add_comment_string("---- function call code beg----"));
+            code_list->push_back(add_comment_string("---- function call code beg----"));
             create_function_call_code(load_record, load_reg);
-            code_generation_.push_back(add_comment_string("---- function call code end ----"));
+            code_list->push_back(add_comment_string("---- function call code end ----"));
         }
         else if (load_record->type_ == "int")
-            code_generation_.push_back("addi " + load_reg + ",r0," + to_string(load_record->integer_value_));
-        create_single_operator_cdes(load_record, load_reg);
+            code_list->push_back("addi " + load_reg + ",r0," + to_string(load_record->integer_value_));
+        create_single_operator_codes(load_record, load_reg);
     }
-
 }
 
-void CodeGenerator::create_single_operator_cdes(SymbolRecord * record, string reg) {
+void CodeGenerator::load_or_call_record_into_reg(SymbolRecord *load_record, string load_reg) {
+    load_or_call_record_into_reg(load_record, load_reg, &code_generation_);
+
+}
+void CodeGenerator::create_single_operator_codes(SymbolRecord *record, string reg) {
+    create_single_operator_codes(record, reg, &code_generation_);
+}
+
+void CodeGenerator::create_single_operator_codes(SymbolRecord *record, string reg, vector<string>* code_list) {
     for(string operator_type: record->single_operators_before_) {
         if (operator_type == "NOT") {
-            code_generation_.push_back("not " + reg + "," + reg);
+            code_list->push_back("not " + reg + "," + reg);
         }else if (operator_type == "SUB") {
-            code_generation_.push_back("sub " + reg + ",r0," + reg);
+            code_list->push_back("sub " + reg + ",r0," + reg);
         }
     }
 }

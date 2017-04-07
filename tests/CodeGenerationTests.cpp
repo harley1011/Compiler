@@ -673,6 +673,26 @@ TEST(FunctionParameter, CodeGeneration)
     parser.global_symbol_table_->print(true);
 }
 
+
+TEST(MultiFunctionCallWithParameter, CodeGeneration)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("program { int x; int y; y = 40; x = funcTest(60 - 20) + funcTest(60 - 40); put(x);}; int funcTest(int k) { return(k); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
+
+
 TEST(FunctionParameterExpression, CodeGeneration)
 {
     vector<Token*> tokens;
@@ -906,6 +926,23 @@ TEST(RecursiveFunctionCall, CodeGeneration)
     vector<Token*> tokens;
     Scanner scanner;
     tokens = scanner.generate_tokens("program { int x; x = countSum(10); put(x); }; int countSum(int x) { if ( 0 == x) then return(0); else return ( x + countSum(x - 1)); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
+TEST(FibFunctionCall, CodeGeneration)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("program { int x; x = fib(5); put(x); }; int fib(int x) { if ( x <= 2) then return(1); else return ( fib(x-1) + fib(x-2) ); };", false);
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;

@@ -92,8 +92,11 @@ bool SymbolTable::check_indice_expression_is_valid(SymbolRecord* record, Express
     get_code_generator()->create_array_indice_storage_code(nested_record);
     return true;
 }
-
 bool SymbolTable::check_expression_is_valid(ExpressionTree *tree) {
+    check_expression_is_valid(tree, NULL);
+    return true;
+}
+bool SymbolTable::check_expression_is_valid(ExpressionTree *tree, vector<string>* code_list) {
     if (!second_pass_)
         return true;
 
@@ -106,9 +109,9 @@ bool SymbolTable::check_expression_is_valid(ExpressionTree *tree) {
 
     } else if (tree->root_node_->record_->kind_ == "ADDOP" || tree->root_node_->record_->kind_ == "MULTOP") {
         check_valid_arithmetic_expression(tree->root_node_);
-        get_code_generator()->create_expression_code(tree->root_node_);
+        get_code_generator()->create_expression_code(tree->root_node_, code_list);
     } else {
-        get_code_generator()->create_expression_code(tree->root_node_);
+        get_code_generator()->create_expression_code(tree->root_node_, code_list);
     }
     return true;
 }
@@ -206,6 +209,7 @@ bool SymbolTable::check_expression_tree_for_correct_type(SymbolRecord *variable_
                             found_assign_record->type_ + " it needs type " + found_variable_record->type_ + ":");
                 else {
                    // found_assign_record->function_parameters_ = assign_record->function_parameters_;
+                    found_assign_record->accessor_code_ = assign_record->accessor_code_;
                     get_code_generator()->load_or_call_record_into_reg(found_assign_record, "r1");
                     get_code_generator()->create_variable_assignment_with_register(found_variable_record, "r1");
                 }
@@ -372,7 +376,7 @@ bool SymbolTable::check_if_func_exists_and_parameters_are_valid(SymbolRecord *fu
                 if (current_func_parameter->type_ != "float" && current_func_parameter->type_ != "int") {
                     report_error_to_highest_symbol_table("Error: parameter " + current_func_parameter->name_ + " is of type " + current_func_parameter->type_  + " and an arithmetic expression is being passed that evaluates to a int or float:");
                 }
-                check_expression_is_valid(current_expression_parameter);
+                check_expression_is_valid(current_expression_parameter, &func_record->accessor_code_);
             } else {
                 SymbolRecord* current_expression_found_parameter = current_expression_parameter->root_node_->record_;
 
@@ -380,11 +384,11 @@ bool SymbolTable::check_if_func_exists_and_parameters_are_valid(SymbolRecord *fu
                     current_expression_found_parameter = search(current_expression_parameter->root_node_->record_->name_);
                 if (check_if_matching_types(current_expression_found_parameter->type_, current_func_parameter->type_))
                     report_error_to_highest_symbol_table("Error: parameter " + current_func_parameter->name_ + " is of type " + current_func_parameter->type_ + " but type " + current_expression_found_parameter->type_ + " is being passed on function call " + func_record->name_ +":");
-                get_code_generator()->load_or_call_record_into_reg(current_expression_found_parameter, "r1");
+                get_code_generator()->load_or_call_record_into_reg(current_expression_found_parameter, "r1", &func_record->accessor_code_);
 
             }
 
-            get_code_generator()->load_function_parameters_into_stack_memory_code(current_func_parameter);
+            get_code_generator()->load_function_parameters_into_stack_memory_code(current_func_parameter,  &func_record->accessor_code_);
 
         }
     }

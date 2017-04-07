@@ -59,7 +59,7 @@ public:
 
     bool check_if_record_is_num_type(SymbolRecord *record);
 
-    bool check_expression_is_valid(ExpressionTree *tree);
+    bool check_expression_is_valid(ExpressionTree *tree, vector<string>* code_list);
 
     bool check_if_func_exists(SymbolRecord *func_record);
 
@@ -78,6 +78,8 @@ public:
     bool copy_stored_record(SymbolRecord *record);
 
     bool check_indice_expression_is_valid(SymbolRecord* record, ExpressionTree *tree);
+
+    bool check_expression_is_valid(ExpressionTree *tree);
 };
 
 
