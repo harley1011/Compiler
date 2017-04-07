@@ -934,7 +934,23 @@ TEST(ClassArrayDataMemberAccessInFunc, CodeGeneration)
 
 // passing array/object as parameter
 
+TEST(PassArrayParameter, CodeGeneration)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("program { int x[5]; x = count(x); put(x[2]); }; int count(int x[5]) { x[2] = 5; }; };", false);
 
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
 
 // function call stack implementation: recursive/circular function calls
 
@@ -972,7 +988,23 @@ TEST(FibFunctionCall, CodeGeneration)
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
     parser.global_symbol_table_->print(true);
 }
+TEST(CircularFunctionalCall, CodeGeneration)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("program { int x; x = count(10); put(x); }; int count(int x) { if ( x <= 0 ) then return (0); else return (x + count2(x - 1));  }; int count2(int x) { if ( x <= 0 ) then return (0); else return (x + count(x - 2)); };", false);
 
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
 // method calls
 
 

@@ -26,7 +26,6 @@ bool SymbolTable::check_if_assign_variable_exist(SymbolRecord *record) {
             check_nested_property_and_compute_offset(record, found_record);
             copy_stored_record(record);
         } else {
-            check_correct_number_of_array_dimensions(found_record, record, record->nested_properties_dimensions_[found_record->name_]);
             copy_stored_record(record);
         }
     }
@@ -218,7 +217,7 @@ bool SymbolTable::check_expression_tree_for_correct_type_and_create_assignment_c
                     get_code_generator()->load_or_call_record_into_reg(found_assign_record, "r1");
                     get_code_generator()->create_variable_assignment_with_register(found_variable_record, "r1");
                 }
-
+                check_correct_number_of_array_dimensions(found_assign_record, assign_record, assign_record->nested_properties_dimensions_[found_assign_record->name_]);
 
             }
             else {
@@ -576,12 +575,20 @@ bool SymbolTable::create_parameter_entry(SymbolRecord* record) {
 void SymbolTable::determine_func_stack_variable_offsets(SymbolRecord *local_record) {
     int variable_size;
     if (local_record->structure_ == "class") {
-        SymbolRecord* found_class_record = search(local_record->type_);
-        if (found_class_record == NULL)
-            return;
-        variable_size = found_class_record->record_size_;
-    } else
-        variable_size = local_record->compute_record_size();
+        if ( local_record->kind_ == "parameter")
+            variable_size = 4;
+        else {
+            SymbolRecord *found_class_record = search(local_record->type_);
+            if (found_class_record == NULL)
+                return;
+            variable_size = found_class_record->record_size_;
+        }
+    } else {
+        if (local_record->kind_  == "parameter" && local_record->structure_ == "array")
+            variable_size = 4;
+        else
+            variable_size = local_record->compute_record_size();
+    }
     int size = local_record->symbol_table_->parent_symbol_table_->symbol_records_.size();
     SymbolRecord* parent_record = local_record->symbol_table_->parent_symbol_table_->symbol_record_;
     parent_record->record_size_ += variable_size;

@@ -138,7 +138,7 @@ void CodeGenerator::create_expression_code(ExpressionNode *expression, vector<st
     delete post_fix_queue;
 }
 
-void CodeGenerator:: load_function_parameters_into_stack_memory_code(SymbolRecord* record, vector<string> *code_list) {
+void CodeGenerator::load_function_parameters_into_stack_memory_code(SymbolRecord* record, vector<string> *code_list) {
     code_list->push_back("addi r12,r13," + to_string(record->offset_address_) + add_comment_string("loading parameter offset"));
     code_list->push_back("sw 0(r12),r1" + add_comment_string("storing value in function parameter stack"));
 
@@ -283,12 +283,19 @@ void CodeGenerator::create_variable_assignment_with_register(SymbolRecord *varia
         code_list->push_back("add r9,r0,r0" + add_comment_string("clear array indices register"));
         code_list->push_back("sw 0(r12)," + reg + add_comment_string("store register value into stack class data member"));
     } else if (variable_record->structure_ == "array") {
+
         if (variable_record->accessor_code_.size() > 1) {
             code_list->push_back("add r5,r0," + reg);
             code_list->insert(code_list->end(), variable_record->accessor_code_.begin(),
                               variable_record->accessor_code_.end());
         }
+
         code_list->push_back("subi r12,r13," + to_string(function_size -variable_record->offset_address_) + add_comment_string("load stack array  offset"));
+
+        if (variable_record->kind_ == "parameter") {
+            code_list->push_back("lw r12,0(r12)" + add_comment_string("load array address"));
+        }
+
         code_list->push_back("add r12,r12,r9");
         code_list->push_back("sw 0(r12),r5" + add_comment_string("store register value in stack array indiex"));
     }
@@ -321,14 +328,19 @@ void CodeGenerator::load_or_call_record_into_reg(SymbolRecord *load_record, stri
             code_list->push_back(
                     "lw " + load_reg + ",0(r12)" + add_comment_string("load stack class data member into register"));
         } else if (load_record->structure_ == "array") {
-            if (load_record->accessor_code_.size() > 1)
+            if (load_record->accessor_code_.size() > 1) {
                 code_list->insert(code_list->end(), load_record->accessor_code_.begin(),
                                   load_record->accessor_code_.end());
-            code_list->push_back("subi r12,r13," + to_string(function_size - load_record->offset_address_) +
-                                 add_comment_string("load stack array  offset"));
-            code_list->push_back("add r12,r12,r9");
-            code_list->push_back(
-                    "lw " + load_reg + ",0(r12)" + add_comment_string("load stack array index value in function"));
+                code_list->push_back("subi r12,r13," + to_string(function_size - load_record->offset_address_) +
+                                     add_comment_string("load stack array  offset"));
+                code_list->push_back("add r12,r12,r9");
+                code_list->push_back(
+                        "lw " + load_reg + ",0(r12)" + add_comment_string("load stack array index value in function"));
+            } else {
+                code_list->push_back("subi r12,r13," + to_string(function_size - load_record->offset_address_) +
+                                     add_comment_string("load stack array address"));
+                code_list->push_back("add " + load_reg + ",r12,r9" + add_comment_string("load array address"));
+            }
         } else if (load_record->kind_ == "variable") {
             code_list->push_back("subi r12,r13," + to_string(function_size - load_record->offset_address_));
             code_list->push_back(
