@@ -8,6 +8,7 @@ using namespace std;
 #define COMPILER_SYMBOLRECORD_H
 
 class SymbolTable;
+class ExpressionTree;
 
 class SymbolRecord {
 public:
@@ -21,6 +22,7 @@ public:
     map<string, int> nested_properties_dimensions_;
     vector<string> nested_properties_;
     vector<string> accessor_code_;
+    vector<ExpressionTree*> function_parameters_;
     string name_;
     string structure_;
     SymbolTable* symbol_table_;
@@ -34,6 +36,8 @@ public:
     bool size_calculated_;
     int integer_value_;
     float float_value_;
+
+
 
     bool set_kind(string kind);
     bool set_type(string type);

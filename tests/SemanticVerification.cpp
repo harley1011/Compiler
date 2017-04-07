@@ -112,7 +112,7 @@ TEST(UseNonDeclaredVarInExpression, SemanticVerification)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 2);
-    EXPECT_EQ(parser.print_semantic_errors(), "Error: x variable is being used without being declared:1:25\nError: y variable is being used without being declared:1:28\n");
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: x variable is being used without being declared:1:28\nError: y variable is being used without being declared:1:28\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
@@ -128,7 +128,7 @@ TEST(AddIdInProg, SemanticVerification)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 4);
-    EXPECT_EQ(parser.print_semantic_errors(), "Error: x variable is being used without being declared:1:25\nError: y variable is being used without being declared:1:29\nError: pFunc function is being used without being declared:1:37\nError: t variable is being used without being declared:1:48\n");
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: x variable is being used without being declared:1:49\nError: y variable is being used without being declared:1:49\nError: pFunc function is being used without being declared:1:49\nError: t variable is being used without being declared:1:49\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
@@ -145,7 +145,7 @@ TEST(UseNonDeclaredVarInGetTest, SemanticVerification)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
-    EXPECT_EQ(parser.print_semantic_errors(), "Error: idc variable is being used without being declared:1:36\n");
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: idc variable is being used without being declared:1:39\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
@@ -197,7 +197,7 @@ TEST(AssignVarNonDeclaredFuncInClassFuncTest, SemanticVerification)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
-    EXPECT_EQ(parser.print_semantic_errors(), "Error: funcTest function is being used without being declared:1:64\n");
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: funcTest function is being used without being declared:1:65\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
     parser.global_symbol_table_->print(true);
@@ -214,7 +214,7 @@ TEST(AssignVarNonDeclaredFuncInProgTest, SemanticVerification)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
-    EXPECT_EQ(parser.print_semantic_errors(), "Error: funcTest function is being used without being declared:1:41\n");
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: funcTest function is being used without being declared:1:42\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
@@ -232,7 +232,7 @@ TEST(AssignVarNonDeclaredFuncInFuncTest, SemanticVerification)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
-    EXPECT_EQ(parser.print_semantic_errors(), "Error: funcTest function is being used without being declared:1:63\n");
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: funcTest function is being used without being declared:1:64\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
     parser.global_symbol_table_->print(true);
@@ -356,7 +356,7 @@ TEST(UseNonDeclaredDataMember, SemanticVerification)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
-    EXPECT_EQ(parser.print_semantic_errors(), "Error: invalid nested property idx on variable util:1:50\n");
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: invalid nested variable idx on variable util:1:50\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
     parser.global_symbol_table_->print(true);
@@ -376,7 +376,7 @@ TEST(UseNonDeclaredNestedDataMember, SemanticVerification)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
-    EXPECT_EQ(parser.print_semantic_errors(), "Error: invalid nested property idx on variable util2:1:117\n");
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: invalid nested variable idx on variable util2:1:117\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 4);
     parser.global_symbol_table_->print(true);
@@ -393,7 +393,7 @@ TEST(UseNonDeclaredNestedFunc, SemanticVerification)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
-    EXPECT_EQ(parser.print_semantic_errors(), "Error: invalid nested function testFunc on variable util3:1:164\n");
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: invalid nested function testFunc on variable util3:1:165\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 4);
     parser.global_symbol_table_->print(true);
@@ -920,7 +920,7 @@ TEST(FunctionCallWithInvalidExpression, SemanticVerification)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
-    EXPECT_EQ(parser.print_semantic_errors(), "Error: can't perform arithmetic operations with variable b.testFunc that is not of type int or float:1:111\n");
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: can't perform arithmetic operations with variable b.testFunc that is not of type int or float:1:112\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 4);
     parser.global_symbol_table_->print(true);
@@ -937,7 +937,7 @@ TEST(FunctionClassCallWithInvalidExpression, SemanticVerification)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
-    EXPECT_EQ(parser.print_semantic_errors(), "Error: can't perform arithmetic operations with variable a that is not of type int or float:1:85\n");
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: can't perform arithmetic operations with variable a that is not of type int or float:1:86\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
     parser.global_symbol_table_->print(true);
@@ -1404,7 +1404,7 @@ TEST(FuncWithWrongNoOfParametersInProg, SemanticVerification)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
-    EXPECT_EQ(parser.print_semantic_errors(), "Error: funcTest is being invoked with 2 parameters but needs 3:1:42\n");
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: funcTest is being invoked with 2 parameters but needs 3:1:43\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
     parser.global_symbol_table_->print(true);
@@ -1421,7 +1421,7 @@ TEST(ClassFuncWithWrongNoOfParametersInProg, SemanticVerification)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
-    EXPECT_EQ(parser.print_semantic_errors(), "Error: a is being invoked with 2 parameters but needs 3:1:119\n");
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: funcTest is being invoked with 2 parameters but needs 3:1:120\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
     parser.global_symbol_table_->print(true);
@@ -1438,7 +1438,7 @@ TEST(FuncWithWrongNoOfParametersInClassFunc, SemanticVerification)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
-    EXPECT_EQ(parser.print_semantic_errors(), "Error: funcTest is being invoked with 2 parameters but needs 3:1:58\n");
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: funcTest is being invoked with 2 parameters but needs 3:1:59\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
     parser.global_symbol_table_->print(true);
@@ -1538,7 +1538,7 @@ TEST(FuncWithWrongParametersOfTypeCordAndIntInProg, SemanticVerification)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
-    EXPECT_EQ(parser.print_semantic_errors(), "Error: parameter cord is of type Cord but type int is being passed on function call funcTest:1:80\n");
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: parameter cord is of type Cord but type int is being passed on function call funcTest:1:81\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
     parser.global_symbol_table_->print(true);

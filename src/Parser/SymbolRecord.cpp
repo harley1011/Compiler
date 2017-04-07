@@ -4,6 +4,7 @@
 
 
 #include "SymbolTable.h"
+#include "ExpressionTree.h"
 #include "../Scanner/IntegerToken.h"
 
 

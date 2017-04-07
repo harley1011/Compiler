@@ -31,7 +31,12 @@ bool ExpressionTree::split_tree_with_rel_operator(ExpressionTree *tree, SymbolRe
 
 bool ExpressionTree::add_bracket_tree(ExpressionNode* node, ExpressionTree *tree) {
 
-    if (node->left_tree_ == NULL) {
+    if (node->record_ == NULL) {
+        node->record_ = tree->root_node_->record_;
+        node->left_tree_ = tree->root_node_->left_tree_;
+        node->right_tree_ = tree->root_node_->right_tree_;
+    }
+    else if (node->left_tree_ == NULL) {
         node->left_tree_ = tree->root_node_;
         node->left_tree_->parent_tree_ = node;
     } else if (node->right_tree_ == NULL){

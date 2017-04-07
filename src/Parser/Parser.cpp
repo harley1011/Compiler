@@ -406,7 +406,8 @@ bool Parser::statementRes(SymbolRecord* func_record) {
     } else if (lookahead_ == "GET") {
         form_derivation_string("<statementRes>", "get ( <variable> ) ;");
         if (match("GET") && match("OPENPARA") && code_generator_->create_get_code() && variable(func_record, *local_record) && match("CLOSEPARA") && match("DELI")) {
-            code_generator_->create_variable_assignment_with_register(*local_record, "r1");
+            if (func_record->symbol_table_->check_if_variable_or_func_exist(*local_record))
+                code_generator_->create_variable_assignment_with_register(*local_record, "r1");
             return true;
         }
     } else if (lookahead_ == "PUT") {
@@ -460,10 +461,10 @@ bool Parser::assignStat(SymbolRecord* func_record, SymbolRecord* record) {
     if (lookahead_ == "ID") {
         form_derivation_string("<assignStat>", "<variable> <assignOp> <expr>");
         ExpressionTree* tree = new ExpressionTree();
-        if (variable(func_record, record) && assignOp() && expr(func_record, tree) &&
-                func_record->symbol_table_->check_expression_tree_for_correct_type_and_create_assignment_code(record,
-                                                                                                              tree))
+        if (variable(func_record, record) && assignOp() && expr(func_record, tree)) {
+            func_record->symbol_table_->check_expression_tree_for_correct_type_and_create_assignment_code(record, tree);
             return true;
+        }
     }
     return false;
 }
@@ -692,7 +693,7 @@ bool Parser::factorVarOrFunc(SymbolRecord* func_record, SymbolRecord* record) {
     } else if (check_if_lookahead_is_in_set(
             {"MULT", "DASH", "AND", "ADD", "SUB", "OR", "EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ", "CLOSEBRA",
              "CLOSEPARA", "DELI", "COM", "DOT"})) { // follow set
-        func_record->symbol_table_->check_if_assign_variable_exist(record);
+       // func_record->symbol_table_->check_if_variable_or_func_exist(record);
         form_derivation_string("<factorVarOrFunc>", "");
         return true;
     }
@@ -725,7 +726,7 @@ bool Parser::factorVarArrayNestId(SymbolRecord* func_record, SymbolRecord* recor
             {"MULT", "DASH", "AND", "ADD", "SUB", "OR", "EQUIV", "NOTEQ", "LT", "GT", "LTEQ", "GTEQ", "CLOSEBRA",
              "CLOSEPARA", "DELI", "COM", "DOT"})) { // follow set
         form_derivation_string("<factorVarArrayNestId>", "");
-        func_record->symbol_table_->check_if_assign_variable_exist(record);
+       // func_record->symbol_table_->check_if_variable_or_func_exist(record);
         return true;
     }
     return false;
@@ -756,7 +757,7 @@ bool Parser::variable(SymbolRecord* func_record, SymbolRecord* record) {
         return false;
     if (lookahead_ == "ID") {
         form_derivation_string("<variable>", "id <variableIndice>");
-        if (match("ID") && record->set_name(get_last_token().lexeme_) && func_record->symbol_table_->copy_stored_record(record) && variableIndice(func_record, record) && func_record->symbol_table_->check_if_assign_variable_exist(record) )
+        if (match("ID") && record->set_name(get_last_token().lexeme_) && func_record->symbol_table_->copy_stored_record(record) && variableIndice(func_record, record))
             return true;
     }
     return false;
@@ -951,12 +952,13 @@ bool Parser::aParams(SymbolRecord* func_record, SymbolRecord* record) {
         record->kind_ = "function";
         form_derivation_string("<aParams>", "<expr> <aParamsTail>");
         ExpressionTree* tree = new ExpressionTree();
-        vector<ExpressionTree *> *function_expression_parameters = new vector<ExpressionTree*>;
-        function_expression_parameters->push_back(tree);
-        if (expr(func_record, tree) && aParamsTail(func_record, record, function_expression_parameters) && func_record->symbol_table_->check_if_func_exists_and_parameters_are_valid(record, function_expression_parameters))
+       // vector<ExpressionTree *> *function_expression_parameters = new vector<ExpressionTree*>;
+       // function_expression_parameters->push_back(tree);
+        record->function_parameters_.push_back(tree);
+        if (expr(func_record, tree) && aParamsTail(func_record, record, &record->function_parameters_))
             return true;
     } else if (lookahead_ == "CLOSEPARA") {
-        func_record->symbol_table_->check_if_func_exists(record);
+      //  func_record->symbol_table_->check_if_func_exists(record);
         form_derivation_string("<aParams>", "");
         return true;
     }
