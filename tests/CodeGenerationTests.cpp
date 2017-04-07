@@ -938,7 +938,7 @@ TEST(PassArrayParameter, CodeGeneration)
 {
     vector<Token*> tokens;
     Scanner scanner;
-    tokens = scanner.generate_tokens("program { int x[5]; x = count(x); put(x[2]); }; int count(int x[5]) { x[2] = 5; }; };", false);
+    tokens = scanner.generate_tokens("program { int x[5]; x[0] = 100; x[3] = count(x); put(x[2]); }; int count(int x[5]) { x[2] = 5; return(4); };", false);
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;

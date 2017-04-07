@@ -27,6 +27,7 @@ bool SymbolTable::check_if_assign_variable_exist(SymbolRecord *record) {
             copy_stored_record(record);
         } else {
             copy_stored_record(record);
+            //check_correct_number_of_array_dimensions(found_record, record, record->nested_properties_dimensions_[record->name_]);
         }
     }
     return true;
@@ -144,7 +145,7 @@ bool SymbolTable::check_valid_arithmetic_expression(ExpressionNode *node) {
                 SymbolRecord* current_found_record = search(current_record->name_);
                 if (current_found_record != NULL)
                     current_found_record = find_nested_record(current_record, current_found_record);
-
+                check_correct_number_of_array_dimensions(current_found_record, current_record, current_record->nested_properties_dimensions_[current_record->name_]);
                 if ( current_found_record != NULL && !check_if_record_is_num_type(current_found_record) ) {
                     if (current_record->nested_properties_.size() == 0) {
                         report_error_to_highest_symbol_table(
@@ -220,9 +221,8 @@ bool SymbolTable::check_expression_tree_for_correct_type_and_create_assignment_c
                     found_assign_record->accessor_code_ = assign_record->accessor_code_;
                     get_code_generator()->load_or_call_record_into_reg(found_assign_record, "r1");
                     get_code_generator()->create_variable_assignment_with_register(found_variable_record, "r1");
+                    check_correct_number_of_array_dimensions(found_assign_record, assign_record, assign_record->nested_properties_dimensions_[assign_record->name_]);
                 }
-                check_correct_number_of_array_dimensions(found_assign_record, assign_record, assign_record->nested_properties_dimensions_[found_assign_record->name_]);
-
             }
             else {
                 found_variable_record->accessor_code_ = variable_record->accessor_code_;
