@@ -83,13 +83,16 @@ SymbolRecord * SymbolTable::check_nested_property_and_compute_offset(SymbolRecor
     return NULL;
 }
 bool SymbolTable::check_indice_expression_is_valid(SymbolRecord* record, ExpressionTree *tree) {
-    check_expression_is_valid(tree);
+    if (!second_pass_)
+        return  true;
+    check_expression_is_valid(tree, &record->accessor_code_);
     SymbolRecord* nested_record;
     SymbolRecord* found_record = search(record->name_);
     nested_record = find_nested_record(record, found_record);
     if (nested_record == NULL)
         nested_record = record;
-    get_code_generator()->create_array_indice_storage_code(nested_record);
+    get_code_generator()->create_array_indice_storage_code(nested_record, &record->accessor_code_);
+    found_record->accessor_code_ = record->accessor_code_;
     return true;
 }
 bool SymbolTable::check_expression_is_valid(ExpressionTree *tree) {
@@ -154,7 +157,8 @@ bool SymbolTable::check_valid_arithmetic_expression(ExpressionNode *node) {
     return true;
 }
 
-bool SymbolTable::check_expression_tree_for_correct_type(SymbolRecord *variable_record, ExpressionTree *tree) {
+bool SymbolTable::check_expression_tree_for_correct_type_and_create_assignment_code(SymbolRecord *variable_record,
+                                                                                    ExpressionTree *tree) {
     if (!second_pass_) {
         return true;
     }
@@ -182,6 +186,7 @@ bool SymbolTable::check_expression_tree_for_correct_type(SymbolRecord *variable_
             report_error_to_highest_symbol_table("Error: can't assign variable " + found_variable_record->name_ + " of type " + found_variable_record->type_  + " an arithmetic expression, it must be of type int or float:");
         }
         check_expression_is_valid(tree);
+        found_variable_record->accessor_code_ = variable_record->accessor_code_;
         get_code_generator()->create_variable_assignment_with_register(found_variable_record, "r1");
 
     }
@@ -208,7 +213,7 @@ bool SymbolTable::check_expression_tree_for_correct_type(SymbolRecord *variable_
                             "Error: can't assign variable " + found_variable_record->name_ + " a value of type " +
                             found_assign_record->type_ + " it needs type " + found_variable_record->type_ + ":");
                 else {
-                   // found_assign_record->function_parameters_ = assign_record->function_parameters_;
+                    found_variable_record->accessor_code_ = variable_record->accessor_code_;
                     found_assign_record->accessor_code_ = assign_record->accessor_code_;
                     get_code_generator()->load_or_call_record_into_reg(found_assign_record, "r1");
                     get_code_generator()->create_variable_assignment_with_register(found_variable_record, "r1");
@@ -217,6 +222,7 @@ bool SymbolTable::check_expression_tree_for_correct_type(SymbolRecord *variable_
 
             }
             else {
+                found_variable_record->accessor_code_ = variable_record->accessor_code_;
                 get_code_generator()->load_or_call_record_into_reg(assign_record, "r1");
                 get_code_generator()->create_variable_assignment_with_register(found_variable_record, "r1");
             }

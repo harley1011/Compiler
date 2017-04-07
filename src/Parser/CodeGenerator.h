@@ -66,7 +66,7 @@ public:
 
     void load_function_parameters_into_stack_memory_code(SymbolRecord *record, vector<string> *code_list);
 
-    void create_array_indice_storage_code(SymbolRecord* record);
+    void create_array_indice_storage_code(SymbolRecord* record,  vector<string> *code_list);
 
     string add_comment_string(string comment);
 

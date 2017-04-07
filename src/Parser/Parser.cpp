@@ -342,7 +342,9 @@ bool Parser::varOrStat(SymbolRecord* func_record, SymbolRecord** record) {
         (*record)->set_name((*record)->type_);
         ExpressionTree* tree = new ExpressionTree();
         func_record->symbol_table_->copy_stored_record(*record);
-        if (indiceLst(func_record, *record) && idnest(func_record, *record) && assignOp() && expr(func_record, tree) && func_record->symbol_table_->check_expression_tree_for_correct_type(*record, tree) && match("DELI", {"INT", "ID", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN", "CLOSECURL"}, ";", "<missingSemiColon>")) {
+        if (indiceLst(func_record, *record) && idnest(func_record, *record) && assignOp() && expr(func_record, tree) &&
+                func_record->symbol_table_->check_expression_tree_for_correct_type_and_create_assignment_code(*record,
+                                                                                                              tree) && match("DELI", {"INT", "ID", "FLOAT", "IF", "FOR", "GET", "PUT", "RETURN", "CLOSECURL"}, ";", "<missingSemiColon>")) {
             return true;
         }
     }
@@ -396,7 +398,8 @@ bool Parser::statementRes(SymbolRecord* func_record) {
         SymbolRecord* assign_record = new SymbolRecord(global_symbol_table_->second_pass_);
         if (match("FOR") && match("OPENPARA") && type(*local_record) && match("ID") && (*local_record)->set_name(get_last_token().lexeme_) &&
                 func_record->symbol_table_->create_variable_entry(local_record) && assignOp() && expr(func_record, tree) && match("DELI") &&
-                func_record->symbol_table_->check_expression_tree_for_correct_type(*local_record, tree) && code_generator_->create_for_loop() &&
+                func_record->symbol_table_->check_expression_tree_for_correct_type_and_create_assignment_code(
+                        *local_record, tree) && code_generator_->create_for_loop() &&
             relExpr(func_record) && code_generator_->create_for_relation_loop() && match("DELI") && assignStat(func_record, assign_record) && match("CLOSEPARA") && statBlock(func_record) && code_generator_->create_end_for_loop()) {
             return true;
         }
@@ -457,7 +460,9 @@ bool Parser::assignStat(SymbolRecord* func_record, SymbolRecord* record) {
     if (lookahead_ == "ID") {
         form_derivation_string("<assignStat>", "<variable> <assignOp> <expr>");
         ExpressionTree* tree = new ExpressionTree();
-        if (variable(func_record, record) && assignOp() && expr(func_record, tree) && func_record->symbol_table_->check_expression_tree_for_correct_type(record, tree))
+        if (variable(func_record, record) && assignOp() && expr(func_record, tree) &&
+                func_record->symbol_table_->check_expression_tree_for_correct_type_and_create_assignment_code(record,
+                                                                                                              tree))
             return true;
     }
     return false;

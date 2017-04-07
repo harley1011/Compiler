@@ -94,7 +94,7 @@ void CodeGenerator::create_expression_code(ExpressionNode *expression, vector<st
             tmp_post_fix_queue->pop();
 
 
-            code_list->push_back(add_comment_string("---evaluting " + operator_type + " expression below ---"));
+            code_list->push_back(add_comment_string("---evaluating " + operator_type + " expression below ---"));
             load_record_into_register(first_record, "r2", code_list);
 
             if (second_record->kind_ == "function") // function call might contain expression and therefore clear r1 so we need to store it on the stack so we don't lose it
@@ -289,9 +289,14 @@ void CodeGenerator::create_variable_assignment_with_register(SymbolRecord *varia
             code_list->push_back("add r9,r0,r0" + add_comment_string("clear array indices register"));
             code_list->push_back("sw 0(r12)," + reg + add_comment_string("store register value into stack class data member"));
         } else if (variable_record->structure_ == "array") {
+            if (variable_record->accessor_code_.size() > 1) {
+                code_list->push_back("add r5,r0," + reg);
+                code_list->insert(code_list->end(), variable_record->accessor_code_.begin(),
+                                  variable_record->accessor_code_.end());
+            }
             code_list->push_back("subi r12,r13," + to_string(function_size -variable_record->offset_address_) + add_comment_string("load stack array  offset"));
             code_list->push_back("add r12,r12,r9");
-            code_list->push_back("sw 0(r12)," + reg + add_comment_string("store register value in stack array indiex"));
+            code_list->push_back("sw 0(r12),r5" + add_comment_string("store register value in stack array indiex"));
         }
         else {
             //load offset address of variable i.e function start address + variable offset within function
@@ -301,7 +306,13 @@ void CodeGenerator::create_variable_assignment_with_register(SymbolRecord *varia
 
 
     } else if (variable_record->structure_ == "array"){
-        code_list->push_back("sw " + variable_record->address + "(r9)," + reg + add_comment_string("access array index"));
+        if (variable_record->accessor_code_.size() > 1) {
+            code_list->push_back("add r5,r0," + reg);
+            code_list->insert(code_list->end(), variable_record->accessor_code_.begin(),
+                              variable_record->accessor_code_.end());
+        }
+
+        code_list->push_back("sw " + variable_record->address + "(r9),r5" + add_comment_string("access array index"));
         //clear indice access register
         code_list->push_back("add r9,r0,r0" + add_comment_string("clear array indices register"));
     } else if (variable_record->structure_ == "class") {
@@ -323,6 +334,8 @@ void CodeGenerator::load_or_call_record_into_reg(SymbolRecord *load_record, stri
             code_list->push_back("add r9,r0,r0" + add_comment_string("clear array indices register"));
             code_list->push_back("lw " + load_reg + ",0(r12)" + add_comment_string("load stack class data member into register"));
         } else if (load_record->structure_ == "array") {
+            if (load_record->accessor_code_.size() > 1)
+                code_list->insert(code_list->end(), load_record->accessor_code_.begin(), load_record->accessor_code_.end());
             code_list->push_back("subi r12,r13," + to_string(function_size -load_record->offset_address_) + add_comment_string("load stack array  offset"));
             code_list->push_back("add r12,r12,r9");
             code_list->push_back("lw " + load_reg + ",0(r12)" + add_comment_string("load stack array index value in function"));
@@ -336,6 +349,8 @@ void CodeGenerator::load_or_call_record_into_reg(SymbolRecord *load_record, stri
     } else {
 
         if (load_record->structure_ == "array" && load_record->kind_ == "variable") {
+            if (load_record->accessor_code_.size() > 1)
+                code_list->insert(code_list->end(), load_record->accessor_code_.begin(), load_record->accessor_code_.end());
             code_list->push_back("lw " + load_reg + "," + load_record->address + "(r9)" + add_comment_string("load array index value into register"));
             //clear indice access register
             code_list->push_back("add r9,r0,r0" + add_comment_string("clear array indices register"));
@@ -374,15 +389,15 @@ void CodeGenerator::create_single_operator_codes(SymbolRecord *record, string re
     }
 }
 
-void CodeGenerator::create_array_indice_storage_code(SymbolRecord* record) {
+void CodeGenerator::create_array_indice_storage_code(SymbolRecord* record,  vector<string> *code_list) {
     if (!second_pass_ || record->array_sizes.size() == 0)
         return;
     int array_dimension_size = record->array_sizes[record->current_array_position_++];
     //increase dimension access
 
-    code_generation_.push_back("muli r9,r9," + to_string(array_dimension_size));
-    code_generation_.push_back("muli r1,r1," + to_string(4) + add_comment_string("multiply last evaluated expression stored in r1 by the arrays type size"));
-    code_generation_.push_back("add r9,r9,r1" + add_comment_string("add new dimension access to current offset counter"));
+    code_list->push_back("muli r9,r9," + to_string(array_dimension_size));
+    code_list->push_back("muli r1,r1," + to_string(4) + add_comment_string("multiply last evaluated expression stored in r1 by the arrays type size"));
+    code_list->push_back("add r9,r9,r1" + add_comment_string("add new dimension access to current offset counter"));
 
 
 }

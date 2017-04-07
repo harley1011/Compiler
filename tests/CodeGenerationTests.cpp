@@ -749,6 +749,24 @@ TEST(ArrayAccess, CodeGeneration)
     parser.global_symbol_table_->print(true);
 }
 
+TEST(ArrayAddAccess, CodeGeneration)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("program { int x[5]; x[3] = 200; x[2] = 100; x[4] = x[3] + x[2]; put(x[4]); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
+
 TEST(ArrayAccessWithVar, CodeGeneration)
 {
     vector<Token*> tokens;
@@ -942,7 +960,7 @@ TEST(FibFunctionCall, CodeGeneration)
 {
     vector<Token*> tokens;
     Scanner scanner;
-    tokens = scanner.generate_tokens("program { int x; x = fib(5); put(x); }; int fib(int x) { if ( x <= 2) then return(1); else return ( fib(x-1) + fib(x-2) ); };", false);
+    tokens = scanner.generate_tokens("program { int x; x = fib(19); put(x); }; int fib(int x) { if ( x <= 2) then return(1); else return ( fib(x-1) + fib(x-2) ); };", false);
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;

@@ -41,7 +41,8 @@ public:
 
     bool check_if_func_exists_and_parameters_are_valid(SymbolRecord *func_record, vector<ExpressionTree *> *function_expression_parameters);
 
-    bool check_expression_tree_for_correct_type(SymbolRecord *variable_record, ExpressionTree* tree);
+    bool check_expression_tree_for_correct_type_and_create_assignment_code(SymbolRecord *variable_record,
+                                                                           ExpressionTree *tree);
 
     SymbolRecord *search_type(string type);
 

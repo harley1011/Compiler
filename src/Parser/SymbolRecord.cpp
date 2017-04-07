@@ -27,6 +27,7 @@ SymbolRecord::SymbolRecord() {
     size_calculated_ = false;
     offset_address_ = 0;
     size_calculated_ = 0;
+    accessor_code_ = *(new vector<string>);
 }
 
 SymbolRecord::SymbolRecord(bool second_pass) {
