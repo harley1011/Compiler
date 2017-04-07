@@ -5,6 +5,7 @@
 #include "CodeGenerator.h"
 #include "SymbolTable.h"
 
+
 CodeGenerator::CodeGenerator() {
     func_count = 0;
     enable_comments_ = true;
@@ -45,12 +46,21 @@ bool CodeGenerator::create_program_halt(bool double_pass) {
 }
 void CodeGenerator::create_relational_expression_code(ExpressionTree * expression) {
     ExpressionNode* left_expression = expression->root_node_->left_tree_;
+
+    string operator_type = expression->root_node_->record_->type_;
+    code_generation_.push_back(add_comment_string("---evaluating " + operator_type + " expression below ---"));
+
     create_expression_code(left_expression, NULL);
     code_generation_.push_back("add r2,r1,r0");
+    code_generation_.push_back("subi r8,r8,4");
+    code_generation_.push_back("sw topaddr(r8),r2" + add_comment_string("store left hand side of relational expression on stack"));
     //todo store on stack
     ExpressionNode* right_expression = expression->root_node_->right_tree_;
     create_expression_code(right_expression, NULL);
-    string operator_type = expression->root_node_->record_->type_;
+
+    code_generation_.push_back("lw r2,topaddr(r8)");
+    code_generation_.push_back("addi r8,r8,4");
+
     if (operator_type == "EQUIV") {
         code_generation_.push_back("ceq r1,r2,r1");
     } else if (operator_type == "NOTEQ") {
@@ -65,7 +75,7 @@ void CodeGenerator::create_relational_expression_code(ExpressionTree * expressio
         code_generation_.push_back("cge r1,r2,r1");
     }
 
-
+    code_generation_.push_back(add_comment_string("---evaluating " + operator_type + " expression over ---"));
 }
 
 void CodeGenerator::create_expression_code(ExpressionNode *expression, vector<string>* code_list) {

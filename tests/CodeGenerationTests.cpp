@@ -3,7 +3,6 @@
 //
 
 #include "CodeGenerationTests.h"
-
 //memory allocation: int and float variable declarations
 
 TEST(IntDeclarationInFunction, CodeGeneration)
