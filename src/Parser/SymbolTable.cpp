@@ -87,6 +87,8 @@ bool SymbolTable::check_indice_expression_is_valid(SymbolRecord* record, Express
     check_expression_is_valid(tree, &record->accessor_code_);
     SymbolRecord* nested_record;
     SymbolRecord* found_record = search(record->name_);
+    if (found_record == NULL)
+        return  true;
     nested_record = find_nested_record(record, found_record);
     if (nested_record == NULL)
         nested_record = record;
@@ -128,6 +130,8 @@ bool SymbolTable::check_valid_relational_expression(ExpressionNode *expression) 
                     current_found_record = find_nested_record(expression->record_, current_found_record);
                 if (current_found_record != NULL && current_found_record->type_ != "int" && current_found_record->type_ != "float")
                     report_error_to_highest_symbol_table("Error: variable " + current_found_record->name_ + " of type " + current_found_record->type_ + " can't be in a relational expression it needs to be of type int or float:");
+                else
+                    return false;
             }
         }
     return true;
@@ -778,12 +782,14 @@ SymbolRecord* SymbolTable::search_type(string type) {
 
 void SymbolTable::report_error_to_highest_symbol_table(string error_message) {
 
-    if (parent_symbol_table_ == NULL)
-        errors_.push_back(error_message + to_string(current_token->row_location_ + 1) + ":" + to_string(current_token->column_location_ + 1));
+    if (parent_symbol_table_ == NULL) {
+        errors_.push_back(error_message + to_string(current_token->row_location_ + 1) + ":" +
+                          to_string(current_token->column_location_ + 1));
+        get_code_generator()->errors_triggered_ = true;
+    }
     else
         parent_symbol_table_->report_error_to_highest_symbol_table(error_message);
 }
-
 
 void SymbolTable::set_second_pass(bool second_pass) {
     second_pass_ = second_pass;

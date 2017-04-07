@@ -9,6 +9,7 @@
 CodeGenerator::CodeGenerator() {
     func_count = 0;
     enable_comments_ = true;
+    errors_triggered_ = false;
 }
 
 
@@ -64,7 +65,8 @@ void CodeGenerator::create_relational_expression_code(ExpressionTree * expressio
 }
 
 void CodeGenerator::create_expression_code(ExpressionNode *expression, vector<string>* code_list) {
-
+    if (errors_triggered_)
+        return;
     if (code_list == NULL)
         code_list = &code_generation_;
     stack<SymbolRecord*>* tmp_post_fix_queue = new stack<SymbolRecord*>;
@@ -273,9 +275,8 @@ void CodeGenerator::create_variable_assignment_with_register(SymbolRecord *varia
 }
 
 void CodeGenerator::create_variable_assignment_with_register(SymbolRecord *variable_record, string reg, vector<string>* code_list) {
-    if (!second_pass_)
+    if (!second_pass_ || errors_triggered_)
         return;
-
     int function_size = variable_record->symbol_table_->parent_symbol_table_->symbol_record_->record_size_;
     if (variable_record->structure_ == "class") {
         code_list->push_back("subi r12,r13," + to_string(function_size - variable_record->offset_address_ - variable_record->data_member_offset_address_) + add_comment_string("load stack class data member offset"));

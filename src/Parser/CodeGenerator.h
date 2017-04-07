@@ -17,6 +17,7 @@ class CodeGenerator {
 public:
     bool second_pass_;
     bool enable_comments_;
+    bool errors_triggered_;
     CodeGenerator();
     vector<string> code_generation_;
     vector<string> variable_declaration_generation_;
