@@ -540,9 +540,6 @@ bool SymbolTable::create_variable_entry(SymbolRecord** record) {
         delete (*record);
         (*record) = found_record;
         set_properly_declared((*record));
-        if (symbol_record_->name_ == "program")
-            get_code_generator()->create_variable_code(record);
-
         return true;
     }
 
@@ -550,7 +547,7 @@ bool SymbolTable::create_variable_entry(SymbolRecord** record) {
     determine_record_fields(*record);
     insert(*record);
 
-    if (symbol_record_ != NULL && symbol_record_->name_ != "program" && symbol_record_->kind_ != "class") {
+    if (symbol_record_ != NULL && symbol_record_->kind_ != "class") {
         SymbolRecord* local_record = (*record);
         determine_func_stack_variable_offsets(local_record);
     }
@@ -596,7 +593,7 @@ void SymbolTable::determine_func_stack_variable_offsets(SymbolRecord *local_reco
             local_record->offset_address_ = found_class_record->offset_address_;
         } else
             local_record->offset_address_ = previous_record->offset_address_ + previous_record->compute_record_size();
-    } else
+    } else if (parent_record->name_ != "program")
         local_record->offset_address_ = 4;
     local_record->is_stack_variable_ = true;
 }

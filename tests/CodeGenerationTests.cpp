@@ -9,7 +9,7 @@ TEST(IntDeclarationInFunction, CodeGeneration)
 {
     vector<Token*> tokens;
     Scanner scanner;
-    tokens = scanner.generate_tokens("program { int i; };", false);
+    tokens = scanner.generate_tokens("program { int i; int k; int p; };", false);
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
@@ -27,7 +27,7 @@ TEST(IntVariableAssignmentIntFunction, CodeGeneration)
 {
     vector<Token*> tokens;
     Scanner scanner;
-    tokens = scanner.generate_tokens("program { int i; i = 5; };", false);
+    tokens = scanner.generate_tokens("program { int i; int k; int p; i = 5; };", false);
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
