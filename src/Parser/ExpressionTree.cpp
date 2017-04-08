@@ -31,12 +31,7 @@ bool ExpressionTree::split_tree_with_rel_operator(ExpressionTree *tree, SymbolRe
 
 bool ExpressionTree::add_bracket_tree(ExpressionNode* node, ExpressionTree *tree) {
 
-    if (node->record_ == NULL) {
-        node->record_ = tree->root_node_->record_;
-        node->left_tree_ = tree->root_node_->left_tree_;
-        node->right_tree_ = tree->root_node_->right_tree_;
-    }
-    else if (node->left_tree_ == NULL) {
+    if (node->left_tree_ == NULL) {
         node->left_tree_ = tree->root_node_;
         node->left_tree_->parent_tree_ = node;
     } else if (node->right_tree_ == NULL){
@@ -181,7 +176,11 @@ void ExpressionTree::calculate_total(ExpressionNode *node, stack<SymbolRecord*>*
 
 
 string ExpressionTree::post_order_print() {
-    string result = post_order_print(root_node_);
+    string result;
+    if (root_node_->record_ == NULL)
+        result = post_order_print(root_node_->left_tree_);
+    else
+        result = post_order_print(root_node_);
     cout << result << endl;
     return result;
 }
@@ -197,6 +196,12 @@ string ExpressionTree::post_order_print(ExpressionNode *node) {
         return result + to_string(node->record_->integer_value_) + " ";
     else
         return result + node->record_->type_ + " ";
+}
+
+ExpressionNode *ExpressionTree::get_root_node() {
+    if (root_node_->record_ == NULL)
+        return root_node_->left_tree_;
+    return root_node_;
 }
 
 

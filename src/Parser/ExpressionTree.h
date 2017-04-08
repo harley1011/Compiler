@@ -18,6 +18,8 @@ public:
     void check_tree_order(ExpressionNode *node);
     void set_all_nodes_in_para(bool in_para);
     void set_all_nodes_in_para(bool in_para, ExpressionNode *node);
+
+    ExpressionNode* get_root_node();
     string post_order_print();
 
     string post_order_print(ExpressionNode *node);

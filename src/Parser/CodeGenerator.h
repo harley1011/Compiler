@@ -86,6 +86,8 @@ public:
     void create_single_operator_codes(SymbolRecord *record, string reg, vector<string> *code_list);
 
     void create_variable_assignment_with_register(SymbolRecord *variable_record, string reg, vector<string> *code_list);
+
+    void create_function_parameter_code(SymbolRecord *load_record,  string load_reg, vector<string>* code_list);
 };
 
 

@@ -398,8 +398,7 @@ bool Parser::statementRes(SymbolRecord* func_record) {
         SymbolRecord* assign_record = new SymbolRecord(global_symbol_table_->second_pass_);
         if (match("FOR") && match("OPENPARA") && type(*local_record) && match("ID") && (*local_record)->set_name(get_last_token().lexeme_) &&
                 func_record->symbol_table_->create_variable_entry(local_record) && assignOp() && expr(func_record, tree) && match("DELI") &&
-                func_record->symbol_table_->check_expression_tree_for_correct_type_and_create_assignment_code(
-                        *local_record, tree) && code_generator_->create_for_loop() &&
+                func_record->symbol_table_->check_expression_tree_for_correct_type_and_create_assignment_code(*local_record, tree) && code_generator_->create_for_loop() &&
             relExpr(func_record) && code_generator_->create_for_relation_loop() && match("DELI") && assignStat(func_record, assign_record) && match("CLOSEPARA") && statBlock(func_record) && code_generator_->create_end_for_loop()) {
             return true;
         }

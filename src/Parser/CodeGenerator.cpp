@@ -260,7 +260,8 @@ string CodeGenerator::add_comment_string(string comment) {
 
 void CodeGenerator::create_function_call_code(SymbolRecord* func_record, string return_register) {
     //r13 is start of stack
-
+    if (!second_pass_)
+        return;
     if (func_record->accessor_code_.size() > 1)
         code_generation_.insert(code_generation_.end(), func_record->accessor_code_.begin(), func_record->accessor_code_.end());
 
@@ -321,6 +322,7 @@ void CodeGenerator::load_or_call_record_into_reg(SymbolRecord *load_record, stri
     if (load_record->type_ == "int" && load_record->structure_ == "")
         code_list->push_back("addi " + load_reg + ",r0," + to_string(load_record->integer_value_) + add_comment_string("load integer value"));
     else  if (load_record->kind_ == "function") {
+        create_function_parameter_code(load_record, load_reg, code_list);
         code_list->push_back(add_comment_string("---- function call code beg----"));
         create_function_call_code(load_record, load_reg);
         code_list->push_back(add_comment_string("---- function call code end ----"));
@@ -361,6 +363,21 @@ void CodeGenerator::load_or_call_record_into_reg(SymbolRecord *load_record, stri
     }
 
     create_single_operator_codes(load_record, load_reg);
+
+}
+
+void CodeGenerator::create_function_parameter_code(SymbolRecord *load_record,  string load_reg, vector<string>* code_list) {
+    vector<ExpressionTree *> function_expression_parameters = load_record->function_parameters_;
+
+    for (ExpressionTree* tree: function_expression_parameters) {
+        SymbolRecord* current_record = tree->root_node_->record_;
+        if (current_record->kind_ == "ADDOP" || current_record->kind_ == "MULTOP")
+            create_expression_code(tree->root_node_, code_list);
+        else
+            load_or_call_record_into_reg(current_record, load_reg, code_list);
+        load_function_parameters_into_stack_memory_code(current_record, code_list);
+    }
+
 
 }
 
@@ -410,3 +427,4 @@ string CodeGenerator::generate_code() {
     result += "stack";
     return result;
 }
+

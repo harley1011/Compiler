@@ -15,6 +15,7 @@ SymbolTable::SymbolTable() {
     parent_symbol_table_ = NULL;
     code_generator_ = NULL;
     symbol_record_ = NULL;
+
 }
 
 bool SymbolTable::check_if_variable_or_func_exist(SymbolRecord *record) {
@@ -118,17 +119,17 @@ bool SymbolTable::check_expression_is_valid(ExpressionTree *tree, vector<string>
     if (!second_pass_)
         return true;
 
-    if (tree->root_node_->record_->kind_ == "RELOP") {
-        ExpressionNode* left_expression = tree->root_node_->left_tree_;
-        ExpressionNode* right_expression = tree->root_node_->right_tree_;
+    if (tree->get_root_node()->record_->kind_ == "RELOP") {
+        ExpressionNode* left_expression = tree->get_root_node()->left_tree_;
+        ExpressionNode* right_expression = tree->get_root_node()->right_tree_;
 
         bool result = check_valid_relational_expression(left_expression);
         if (check_valid_relational_expression(right_expression) && result)
             get_code_generator()->create_relational_expression_code(tree);
 
     } else {
-        if (check_valid_arithmetic_expression(tree->root_node_))
-            get_code_generator()->create_expression_code(tree->root_node_, code_list);
+        if (check_valid_arithmetic_expression(tree->get_root_node()))
+            get_code_generator()->create_expression_code(tree->get_root_node(), code_list);
     }
     return true;
 }
@@ -143,13 +144,14 @@ bool SymbolTable::check_valid_relational_expression(ExpressionNode *expression) 
                     if (expression->record_->nested_properties_.size() > 0)
                         current_found_record = find_nested_record(expression->record_, current_found_record);
                     if (current_found_record != NULL && current_found_record->type_ != "int" &&
-                        current_found_record->type_ != "float")
+                        current_found_record->type_ != "float") {
                         report_error_to_highest_symbol_table(
                                 "Error: variable " + current_found_record->name_ + " of type " +
                                 current_found_record->type_ +
                                 " can't be in a relational expression it needs to be of type int or float:");
-                    else
                         return false;
+                    }
+
                 }
             }
         }
@@ -171,7 +173,7 @@ bool SymbolTable::check_valid_arithmetic_expression(ExpressionNode *node) {
                     if (current_found_record != NULL)
                         current_found_record = find_nested_record(current_record, current_found_record);
 
-
+                    current_record->offset_address_ = current_found_record->offset_address_;
                     if (is_arithmetic && current_found_record != NULL && !check_if_record_is_num_type(current_found_record)) {
                         if (current_record->nested_properties_.size() == 0) {
                             report_error_to_highest_symbol_table(
@@ -217,7 +219,7 @@ bool SymbolTable::check_expression_tree_for_correct_type_and_create_assignment_c
         }
     }
 
-    if (tree->root_node_->record_->kind_ == "ADDOP" || tree->root_node_->record_->kind_ == "MULTOP" || tree->root_node_->record_->kind_ == "RELOP") {
+    if (tree->get_root_node()->record_->kind_ == "ADDOP" || tree->get_root_node()->record_->kind_ == "MULTOP" || tree->get_root_node()->record_->kind_ == "RELOP") {
 
         if (found_variable_record->type_ != "float" && found_variable_record->type_ != "int") {
             report_error_to_highest_symbol_table("Error: can't assign variable " + found_variable_record->name_ + " of type " + found_variable_record->type_  + " an arithmetic expression, it must be of type int or float:");
@@ -228,7 +230,7 @@ bool SymbolTable::check_expression_tree_for_correct_type_and_create_assignment_c
 
     }
     else if (found_variable_record != NULL) {
-        SymbolRecord* assign_record = tree->root_node_->record_;
+        SymbolRecord* assign_record = tree->get_root_node()->record_;
 
         if (variable_property != assign_record->type_ && (assign_record->type_ == "int" || assign_record->type_ == "float")) {
             report_error_to_highest_symbol_table("Error: can't assign variable " + found_variable_record->name_ + " a value of type " + assign_record->type_ + " it needs type " + found_variable_record->type_ + ":");
@@ -254,11 +256,12 @@ bool SymbolTable::check_expression_tree_for_correct_type_and_create_assignment_c
                         get_code_generator()->create_variable_assignment_with_register(found_variable_record, "r1");
                         check_correct_number_of_array_dimensions(search(assign_record->name_), assign_record);
                     }
-                } else {
-                    found_variable_record->accessor_code_ = variable_record->accessor_code_;
-                    get_code_generator()->load_or_call_record_into_reg(assign_record, "r1");
-                    get_code_generator()->create_variable_assignment_with_register(found_variable_record, "r1");
                 }
+            }
+            else {
+                found_variable_record->accessor_code_ = variable_record->accessor_code_;
+                get_code_generator()->load_or_call_record_into_reg(assign_record, "r1");
+                get_code_generator()->create_variable_assignment_with_register(found_variable_record, "r1");
             }
         }
     }
@@ -352,9 +355,9 @@ bool SymbolTable::check_if_return_type_is_correct_type(SymbolRecord *func_record
     int error_count = errors_.size();
     check_expression_is_valid(expression);
 
-    if (errors_.size() == error_count && expression->root_node_->record_->kind_ != "ADDOP" && expression->root_node_->record_->kind_ != "MULTOP" && expression->root_node_->record_->kind_ != "RELOP" ) {
+    if (errors_.size() == error_count && expression->get_root_node()->record_->kind_ != "ADDOP" && expression->get_root_node()->record_->kind_ != "MULTOP" && expression->get_root_node()->record_->kind_ != "RELOP" ) {
         SymbolRecord* found_func_record = search(func_record->name_);
-        SymbolRecord* return_record = expression->root_node_->record_;
+        SymbolRecord* return_record = expression->get_root_node()->record_;
         SymbolRecord* found_return_record = return_record;
 
         if (found_return_record->structure_ == "class") {
@@ -376,54 +379,6 @@ bool SymbolTable::check_if_return_type_is_correct_type(SymbolRecord *func_record
 
 }
 
-//bool SymbolTable::check_if_func_exists(SymbolRecord *func_record) {
-//    if (!second_pass_)
-//        return true;
-//    SymbolRecord* local_record = search(func_record->name_);
-//
-//    if (local_record != NULL) {
-//        func_record->address = local_record->address;
-//        func_record->is_stack_variable_ = local_record->is_stack_variable_;
-//        func_record->symbol_table_ = local_record->symbol_table_;
-//        func_record->offset_address_ = local_record->offset_address_;
-//    }
-//
-//    if (func_record->nested_properties_.size() > 0 ) {
-//        if (local_record == NULL) {
-//            report_error_to_highest_symbol_table("Error: " + func_record->name_ + " variable is being used without being declared:");
-//            return false;
-//        }
-//        if (func_record->type_ == "int" || func_record->type_ == "float") {
-//            report_error_to_highest_symbol_table(
-//                    "Error: " + func_record->name_ + " is of type " + func_record->type_ + " and doesn't have any properties to access:");
-//            return false;
-//        }
-//        else {
-//            SymbolRecord* current_record = local_record;
-//            SymbolTable* top_symbol_table = local_record->symbol_table_->parent_symbol_table_;
-//            if (top_symbol_table->parent_symbol_table_ != NULL)
-//                top_symbol_table = top_symbol_table->parent_symbol_table_;
-//            for (int i = 0; i < func_record->nested_properties_.size(); i++) {
-//                string property = func_record->nested_properties_[i];
-//                current_record = top_symbol_table->search(current_record->type_);
-//                current_record = current_record->symbol_table_->search(property);
-//
-//                if (current_record == NULL) {
-//                    report_error_to_highest_symbol_table("Error: invalid nested function " + property + " on variable " + func_record->name_ + ":");
-//                    return false;
-//                }
-//
-//            }
-//        }
-//    }
-//    else if (local_record == NULL) {
-//        report_error_to_highest_symbol_table(
-//                "Error: " + func_record->name_ + " function is being used without being declared:");
-//        return false;
-//    }
-//    return true;
-//}
-
 bool SymbolTable::check_func_parameters(SymbolRecord *local_record) {
     if (!second_pass_)
         return true;
@@ -435,26 +390,23 @@ bool SymbolTable::check_func_parameters(SymbolRecord *local_record) {
         SymbolRecord* current_func_parameter = local_record->symbol_table_->symbol_records_[i];
         ExpressionTree* current_expression_parameter = function_expression_parameters[i];
 
-        if (current_expression_parameter->root_node_->record_->kind_ == "ADDOP" || current_expression_parameter->root_node_->record_->kind_ == "MULTOP") {
+        current_expression_parameter->get_root_node()->record_->offset_address_ = current_func_parameter->offset_address_;
+
+        if (current_expression_parameter->get_root_node()->record_->kind_ == "ADDOP" || current_expression_parameter->get_root_node()->record_->kind_ == "MULTOP") {
             if (current_func_parameter->type_ != "float" && current_func_parameter->type_ != "int") {
                 report_error_to_highest_symbol_table("Error: parameter " + current_func_parameter->name_ + " is of type " + current_func_parameter->type_  + " and an arithmetic expression is being passed that evaluates to a int or float:");
             }
             check_expression_is_valid(current_expression_parameter, &local_record->accessor_code_);
         } else {
-            SymbolRecord* current_expression_found_parameter = current_expression_parameter->root_node_->record_;
+            SymbolRecord* current_expression_found_parameter = current_expression_parameter->get_root_node()->record_;
 
             if (current_expression_found_parameter->type_ == "")
-                current_expression_found_parameter = search(current_expression_parameter->root_node_->record_->name_);
+                current_expression_found_parameter = search(current_expression_parameter->get_root_node()->record_->name_);
             if (check_if_matching_types(current_expression_found_parameter->type_, current_func_parameter->type_))
                 report_error_to_highest_symbol_table("Error: parameter " + current_func_parameter->name_ + " is of type " + current_func_parameter->type_ + " but type " + current_expression_found_parameter->type_ + " is being passed on function call " + local_record->name_ +":");
 
             current_expression_found_parameter->symbol_table_->parent_symbol_table_ = this;
-            get_code_generator()->load_or_call_record_into_reg(current_expression_found_parameter, "r1", &local_record->accessor_code_);
-
         }
-
-        get_code_generator()->load_function_parameters_into_stack_memory_code(current_func_parameter,  &local_record->accessor_code_);
-
     }
 
     return true;
@@ -627,7 +579,7 @@ bool SymbolTable::create_parameter_entry(SymbolRecord* record) {
     determine_record_fields(record);
     record->symbol_table_->parent_symbol_table_ = this;
     insert(record);
-    if (code_generator_ != NULL)
+    if (get_code_generator() != NULL)
         determine_func_stack_variable_offsets(record);
     return true;
 }
