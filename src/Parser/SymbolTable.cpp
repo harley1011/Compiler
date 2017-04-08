@@ -36,12 +36,12 @@ bool SymbolTable::check_if_variable_or_func_exist(SymbolRecord *record) {
                 return false;
             copy_stored_record(record);
         }
-
+        copy_stored_record(record);
         if (record->kind_ == "function") {
             found_record->function_parameters_ = record->function_parameters_;
             check_func_parameters(found_record);
         }
-        copy_stored_record(record);
+
     }
     return true;
 }
@@ -399,13 +399,17 @@ bool SymbolTable::check_func_parameters(SymbolRecord *local_record) {
             check_expression_is_valid(current_expression_parameter, &local_record->accessor_code_);
         } else {
             SymbolRecord* current_expression_found_parameter = current_expression_parameter->get_root_node()->record_;
+            if (check_if_variable_or_func_exist(current_expression_found_parameter)) {
+                if (current_expression_found_parameter->structure_ == "array" && current_func_parameter->structure_ == "array") {
 
-            if (current_expression_found_parameter->type_ == "")
-                current_expression_found_parameter = search(current_expression_parameter->get_root_node()->record_->name_);
-            if (check_if_matching_types(current_expression_found_parameter->type_, current_func_parameter->type_))
-                report_error_to_highest_symbol_table("Error: parameter " + current_func_parameter->name_ + " is of type " + current_func_parameter->type_ + " but type " + current_expression_found_parameter->type_ + " is being passed on function call " + local_record->name_ +":");
+                }else if (check_if_matching_types(current_expression_found_parameter->type_, current_func_parameter->type_))
+                    report_error_to_highest_symbol_table(
+                            "Error: parameter " + current_func_parameter->name_ + " is of type " +
+                            current_func_parameter->type_ + " but type " + current_expression_found_parameter->type_ +
+                            " is being passed on function call " + local_record->name_ + ":");
 
-            current_expression_found_parameter->symbol_table_->parent_symbol_table_ = this;
+                current_expression_found_parameter->symbol_table_->parent_symbol_table_ = this;
+            }
         }
     }
 

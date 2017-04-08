@@ -283,8 +283,7 @@ void CodeGenerator::create_variable_assignment_with_register(SymbolRecord *varia
 
         code_list->push_back("add r5,r0," + reg);
         if (variable_record->accessor_code_.size() > 1) {
-            code_list->insert(code_list->end(), variable_record->accessor_code_.begin(),
-                              variable_record->accessor_code_.end());
+            code_list->insert(code_list->end(), variable_record->accessor_code_.begin(), variable_record->accessor_code_.end());
         }
 
         code_list->push_back("subi r12,r13," + to_string(function_size - variable_record->offset_address_ - variable_record->data_member_offset_address_) + add_comment_string("load stack class data member offset"));
@@ -331,8 +330,7 @@ void CodeGenerator::load_or_call_record_into_reg(SymbolRecord *load_record, stri
         int function_size = load_record->symbol_table_->parent_symbol_table_->symbol_record_->record_size_;
         if (load_record->structure_ == "class") {
             if (load_record->accessor_code_.size() > 1) {
-                code_list->insert(code_list->end(), load_record->accessor_code_.begin(),
-                                  load_record->accessor_code_.end());
+                code_list->insert(code_list->end(), load_record->accessor_code_.begin(), load_record->accessor_code_.end());
             }
 
             code_list->push_back("subi r12,r13," + to_string(
