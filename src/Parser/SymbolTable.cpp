@@ -258,7 +258,7 @@ bool SymbolTable::check_expression_tree_for_correct_type_and_create_assignment_c
                     }
                 }
             }
-            else {
+            else if (assign_record->kind_ != "variable" && assign_record->kind_ != "function") {
                 found_variable_record->accessor_code_ = variable_record->accessor_code_;
                 get_code_generator()->load_or_call_record_into_reg(assign_record, "r1");
                 get_code_generator()->create_variable_assignment_with_register(found_variable_record, "r1");
