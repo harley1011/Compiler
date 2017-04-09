@@ -369,9 +369,7 @@ bool SymbolTable::check_if_record_is_num_type(SymbolRecord *record) {
         return true;
 
     string assign_type = record->type_;
-    if ( assign_type != "float" && assign_type != "int")
-        return false;
-    return true;
+    return !(assign_type != "float" && assign_type != "int");
 }
 
 bool SymbolTable::check_correct_number_of_array_dimensions(SymbolRecord* found_record, SymbolRecord *record) {
@@ -549,7 +547,7 @@ bool SymbolTable::create_program_entry_and_table() {
 void SymbolTable::set_properly_declared(SymbolRecord* record) {
 
     string type = record->type_;
-    int location = type.find("[");
+    int location = (int) type.find("[");
     if (location!= string::npos) {
         type = type.substr(0, location);
     }
@@ -678,7 +676,7 @@ bool SymbolTable::create_parameter_entry(SymbolRecord* record) {
 
 void SymbolTable::determine_func_stack_variable_offsets(SymbolRecord *local_record) {
     int variable_size;
-    if (local_record->structure_ == "class") {
+    if (local_record->structure_ == "class" || local_record->structure_ == "class array") {
         if ( local_record->kind_ == "parameter")
             variable_size = 4;
         else {
@@ -686,6 +684,10 @@ void SymbolTable::determine_func_stack_variable_offsets(SymbolRecord *local_reco
             if (found_class_record == NULL)
                 return;
             variable_size = found_class_record->record_size_;
+
+            if (local_record->structure_ == "class array")
+                variable_size = local_record->compute_array_size() / 4 * variable_size;
+
         }
     } else {
         if (local_record->kind_  == "parameter" && (local_record->structure_ == "array" || local_record->structure_ == "class array" || local_record->structure_ == "class"))
@@ -715,7 +717,7 @@ bool SymbolTable::calculate_class_offsets() {
     if (second_pass_)
         return true;
     int offset_calculation_remain = false;
-    int previous_loop_count = symbol_records_.size();
+    int previous_loop_count = (int) symbol_records_.size();
     int loop_count = 0;
     while(true) {
         previous_loop_count = loop_count;
@@ -951,18 +953,6 @@ string SymbolTable::generate_symbol_table_string(SymbolTable *table, string tabl
         return_string += generate_symbol_table_string(record->symbol_table_, record->name_, indent_count);
     }
     return return_string;
-}
-
-void SymbolTable::load_record_details(SymbolRecord *record) {
-    if (!second_pass_)
-        return;
-    SymbolRecord* found_record = search(record->name_);
-    if (found_record == NULL)
-        return;
-    if (found_record->array_sizes.size() > 0) {
-        record->array_sizes = found_record->array_sizes;
-    }
-    record->structure_ = found_record->structure_;
 }
 
 

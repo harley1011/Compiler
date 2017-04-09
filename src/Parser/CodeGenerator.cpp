@@ -335,7 +335,7 @@ void CodeGenerator::create_variable_assignment_with_register(SymbolRecord *varia
         code_generation_.push_back("add r12,r12,r9");
         code_generation_.push_back("add r9,r0,r0" + add_comment_string("clear array indices register"));
         code_generation_.push_back("sw 0(r12),r5" + add_comment_string("store register value into stack class data member"));
-    } else if (variable_record->structure_ == "array") {
+    } else if (variable_record->structure_ == "array" || variable_record->structure_ == "class array") {
         code_generation_.push_back("add r5,r0," + reg);
 
         create_array_index_calculation_code(variable_record);
