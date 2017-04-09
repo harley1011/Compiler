@@ -693,6 +693,42 @@ TEST(FunctionParameter, CodeGeneration)
 }
 
 
+TEST(FunctionClassNestedParameter, CodeGeneration)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class A { int x; int y; }; program {A a; a.x = 100; int x; x = funcTest(60, a.x); put(x);}; int funcTest(int k, int x) { int i; i = k + x; return(i); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
+TEST(FunctionFunctionCallParameter, CodeGeneration)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class A { int x; int y; }; program {A a; a.x = 100; int x; x = funcTest(funcTest(100, 50), a.x); put(x);}; int funcTest(int k, int x) { int i; i = k + x; return(i); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
+
+
 TEST(MultiFunctionCallWithParameter, CodeGeneration)
 {
     vector<Token*> tokens;
@@ -977,6 +1013,24 @@ TEST(PassArrayParameter, CodeGeneration)
     vector<Token*> tokens;
     Scanner scanner;
     tokens = scanner.generate_tokens("program { int x[5]; x[0] = 100; x[3] = count(x); put(x[2]); }; int count(int x[5]) { x[2] = 5; return(4); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
+
+TEST(PassObjectParameter, CodeGeneration)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class Cord { int x; int y; }; program { int k; Cord cord; cord.x = 100; cord.y = count(cord); put(cord.x); }; int count(Cord cord) { cord.x = 150; return(cord.x); };", false);
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;

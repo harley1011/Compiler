@@ -1190,6 +1190,24 @@ TEST(ExpressionTreeExpressionFiften, SemanticVerification)
 // ----------------------------------------------------------------------------------------------------------------
 // type checking of an assignment statement
 
+TEST(ArrayEqualAccess, CodeGeneration)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("program { int x[5]; int y[5]; x = y; put(x[4]); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: array x is being accessed with too few dimensions:1:36\nError: array y is being accessed with too few dimensions:1:36\n");
+
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
+
 TEST(AssignDeclaredClassVarIntFunc, SemanticVerification)
 {
     vector<Token*> tokens;
@@ -1639,6 +1657,24 @@ TEST(FuncWithWrongParameterArrayType, SemanticVerification)
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
     EXPECT_EQ(parser.print_semantic_errors(), "Error: parameter cord needs an array of type Cord but an array of type float is being passed:1:84\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
+    parser.global_symbol_table_->print(true);
+}
+
+
+TEST(PassInvalidClassParameter, CodeGeneration)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class Cord { int x; int y; }; program { Cord cord; cord.x = 100; cord.y = count(cord.x); put(cord.y); }; int count(Cord cord) { return(cord.x); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: parameter cord is of type Cord but type int is being passed on function call count:1:88\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
     parser.global_symbol_table_->print(true);

@@ -47,14 +47,15 @@ bool SymbolTable::check_if_variable_or_func_exist(SymbolRecord *record) {
             report_error_to_highest_symbol_table("Error: " + record->name_ + " " + kind + " is being used without being declared:");
             return false;
         } else if (record->nested_properties_.size() > 0 ) {
+            record->kind_ = found_record->kind_;
             found_record = check_nested_property_and_compute_offset(record, found_record);
             if (found_record == NULL)
                 return false;
         }
         copy_stored_record(record);
         if (record->kind_ == "function") {
-            found_record->function_parameters_ = record->function_parameters_;
-            check_func_parameters(found_record);
+            //found_record->function_parameters_ = record->function_parameters_;
+            check_func_parameters(found_record, record);
         }
 
     }
@@ -74,9 +75,27 @@ bool SymbolTable::copy_stored_record(SymbolRecord *record) {
     record->array_sizes = found_record->array_sizes;
     record->type_ = found_record->type_;
     record->record_size_ = found_record->record_size_;
+    record->symbol_table_->parent_symbol_table_ = found_record->symbol_table_->parent_symbol_table_;
     return true;
 }
 
+
+bool SymbolTable::copy_stored_record(SymbolRecord *record, SymbolRecord* found_record) {
+
+    record->address = found_record->address;
+    record->is_stack_variable_ = found_record->is_stack_variable_;
+    record->symbol_table_ = found_record->symbol_table_;
+    record->offset_address_ = found_record->offset_address_;
+    record->data_member_offset_address_ = found_record->data_member_offset_address_;
+    record->structure_ = found_record->structure_;
+    record->array_sizes = found_record->array_sizes;
+    record->type_ = found_record->type_;
+    record->kind_ = found_record->kind_;
+    record->record_size_ = found_record->record_size_;
+    record->symbol_table_->parent_symbol_table_ = found_record->symbol_table_->parent_symbol_table_;
+    record->record_size_ = found_record->record_size_;
+    return true;
+}
 
 SymbolRecord * SymbolTable::check_nested_property_and_compute_offset(SymbolRecord *record, SymbolRecord *found_record) {
     if (found_record->type_ == "int")
@@ -215,6 +234,9 @@ bool SymbolTable::check_valid_arithmetic_expression(ExpressionNode *node) {
                     if (current_found_record != NULL)
                         current_found_record = find_nested_record(current_record, current_found_record);
 
+                    if (current_found_record != NULL)
+                        current_record->type_ = current_found_record->type_;
+
                     if (is_arithmetic && current_found_record != NULL && !check_if_record_is_num_type(current_found_record)) {
                         if (current_record->nested_properties_.size() == 0) {
                             report_error_to_highest_symbol_table(
@@ -297,7 +319,8 @@ bool SymbolTable::check_expression_tree_for_correct_type_and_create_assignment_c
                     } else {
                         found_variable_record->accessor_code_ = variable_record->accessor_code_;
                         found_assign_record->accessor_code_ = assign_record->accessor_code_;
-                        get_code_generator()->load_or_call_record_into_reg(found_assign_record, "r1");
+                        copy_stored_record(assign_record, found_assign_record);
+                        get_code_generator()->load_or_call_record_into_reg(assign_record, "r1");
                         get_code_generator()->create_variable_assignment_with_register(found_variable_record, "r1");
                         check_correct_number_of_array_dimensions(search(assign_record->name_), assign_record);
                     }
@@ -401,15 +424,15 @@ bool SymbolTable::check_if_return_type_is_correct_type(SymbolRecord *func_record
 
 }
 
-bool SymbolTable::check_func_parameters(SymbolRecord *local_record) {
+bool SymbolTable::check_func_parameters(SymbolRecord *func_found_record, SymbolRecord *func_record) {
     if (!second_pass_)
         return true;
-    vector<ExpressionTree *> function_expression_parameters = local_record->function_parameters_;
-    if (function_expression_parameters.size() != local_record->get_all_function_parameters().size())
-        report_error_to_highest_symbol_table("Error: " + local_record->name_ + " is being invoked with " + to_string(function_expression_parameters.size()) + " parameters but needs " + to_string(local_record->get_all_function_parameters().size()) + ":");
+    vector<ExpressionTree *> function_expression_parameters = func_record->function_parameters_;
+    if (function_expression_parameters.size() != func_found_record->get_all_function_parameters().size())
+        report_error_to_highest_symbol_table("Error: " + func_found_record->name_ + " is being invoked with " + to_string(function_expression_parameters.size()) + " parameters but needs " + to_string(func_found_record->get_all_function_parameters().size()) + ":");
 
-    for(int i = 0; i < local_record->get_all_function_parameters().size() && i < function_expression_parameters.size(); i++) {
-        SymbolRecord* current_func_parameter = local_record->symbol_table_->symbol_records_[i];
+    for(int i = 0; i < func_found_record->get_all_function_parameters().size() && i < function_expression_parameters.size(); i++) {
+        SymbolRecord* current_func_parameter = func_found_record->symbol_table_->symbol_records_[i];
         ExpressionTree* current_expression_parameter = function_expression_parameters[i];
 
         current_expression_parameter->get_root_node()->record_->parameter_offset_address_ = current_func_parameter->offset_address_;
@@ -418,11 +441,17 @@ bool SymbolTable::check_func_parameters(SymbolRecord *local_record) {
             if (current_func_parameter->type_ != "float" && current_func_parameter->type_ != "int") {
                 report_error_to_highest_symbol_table("Error: parameter " + current_func_parameter->name_ + " is of type " + current_func_parameter->type_  + " and an arithmetic expression is being passed that evaluates to a int or float:");
             }
-            check_expression_is_valid(current_expression_parameter, &local_record->accessor_code_);
+            check_expression_is_valid(current_expression_parameter, &func_found_record->accessor_code_);
         } else {
             SymbolRecord* current_expression_found_parameter = current_expression_parameter->get_root_node()->record_;
-           // current_expression_found_parameter->parameter_offset_address_ = current_func_parameter->offset_address_;
             if (check_if_variable_or_func_exist(current_expression_found_parameter)) {
+
+                if (current_expression_found_parameter->nested_properties_.size() > 0) {
+                    current_expression_found_parameter = find_nested_record(current_expression_found_parameter,
+                                                                            search(current_expression_found_parameter->name_));
+                    current_expression_parameter->get_root_node()->record_->type_ = current_expression_found_parameter->type_;
+                }
+
                 if (current_expression_found_parameter->structure_ == "array" || current_func_parameter->structure_ == "array" || current_expression_found_parameter->structure_ == "class array" || current_func_parameter->structure_ == "class array") {
                     if (current_expression_found_parameter->structure_ != "array" && current_expression_found_parameter->structure_ != "class array")
                         report_error_to_highest_symbol_table("Error: parameter " + current_func_parameter->name_ + " needs an array of type " + current_func_parameter->type_ + " but type " + current_expression_found_parameter->type_ +" is being passed:");
@@ -437,8 +466,7 @@ bool SymbolTable::check_func_parameters(SymbolRecord *local_record) {
                     report_error_to_highest_symbol_table(
                             "Error: parameter " + current_func_parameter->name_ + " is of type " +
                             current_func_parameter->type_ + " but type " + current_expression_found_parameter->type_ +
-                            " is being passed on function call " + local_record->name_ + ":");
-
+                            " is being passed on function call " + func_found_record->name_ + ":");
                 current_expression_found_parameter->symbol_table_->parent_symbol_table_ = this;
             }
         }

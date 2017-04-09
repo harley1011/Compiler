@@ -39,7 +39,7 @@ public:
 
     bool check_if_variable_or_func_exist(SymbolRecord *record);
 
-    bool check_func_parameters(SymbolRecord *func_record);
+    bool check_func_parameters(SymbolRecord *found_record,  SymbolRecord *func_record);
 
     bool check_expression_tree_for_correct_type_and_create_assignment_code(SymbolRecord *variable_record,
                                                                            ExpressionTree *tree);
@@ -83,6 +83,8 @@ public:
     bool check_expression_is_valid(ExpressionTree *tree);
 
     bool check_if_get_variable_is_int_or_float_and_exists(SymbolRecord *record);
+
+    bool copy_stored_record(SymbolRecord *record, SymbolRecord *found_record);
 };
 
 

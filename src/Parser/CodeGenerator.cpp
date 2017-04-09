@@ -309,7 +309,17 @@ void CodeGenerator::create_variable_assignment_with_register(SymbolRecord *varia
             code_list->insert(code_list->end(), variable_record->accessor_code_.begin(), variable_record->accessor_code_.end());
         }
 
-        code_list->push_back("subi r12,r13," + to_string(function_size - variable_record->offset_address_ - variable_record->data_member_offset_address_) + add_comment_string("load stack class data member offset"));
+        if (variable_record->kind_ == "parameter") {
+            code_list->push_back("subi r12,r13," + to_string(function_size - variable_record->offset_address_) +
+                                 add_comment_string("load paramater class address"));
+            code_list->push_back("lw r12,0(r12)" + add_comment_string("load stack class address"));
+            code_list->push_back("addi r12,r12," + to_string(variable_record->data_member_offset_address_));
+        } else {
+
+            code_list->push_back("subi r12,r13," + to_string(
+                    function_size - variable_record->offset_address_ - variable_record->data_member_offset_address_) +
+                                 add_comment_string("load stack class data member offset"));
+        }
         code_list->push_back("add r12,r12,r9");
         code_list->push_back("add r9,r0,r0" + add_comment_string("clear array indices register"));
         code_list->push_back("sw 0(r12),r5" + add_comment_string("store register value into stack class data member"));
@@ -352,13 +362,29 @@ void CodeGenerator::load_or_call_record_into_reg(SymbolRecord *load_record, stri
     else {
         int function_size = load_record->symbol_table_->parent_symbol_table_->symbol_record_->record_size_;
         if (load_record->structure_ == "class") {
-            if (load_record->accessor_code_.size() > 1) {
-                code_list->insert(code_list->end(), load_record->accessor_code_.begin(), load_record->accessor_code_.end());
+            if (load_record->type_ == "int" || load_record->type_ == "float") {
+                if (load_record->accessor_code_.size() > 1) {
+                    code_list->insert(code_list->end(), load_record->accessor_code_.begin(),
+                                      load_record->accessor_code_.end());
+                }
+
+                if (load_record->kind_ == "parameter") {
+                    code_list->push_back("subi r12,r13," + to_string(function_size - load_record->offset_address_) + add_comment_string("load paramater class address"));
+                    code_list->push_back("lw r12,0(r12)" + add_comment_string("load stack class address"));
+                    code_list->push_back("addi r12,r12," + to_string(load_record->data_member_offset_address_));
+                } else {
+
+                    code_list->push_back("subi r12,r13," + to_string(
+                            function_size - load_record->offset_address_ - load_record->data_member_offset_address_) +
+                                         add_comment_string("load stack class data member offset"));
+                }
+                code_list->push_back("add r12,r12,r9");
+                code_list->push_back("add r9,r0,r0" + add_comment_string("clear array indices register"));
+                code_list->push_back("lw " + load_reg + ",0(r12)" +
+                                     add_comment_string("load stack class data member into register"));
+            } else {
+                code_list->push_back("subi r1,r13," + to_string(function_size - load_record->offset_address_) + add_comment_string("load stack class address"));
             }
-            code_list->push_back("subi r12,r13," + to_string(function_size - load_record->offset_address_ - load_record->data_member_offset_address_) + add_comment_string("load stack class data member offset"));
-            code_list->push_back("add r12,r12,r9");
-            code_list->push_back("add r9,r0,r0" + add_comment_string("clear array indices register"));
-            code_list->push_back("lw " + load_reg + ",0(r12)" + add_comment_string("load stack class data member into register"));
 
         } else if (load_record->structure_ == "array") {
             if (load_record->accessor_code_.size() > 1) {
