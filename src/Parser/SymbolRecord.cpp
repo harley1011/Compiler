@@ -29,7 +29,6 @@ SymbolRecord::SymbolRecord() {
     size_calculated_ = false;
     offset_address_ = 0;
     record_size_ = 0;
-    accessor_code_ = *(new vector<string>);
     data_member_offset_address_ = 0;
 }
 
@@ -45,11 +44,7 @@ SymbolRecord::SymbolRecord(bool second_pass) {
     record_size_ = 0;
     data_member_offset_address_ = 0;
 }
-int SymbolRecord::compute_type_size() {
-    if (type_ == "int" || type_ == "float")
-        return 4;
-    return 4;
-}
+
 int SymbolRecord::compute_record_size() {
     if (array_sizes.size() > 0)
          return compute_array_size();
@@ -81,7 +76,7 @@ bool SymbolRecord::set_structure(string structure) {
 
 bool SymbolRecord::add_nested_property(string property) {
     nested_properties_.push_back(property);
-    nested_properties_dimensions_[property] = 0;
+    //nested_properties_dimensions_[property] = 0;
     return true;
 }
 
@@ -114,13 +109,6 @@ vector<SymbolRecord*> SymbolRecord::get_all_function_parameters() {
     return params;
 }
 
-bool SymbolRecord::add_nested_properties_dimension_to_last_porperty() {
-    string property = name_;
-    if (nested_properties_.size() > 0)
-        property = nested_properties_[nested_properties_.size() - 1];
-    nested_properties_dimensions_[property] += 1;
-    return true;
-}
 
 string SymbolRecord::generate_nested_properties_string() {
     string nested_property_string = name_;

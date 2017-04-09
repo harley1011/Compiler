@@ -12,6 +12,7 @@ int main(int argc, char *argv[] ) {
     string semantic_output;
     string syntax_error_output;
     string semantic_error_output;
+    string code_output;
 
     if (argc < 3) {
         struct stat info;
@@ -63,6 +64,9 @@ int main(int argc, char *argv[] ) {
 
         cout << "Enter semantic error output path location: ";
         getline(cin, semantic_error_output);
+
+        cout << "Enter program code output path location: ";
+        getline(cin, code_output);
 
         Parser syntaxParser(syntax_output, semantic_output, syntax_error_output, semantic_error_output);
 

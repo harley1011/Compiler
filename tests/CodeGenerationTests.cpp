@@ -293,7 +293,7 @@ TEST(NotInFunction, CodeGeneration)
 {
     vector<Token*> tokens;
     Scanner scanner;
-    tokens = scanner.generate_tokens("program { int x; x = not 100; put(x); };", false);
+    tokens = scanner.generate_tokens("program { int x; x = not 0; put(x); };", false);
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
@@ -672,6 +672,24 @@ TEST(FunctionCallWithForLoop, CodeGeneration)
     parser.global_symbol_table_->print(true);
 }
 
+TEST(FunctionCallReturnClass, CodeGeneration)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class A {int x; int y; int z; }; program { A a; a = funcTest(10, 777); put(a.x); put(a.y); put(a.z); }; A funcTest(int x, int y) { A a; a.x = x; a.y = y; a.z = a.x + a.y; put(a.x); put(a.y); put(a.z); return(a); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
+
 // parameter passing mechanism
 
 TEST(FunctionParameter, CodeGeneration)
@@ -972,7 +990,7 @@ TEST(ClassDoubleArrayDataMemberAccess, CodeGeneration)
 {
     vector<Token*> tokens;
     Scanner scanner;
-    tokens = scanner.generate_tokens("class A { int x; int y[5][5]; }; program { A a; a.y[3][2] = 1200; put(a.y[3][2]); };", false);
+    tokens = scanner.generate_tokens("class A { int x; int y[5][5]; }; program { A a; a.y[3][2] = 1200; a.y[2][2] = 2100; put(a.y[3][2]); put(a.y[2][2]); };", false);
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;

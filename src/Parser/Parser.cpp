@@ -390,7 +390,8 @@ bool Parser::statementRes(SymbolRecord* func_record) {
     ExpressionTree* tree = new ExpressionTree();
     if (lookahead_ == "IF") {
         form_derivation_string("<statementRes>", "if ( <expr> ) then <statThenBlock>");
-        if (match("IF") && match("OPENPARA") && expr(func_record, tree) && func_record->symbol_table_->check_expression_is_valid(tree) && code_generator_->create_if() && match("CLOSEPARA") && match("THEN") && statThenBlock(func_record) && code_generator_->create_if_end()) {
+        if (match("IF") && match("OPENPARA") && expr(func_record, tree) &&
+                func_record->symbol_table_->check_expression_is_valid_and_generate_code(tree) && code_generator_->create_if() && match("CLOSEPARA") && match("THEN") && statThenBlock(func_record) && code_generator_->create_if_end()) {
             return true;
         }
     } else if (lookahead_ == "FOR") {
@@ -411,12 +412,13 @@ bool Parser::statementRes(SymbolRecord* func_record) {
         }
     } else if (lookahead_ == "PUT") {
         form_derivation_string("<statementRes>", "put ( <expr> ) ;");
-        if (match("PUT") && match("OPENPARA") && expr(func_record, tree) && func_record->symbol_table_->check_expression_is_valid(tree) && code_generator_->create_put_code() && match("CLOSEPARA") && match("DELI")) {
+        if (match("PUT") && match("OPENPARA") && expr(func_record, tree) &&
+                func_record->symbol_table_->check_expression_is_valid_and_generate_code(tree) && code_generator_->create_put_code() && match("CLOSEPARA") && match("DELI")) {
             return true;
         }
     } else if (lookahead_ == "RETURN") {
         form_derivation_string("<statementRes>", "return ( <expr> ) ;");
-        if (match("RETURN") && match("OPENPARA") && expr(func_record, tree) && func_record->symbol_table_->check_if_return_type_is_correct_type(func_record, tree) && match("CLOSEPARA") && code_generator_->create_func_return_code(func_record) && match("DELI")) {
+        if (match("RETURN") && match("OPENPARA") && expr(func_record, tree) && func_record->symbol_table_->check_if_return_type_is_correct_type(func_record, tree) && match("CLOSEPARA") && match("DELI")) {
             return true;
         }
     }
@@ -549,7 +551,7 @@ bool Parser::relExpr(SymbolRecord* func_record) {
         ExpressionTree* right_abstract_expression_tree = new ExpressionTree();
         if (arithExpr(func_record, left_abstract_expression_tree) && relOp(operation_record) && arithExpr(func_record, right_abstract_expression_tree)) {
             left_abstract_expression_tree->split_tree_with_rel_operator(right_abstract_expression_tree, operation_record);
-            func_record->symbol_table_->check_expression_is_valid(left_abstract_expression_tree);
+            func_record->symbol_table_->check_expression_is_valid_and_generate_code(left_abstract_expression_tree);
             return true;
         }
 
@@ -803,7 +805,7 @@ bool Parser::indice(SymbolRecord* func_record, SymbolRecord* record) {
     if (lookahead_ == "OPENBRA") {
         form_derivation_string("<indice>", "[ <arithExpr> ]");
         ExpressionTree* tree = new ExpressionTree();
-        if (match("OPENBRA") && record->add_nested_properties_dimension_to_last_porperty() && arithExpr(func_record, tree) && func_record->symbol_table_->check_indice_expression_is_valid(record, tree) && match("CLOSEBRA")) {
+        if (match("OPENBRA") && arithExpr(func_record, tree) && func_record->symbol_table_->check_indice_expression_is_valid(record, tree) && match("CLOSEBRA")) {
 
             return true;
         }

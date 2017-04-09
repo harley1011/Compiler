@@ -60,7 +60,7 @@ public:
 
     bool check_if_record_is_num_type(SymbolRecord *record);
 
-    bool check_expression_is_valid(ExpressionTree *tree, vector<string>* code_list);
+    bool check_expression_is_valid_and_generate_code(ExpressionTree *tree);
 
     bool check_if_func_exists(SymbolRecord *func_record);
 
@@ -80,11 +80,11 @@ public:
 
     bool check_indice_expression_is_valid(SymbolRecord* record, ExpressionTree *tree);
 
-    bool check_expression_is_valid(ExpressionTree *tree);
-
     bool check_if_get_variable_is_int_or_float_and_exists(SymbolRecord *record);
 
     bool copy_stored_record(SymbolRecord *record, SymbolRecord *found_record);
+
+    bool check_expression_is_valid(ExpressionTree *tree);
 };
 
 

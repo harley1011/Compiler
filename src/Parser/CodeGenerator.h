@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <stack>
+#include <utility>
 #include "SymbolRecord.h"
 #include "ExpressionTree.h"
 #include "IntAndStringConversion.h"
@@ -35,14 +36,14 @@ public:
     IntAndStringConversion int_and_string_converter;
 
     void create_program_entry(SymbolRecord **record);
-    void create_expression_code(ExpressionNode *expression, vector<string>* code_list);
+    void create_expression_code(ExpressionNode *expression);
     void load_or_call_record_into_reg(SymbolRecord *load_record, string load_reg);
     void create_variable_assignment_with_register(SymbolRecord *variable_record, string reg);
     string generate_code();
 
     bool create_program_halt(bool double_pass);
 
-    void load_record_into_register(SymbolRecord *record, string reg, vector<string>* code_list);
+    void load_record_into_register(SymbolRecord *record, string reg);
 
     void create_relational_expression_code(ExpressionTree *expression);
 
@@ -66,9 +67,9 @@ public:
 
     bool create_func_return_code(SymbolRecord* record);
 
-    void load_function_parameters_into_stack_memory_code(SymbolRecord *record, vector<string> *code_list);
+    void load_function_parameters_into_stack_memory_code(SymbolRecord *record);
 
-    void create_array_indice_storage_code(SymbolRecord* record,  vector<string> *code_list);
+    void create_array_index_calculation_code(SymbolRecord *record);
 
     string add_comment_string(string comment);
 
@@ -82,17 +83,11 @@ public:
 
     void create_single_operator_codes(SymbolRecord *record, string reg);
 
-    void load_or_call_record_into_reg(SymbolRecord *load_record, string load_reg, vector<string> *code_list);
-
-    void create_single_operator_codes(SymbolRecord *record, string reg, vector<string> *code_list);
-
-    void create_variable_assignment_with_register(SymbolRecord *variable_record, string reg, vector<string> *code_list);
-
-    void create_function_parameter_code(SymbolRecord *load_record,  string load_reg, vector<string>* code_list);
+    void create_function_parameter_code(SymbolRecord *load_record,  string load_reg);
 
     void create_copy_class_values(SymbolRecord *variable_record, SymbolRecord *assign_record);
 
-    void create_array_indice_storage_code(SymbolRecord *record);
+    bool create_func_return_class_code(SymbolRecord *record);
 };
 
 
