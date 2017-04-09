@@ -27,6 +27,7 @@ public:
 
     string generate_variable_declaration();
     int loop_count_ = 0;
+    int copy_object_count = 0;
     int if_count_ = 0;
     int class_func_count = 0;
     int func_count = 0;
@@ -88,6 +89,8 @@ public:
     void create_variable_assignment_with_register(SymbolRecord *variable_record, string reg, vector<string> *code_list);
 
     void create_function_parameter_code(SymbolRecord *load_record,  string load_reg, vector<string>* code_list);
+
+    void create_copy_class_values(SymbolRecord *variable_record, SymbolRecord *assign_record);
 };
 
 

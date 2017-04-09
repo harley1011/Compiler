@@ -405,8 +405,8 @@ bool Parser::statementRes(SymbolRecord* func_record) {
     } else if (lookahead_ == "GET") {
         form_derivation_string("<statementRes>", "get ( <variable> ) ;");
         if (match("GET") && match("OPENPARA") && code_generator_->create_get_code() && variable(func_record, *local_record) && match("CLOSEPARA") && match("DELI")) {
-            if (func_record->symbol_table_->check_if_variable_or_func_exist(*local_record))
-                code_generator_->create_variable_assignment_with_register(*local_record, "r1");
+            func_record->symbol_table_->check_if_get_variable_is_int_or_float_and_exists(*local_record);
+
             return true;
         }
     } else if (lookahead_ == "PUT") {

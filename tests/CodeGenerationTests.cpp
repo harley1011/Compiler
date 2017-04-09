@@ -88,7 +88,7 @@ TEST(ClassDeclarationInFunction, CodeGeneration)
 {
     vector<Token*> tokens;
     Scanner scanner;
-    tokens = scanner.generate_tokens("class A { int x; int y; }; program { A a; };", false);
+    tokens = scanner.generate_tokens("class A { int x; int y; }; program { int k; A a2; int p; A a1; };", false);
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
@@ -107,6 +107,26 @@ TEST(ClassDeclarationWithClassVariableInFunction, CodeGeneration)
     vector<Token*> tokens;
     Scanner scanner;
     tokens = scanner.generate_tokens("class B { A a; int y; int k; };class A { int x; int y; }; program { B b; };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
+
+
+TEST(ClassAssignmentInFunction, CodeGeneration)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class A { int x; int y; }; program { A a; a.x = 100; a.y = 10202; A a1; a1 = a; put(a1.y); a.x = 120; put(a.x); put(a1.x);  };", false);
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
@@ -788,7 +808,25 @@ TEST(ArrayForLoopAccess, CodeGeneration)
 {
     vector<Token*> tokens;
     Scanner scanner;
-    tokens = scanner.generate_tokens("program { int x[5]; for(int i = 0; i < 5; i = i + 1) x[i] = i; for(int p = 0; p < 5; p = p + 1) put(x[p]); };", false);
+    tokens = scanner.generate_tokens("program { int x[20]; for(int i = 0; i < 20; i = i + 1) x[i] = i * i; for(int p = 0; p < 20; p = p + 1) put(x[p]); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
+
+TEST(ArrayForLoopAccessInExternalFunc, CodeGeneration)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("program { int x; x = funcTest(); }; int funcTest() { int x[20]; for(int i = 0; i < 20; i = i + 1) x[i] = i * i; for(int p = 0; p < 20; p = p + 1) put(x[p]); return(0); };", false);
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
@@ -826,7 +864,7 @@ TEST(ClassDataMemberAccess, CodeGeneration)
 {
     vector<Token*> tokens;
     Scanner scanner;
-    tokens = scanner.generate_tokens("class A { int x; int y; }; program { int k; A a; a.y = 110; put(a.y); };", false);
+    tokens = scanner.generate_tokens("class A { int x; int y; }; program { int k; A a; a.y = 110; put(a.y); put(a.x); };", false);
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;

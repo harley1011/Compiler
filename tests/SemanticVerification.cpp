@@ -1206,6 +1206,22 @@ TEST(AssignDeclaredClassVarIntFunc, SemanticVerification)
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
     parser.global_symbol_table_->print(true);
 }
+TEST(GetTypeFunc, SemanticVerification)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class Util { }; program { Util idx; get(idx); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: can't place get value into variable idx not of type int or float:1:47\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
 
 
 TEST(AssignDeclaredClassVarIdClassFunc, SemanticVerification)
@@ -1399,6 +1415,25 @@ TEST(ClassFuncWithWrongReturnTypeInt, SemanticVerification)
     parser.global_symbol_table_->print(true);
 }
 
+TEST(FuncReturningClassNestedValue, SemanticVerification)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class Cord { int idc; }; program { Cord cord[5]; float y[5]; int x; x = funcTest(cord); }; int funcTest(Cord cord[5]) { return (cord[0].idc); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+    EXPECT_EQ(parser.print_semantic_errors(), "");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
+    parser.global_symbol_table_->print(true);
+}
+
+
+
 // ----------------------------------------------------------------------------------------------------------------
 // function calls: right number and types of parameters upon call
 
@@ -1554,3 +1589,57 @@ TEST(FuncWithWrongParametersOfTypeCordAndIntInProg, SemanticVerification)
     parser.global_symbol_table_->print(true);
 }
 
+
+TEST(FuncWithWrongParameterOfArray, SemanticVerification)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class Cord { int idc; }; program { Cord cord; float y; int x; x = funcTest(cord, y); }; int funcTest(Cord cord, int idc[5]) { return (cord.idc); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: parameter idc needs an array of type int but type float is being passed:1:84\\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
+    parser.global_symbol_table_->print(true);
+}
+
+
+TEST(FuncWithWrongParameterArrayPassed, SemanticVerification)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class Cord { int idc; }; program { Cord cord; float y[5]; int x; x = funcTest(cord, y); }; int funcTest(Cord cord, int idc) { return (cord.idc); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: parameter idc is of type int but an array of type float is being passed:1:87\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
+    parser.global_symbol_table_->print(true);
+}
+
+
+
+TEST(FuncWithWrongParameterArrayType, SemanticVerification)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class Cord { int idc; }; program { Cord cord; float y[5]; int x; x = funcTest(y, y); }; int funcTest(Cord cord[5], int idc[5]) { return (cord[0].idc); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: parameter cord needs an array of type Cord but an array of type float is being passed:1:84\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
+    parser.global_symbol_table_->print(true);
+}

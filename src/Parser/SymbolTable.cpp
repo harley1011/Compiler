@@ -15,7 +15,23 @@ SymbolTable::SymbolTable() {
     parent_symbol_table_ = NULL;
     code_generator_ = NULL;
     symbol_record_ = NULL;
+}
 
+
+bool SymbolTable::check_if_get_variable_is_int_or_float_and_exists(SymbolRecord * record) {
+    if (!second_pass_)
+        return true;
+    if (check_if_variable_or_func_exist(record)) {
+        SymbolRecord* found_record = search(record->name_);
+        if (record->nested_properties_.size() > 0)
+            found_record = find_nested_record(record, found_record);
+
+        if (found_record->type_ == "int" || found_record->type_ == "float")
+            get_code_generator()->create_variable_assignment_with_register(found_record, "r1");
+        else
+            report_error_to_highest_symbol_table("Error: can't place get value into variable " + record->name_ + " not of type int or float:");
+    }
+    return true;
 }
 
 bool SymbolTable::check_if_variable_or_func_exist(SymbolRecord *record) {
@@ -34,7 +50,6 @@ bool SymbolTable::check_if_variable_or_func_exist(SymbolRecord *record) {
             found_record = check_nested_property_and_compute_offset(record, found_record);
             if (found_record == NULL)
                 return false;
-            copy_stored_record(record);
         }
         copy_stored_record(record);
         if (record->kind_ == "function") {
@@ -96,6 +111,33 @@ SymbolRecord * SymbolTable::check_nested_property_and_compute_offset(SymbolRecor
     }
     return NULL;
 }
+
+
+
+SymbolRecord* find_nested_record(SymbolRecord* record, SymbolRecord* found_record) {
+    SymbolRecord* current_record = found_record;
+    if (found_record == NULL)
+        return NULL;
+    SymbolTable* top_symbol_table = found_record->symbol_table_->parent_symbol_table_;
+    if (top_symbol_table->parent_symbol_table_ != NULL)
+        top_symbol_table = top_symbol_table->parent_symbol_table_;
+    int offset_count = 0;
+    for (int i = 0; i < record->nested_properties_.size(); i++) {
+        string property = record->nested_properties_[i];
+        current_record = top_symbol_table->search(current_record->type_);
+        current_record = current_record->symbol_table_->search(property);
+
+        if (current_record == NULL) {
+            return NULL;
+        }
+        offset_count += current_record->offset_address_;
+
+    }
+    found_record->data_member_offset_address_ = offset_count;
+    return  current_record;
+}
+
+
 bool SymbolTable::check_indice_expression_is_valid(SymbolRecord* record, ExpressionTree *tree) {
     if (!second_pass_)
         return  true;
@@ -168,12 +210,11 @@ bool SymbolTable::check_valid_arithmetic_expression(ExpressionNode *node) {
                     SymbolRecord *current_found_record = search(current_record->name_);
 
                     if (identifiers.size() > 1)
-                        check_correct_number_of_array_dimensions(search(current_record->name_), current_found_record);
+                        check_correct_number_of_array_dimensions(current_found_record, current_record);
 
                     if (current_found_record != NULL)
                         current_found_record = find_nested_record(current_record, current_found_record);
 
-                    current_record->offset_address_ = current_found_record->offset_address_;
                     if (is_arithmetic && current_found_record != NULL && !check_if_record_is_num_type(current_found_record)) {
                         if (current_record->nested_properties_.size() == 0) {
                             report_error_to_highest_symbol_table(
@@ -249,7 +290,11 @@ bool SymbolTable::check_expression_tree_for_correct_type_and_create_assignment_c
                         report_error_to_highest_symbol_table(
                                 "Error: can't assign variable " + found_variable_record->name_ + " a value of type " +
                                 found_assign_record->type_ + " it needs type " + found_variable_record->type_ + ":");
-                    else {
+                    else if (found_assign_record->structure_ == "class") {
+                        SymbolRecord* class_record = search(found_variable_record->type_);
+                        found_variable_record->record_size_ = class_record->record_size_;
+                        get_code_generator()->create_copy_class_values(found_variable_record, found_assign_record);
+                    } else {
                         found_variable_record->accessor_code_ = variable_record->accessor_code_;
                         found_assign_record->accessor_code_ = assign_record->accessor_code_;
                         get_code_generator()->load_or_call_record_into_reg(found_assign_record, "r1");
@@ -326,29 +371,6 @@ bool SymbolTable::check_correct_number_of_array_dimensions(SymbolRecord* found_r
     return true;
 }
 
-SymbolRecord* find_nested_record(SymbolRecord* record, SymbolRecord* found_record) {
-    SymbolRecord* current_record = found_record;
-    if (found_record == NULL)
-        return NULL;
-    SymbolTable* top_symbol_table = found_record->symbol_table_->parent_symbol_table_;
-    if (top_symbol_table->parent_symbol_table_ != NULL)
-        top_symbol_table = top_symbol_table->parent_symbol_table_;
-    int offset_count = 0;
-    for (int i = 0; i < record->nested_properties_.size(); i++) {
-        string property = record->nested_properties_[i];
-        current_record = top_symbol_table->search(current_record->type_);
-        current_record = current_record->symbol_table_->search(property);
-
-        if (current_record == NULL) {
-            return NULL;
-        }
-        offset_count += current_record->offset_address_;
-
-    }
-    found_record->data_member_offset_address_ = offset_count;
-    return  current_record;
-}
-
 bool SymbolTable::check_if_return_type_is_correct_type(SymbolRecord *func_record, ExpressionTree* expression) {
     if (!second_pass_)
         return true;
@@ -360,7 +382,7 @@ bool SymbolTable::check_if_return_type_is_correct_type(SymbolRecord *func_record
         SymbolRecord* return_record = expression->get_root_node()->record_;
         SymbolRecord* found_return_record = return_record;
 
-        if (found_return_record->structure_ == "class") {
+        if (found_return_record->structure_ == "class" || found_return_record->structure_ == "class array") {
             found_return_record = search(return_record->name_);
 
             if (found_return_record == NULL)
@@ -400,9 +422,17 @@ bool SymbolTable::check_func_parameters(SymbolRecord *local_record) {
         } else {
             SymbolRecord* current_expression_found_parameter = current_expression_parameter->get_root_node()->record_;
             if (check_if_variable_or_func_exist(current_expression_found_parameter)) {
-                if (current_expression_found_parameter->structure_ == "array" && current_func_parameter->structure_ == "array") {
+                if (current_expression_found_parameter->structure_ == "array" || current_func_parameter->structure_ == "array" || current_expression_found_parameter->structure_ == "class array" || current_func_parameter->structure_ == "class array") {
+                    if (current_expression_found_parameter->structure_ != "array" && current_expression_found_parameter->structure_ != "class array")
+                        report_error_to_highest_symbol_table("Error: parameter " + current_func_parameter->name_ + " needs an array of type " + current_func_parameter->type_ + " but type " + current_expression_found_parameter->type_ +" is being passed:");
+                    else if (current_func_parameter->structure_ != "array" && current_func_parameter->structure_ != "class array")
+                        report_error_to_highest_symbol_table("Error: parameter " + current_func_parameter->name_ + " is of type " + current_func_parameter->type_ + " but an array of type " + current_expression_found_parameter->type_ +" is being passed:");
+                    else if (check_if_matching_types(current_expression_found_parameter->type_, current_func_parameter->type_)) {
+                        report_error_to_highest_symbol_table("Error: parameter " + current_func_parameter->name_ + " needs an array of type " + current_func_parameter->type_ + " but an array of type " + current_expression_found_parameter->type_ +" is being passed:");
+                    }
 
-                }else if (check_if_matching_types(current_expression_found_parameter->type_, current_func_parameter->type_))
+                }
+                else if (check_if_matching_types(current_expression_found_parameter->type_, current_func_parameter->type_))
                     report_error_to_highest_symbol_table(
                             "Error: parameter " + current_func_parameter->name_ + " is of type " +
                             current_func_parameter->type_ + " but type " + current_expression_found_parameter->type_ +
@@ -616,7 +646,7 @@ void SymbolTable::determine_func_stack_variable_offsets(SymbolRecord *local_reco
             SymbolRecord * found_class_record = search(previous_record->type_);
             if (found_class_record == NULL)
                 return;
-            local_record->offset_address_ = found_class_record->offset_address_;
+            local_record->offset_address_ = previous_record->offset_address_ + found_class_record->record_size_;
         } else
             local_record->offset_address_ = previous_record->offset_address_ + previous_record->compute_record_size();
     } else if (parent_record->name_ != "program")

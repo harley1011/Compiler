@@ -17,6 +17,7 @@ SymbolRecord::SymbolRecord(string kind, string type, string name) {
     size_calculated_ = false;
     offset_address_ = 0;
     record_size_ = 0;
+    data_member_offset_address_ = 0;
 }
 
 SymbolRecord::SymbolRecord() {
@@ -29,6 +30,7 @@ SymbolRecord::SymbolRecord() {
     offset_address_ = 0;
     record_size_ = 0;
     accessor_code_ = *(new vector<string>);
+    data_member_offset_address_ = 0;
 }
 
 SymbolRecord::SymbolRecord(bool second_pass) {
@@ -41,6 +43,7 @@ SymbolRecord::SymbolRecord(bool second_pass) {
     offset_address_ = 0;
     size_calculated_ = false;
     record_size_ = 0;
+    data_member_offset_address_ = 0;
 }
 int SymbolRecord::compute_type_size() {
     if (type_ == "int" || type_ == "float")

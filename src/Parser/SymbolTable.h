@@ -81,6 +81,8 @@ public:
     bool check_indice_expression_is_valid(SymbolRecord* record, ExpressionTree *tree);
 
     bool check_expression_is_valid(ExpressionTree *tree);
+
+    bool check_if_get_variable_is_int_or_float_and_exists(SymbolRecord *record);
 };
 
 

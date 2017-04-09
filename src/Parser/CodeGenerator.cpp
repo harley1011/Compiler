@@ -162,6 +162,8 @@ bool CodeGenerator::create_put_code() {
 
     int_and_string_converter.put_int_required = true;
     code_generation_.push_back("jl r15,putint");
+    code_generation_.push_back("addi r1,r0,10");
+    code_generation_.push_back("putc r1");
     return true;
 }
 
@@ -273,6 +275,27 @@ void CodeGenerator::create_function_call_code(SymbolRecord* func_record, string 
 
 void CodeGenerator::create_variable_assignment_with_register(SymbolRecord *variable_record, string reg) {
     create_variable_assignment_with_register(variable_record, reg, &code_generation_);
+}
+
+void CodeGenerator::create_copy_class_values(SymbolRecord* variable_record, SymbolRecord* assign_record) {
+
+    int function_size = variable_record->symbol_table_->parent_symbol_table_->symbol_record_->record_size_;
+
+    code_generation_.push_back(add_comment_string("--- copying class variable ---"));
+    code_generation_.push_back("add r1,r0,r0");
+    code_generation_.push_back("subi r12,r13," + to_string(function_size - variable_record->offset_address_) + add_comment_string("load variable record offset"));
+    code_generation_.push_back("subi r11,r13," + to_string(function_size - assign_record->offset_address_) + add_comment_string("load assign variable record offset"));
+    code_generation_.push_back("copyclass" + to_string(copy_object_count));
+    code_generation_.push_back("ceqi r2,r1," + to_string(variable_record->record_size_) + add_comment_string("check if more to copy"));
+    code_generation_.push_back("bnz r2,copyclassend" + to_string(copy_object_count));
+    code_generation_.push_back("lw r2,0(r11)");
+    code_generation_.push_back("sw 0(r12),r2" + add_comment_string("copy class variable value"));
+    code_generation_.push_back("addi r1,r1,4" + add_comment_string("move on to next property to copy"));
+    code_generation_.push_back("addi r12,r12,4");
+    code_generation_.push_back("addi r11,r11,4");
+    code_generation_.push_back("j copyclass" + to_string(copy_object_count));
+    code_generation_.push_back("copyclassend" + to_string(copy_object_count++));
+    code_generation_.push_back(add_comment_string("--- copying class variable over ---"));
 }
 
 void CodeGenerator::create_variable_assignment_with_register(SymbolRecord *variable_record, string reg, vector<string>* code_list) {
