@@ -112,7 +112,9 @@ SymbolRecord * SymbolTable::check_nested_property_and_compute_offset(SymbolRecor
         for (int i = 0; i < record->nested_properties_.size(); i++) {
             string property = record->nested_properties_[i];
             current_found_record = top_symbol_table->search(current_record->type_);
-            current_record = current_found_record->symbol_table_->search(property);
+
+            if (current_found_record != NULL) // make sure class exists
+                current_record = current_found_record->symbol_table_->search(property);
 
             if (current_record == NULL) {
                 string kind = record->kind_;
@@ -144,7 +146,8 @@ SymbolRecord* find_nested_record(SymbolRecord* record, SymbolRecord* found_recor
     for (int i = 0; i < record->nested_properties_.size(); i++) {
         string property = record->nested_properties_[i];
         current_record = top_symbol_table->search(current_record->type_);
-        current_record = current_record->symbol_table_->search(property);
+        if (current_record != NULL) // make sure class exists
+            current_record = current_record->symbol_table_->search(property);
 
         if (current_record == NULL) {
             return NULL;
@@ -168,7 +171,8 @@ bool SymbolTable::check_indice_expression_is_valid(SymbolRecord* record, Express
     nested_record = find_nested_record(record, found_record);
     if (nested_record == NULL)
         nested_record = record;
-    get_code_generator()->create_array_indice_storage_code(nested_record, &record->accessor_code_);
+  //  get_code_generator()->create_array_indice_storage_code(nested_record, &record->accessor_code_);
+    record->function_parameters_.push_back(tree);
     found_record->accessor_code_ = record->accessor_code_;
     return true;
 }
@@ -289,7 +293,8 @@ bool SymbolTable::check_expression_tree_for_correct_type_and_create_assignment_c
         }
         check_expression_is_valid(tree);
         found_variable_record->accessor_code_ = variable_record->accessor_code_;
-        get_code_generator()->create_variable_assignment_with_register(found_variable_record, "r1");
+        copy_stored_record(variable_record, found_variable_record);
+        get_code_generator()->create_variable_assignment_with_register(variable_record, "r1");
 
     }
     else if (found_variable_record != NULL) {
@@ -320,6 +325,7 @@ bool SymbolTable::check_expression_tree_for_correct_type_and_create_assignment_c
                         found_variable_record->accessor_code_ = variable_record->accessor_code_;
                         found_assign_record->accessor_code_ = assign_record->accessor_code_;
                         copy_stored_record(assign_record, found_assign_record);
+                        copy_stored_record(variable_record, found_variable_record);
                         get_code_generator()->load_or_call_record_into_reg(assign_record, "r1");
                         get_code_generator()->create_variable_assignment_with_register(found_variable_record, "r1");
                         check_correct_number_of_array_dimensions(search(assign_record->name_), assign_record);
@@ -329,7 +335,8 @@ bool SymbolTable::check_expression_tree_for_correct_type_and_create_assignment_c
             else if (assign_record->kind_ != "variable" && assign_record->kind_ != "function") {
                 found_variable_record->accessor_code_ = variable_record->accessor_code_;
                 get_code_generator()->load_or_call_record_into_reg(assign_record, "r1");
-                get_code_generator()->create_variable_assignment_with_register(found_variable_record, "r1");
+                copy_stored_record(variable_record, found_variable_record);
+                get_code_generator()->create_variable_assignment_with_register(variable_record, "r1");
             }
         }
     }
@@ -382,7 +389,8 @@ bool SymbolTable::check_correct_number_of_array_dimensions(SymbolRecord* found_r
 
         string property = record->nested_properties_[i];
         current_record = top_symbol_table->search(current_record->type_);
-        current_record = current_record->symbol_table_->search(property);
+        if (current_record != NULL) // make sure class exists
+            current_record = current_record->symbol_table_->search(property);
 
         if (current_record == NULL) {
             return NULL;

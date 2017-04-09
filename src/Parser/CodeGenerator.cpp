@@ -31,9 +31,9 @@ bool CodeGenerator::create_program_halt(bool double_pass) {
 
 }
 void CodeGenerator::create_relational_expression_code(ExpressionTree * expression) {
-    ExpressionNode* left_expression = expression->root_node_->left_tree_;
+    ExpressionNode* left_expression = expression->get_root_node()->left_tree_;
 
-    string operator_type = expression->root_node_->record_->type_;
+    string operator_type = expression->get_root_node()->record_->type_;
     code_generation_.push_back(add_comment_string("---evaluating " + operator_type + " expression below ---"));
 
     create_expression_code(left_expression, NULL);
@@ -41,7 +41,7 @@ void CodeGenerator::create_relational_expression_code(ExpressionTree * expressio
     code_generation_.push_back("subi r8,r8,4");
     code_generation_.push_back("sw topaddr(r8),r2" + add_comment_string("store left hand side of relational expression on stack"));
     //todo store on stack
-    ExpressionNode* right_expression = expression->root_node_->right_tree_;
+    ExpressionNode* right_expression = expression->get_root_node()->right_tree_;
     create_expression_code(right_expression, NULL);
 
     code_generation_.push_back("lw r2,topaddr(r8)");
@@ -325,10 +325,8 @@ void CodeGenerator::create_variable_assignment_with_register(SymbolRecord *varia
         code_list->push_back("sw 0(r12),r5" + add_comment_string("store register value into stack class data member"));
     } else if (variable_record->structure_ == "array") {
         code_list->push_back("add r5,r0," + reg);
-        if (variable_record->accessor_code_.size() > 1) {
-            code_list->insert(code_list->end(), variable_record->accessor_code_.begin(),
-                              variable_record->accessor_code_.end());
-        }
+
+        create_array_indice_storage_code(variable_record);
 
         code_list->push_back("subi r12,r13," + to_string(function_size -variable_record->offset_address_) + add_comment_string("load stack array  offset"));
 
@@ -387,8 +385,10 @@ void CodeGenerator::load_or_call_record_into_reg(SymbolRecord *load_record, stri
             }
 
         } else if (load_record->structure_ == "array") {
-            if (load_record->accessor_code_.size() > 1) {
-                code_list->insert(code_list->end(), load_record->accessor_code_.begin(), load_record->accessor_code_.end());
+            if (load_record->function_parameters_.size() > 0) {
+
+                create_array_indice_storage_code(load_record);
+
                 code_list->push_back("subi r12,r13," + to_string(function_size - load_record->offset_address_) + add_comment_string("load stack array  offset"));
                 code_list->push_back("add r12,r12,r9");
                 code_list->push_back("lw " + load_reg + ",0(r12)" + add_comment_string("load stack array index value in function"));
@@ -412,9 +412,9 @@ void CodeGenerator::create_function_parameter_code(SymbolRecord *load_record,  s
     vector<ExpressionTree *> function_expression_parameters = load_record->function_parameters_;
 
     for (ExpressionTree* tree: function_expression_parameters) {
-        SymbolRecord* current_record = tree->root_node_->record_;
+        SymbolRecord* current_record = tree->get_root_node()->record_;
         if (current_record->kind_ == "ADDOP" || current_record->kind_ == "MULTOP")
-            create_expression_code(tree->root_node_, code_list);
+            create_expression_code(tree->get_root_node(), code_list);
         else
             load_or_call_record_into_reg(current_record, load_reg, code_list);
         load_function_parameters_into_stack_memory_code(current_record, code_list);
@@ -439,6 +439,28 @@ void CodeGenerator::create_single_operator_codes(SymbolRecord *record, string re
             code_list->push_back("sub " + reg + ",r0," + reg);
         }
     }
+}
+
+void CodeGenerator::create_array_indice_storage_code(SymbolRecord* record) {
+    if (!second_pass_ || record->array_sizes.size() == 0)
+        return;
+
+    int current_array_dimension = 0;
+    for(ExpressionTree* tree: record->function_parameters_) {
+        int array_dimension_size = record->array_sizes[current_array_dimension++];
+        //increase dimension access
+
+        if (tree->get_root_node()->record_->kind_ == "RELOP") {
+            create_relational_expression_code(tree);
+        }
+        else
+            create_expression_code(tree->get_root_node(), &code_generation_);
+        code_generation_.push_back("muli r9,r9," + to_string(array_dimension_size));
+        code_generation_.push_back("muli r1,r1," + to_string(4) + add_comment_string("multiply last evaluated expression stored in r1 by the arrays type size"));
+        code_generation_.push_back("add r9,r9,r1" + add_comment_string("add new dimension access to current offset counter"));
+    }
+
+
 }
 
 void CodeGenerator::create_array_indice_storage_code(SymbolRecord* record,  vector<string> *code_list) {

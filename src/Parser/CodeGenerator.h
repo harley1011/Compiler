@@ -91,6 +91,8 @@ public:
     void create_function_parameter_code(SymbolRecord *load_record,  string load_reg, vector<string>* code_list);
 
     void create_copy_class_values(SymbolRecord *variable_record, SymbolRecord *assign_record);
+
+    void create_array_indice_storage_code(SymbolRecord *record);
 };
 
 

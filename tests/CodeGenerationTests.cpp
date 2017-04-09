@@ -1097,6 +1097,8 @@ TEST(CircularFunctionalCall, CodeGeneration)
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
     parser.global_symbol_table_->print(true);
 }
+
+//floating point numbers computation
 // method calls
 
 
