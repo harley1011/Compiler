@@ -412,7 +412,7 @@ bool SymbolTable::check_func_parameters(SymbolRecord *local_record) {
         SymbolRecord* current_func_parameter = local_record->symbol_table_->symbol_records_[i];
         ExpressionTree* current_expression_parameter = function_expression_parameters[i];
 
-        current_expression_parameter->get_root_node()->record_->offset_address_ = current_func_parameter->offset_address_;
+        current_expression_parameter->get_root_node()->record_->parameter_offset_address_ = current_func_parameter->offset_address_;
 
         if (current_expression_parameter->get_root_node()->record_->kind_ == "ADDOP" || current_expression_parameter->get_root_node()->record_->kind_ == "MULTOP") {
             if (current_func_parameter->type_ != "float" && current_func_parameter->type_ != "int") {
@@ -421,6 +421,7 @@ bool SymbolTable::check_func_parameters(SymbolRecord *local_record) {
             check_expression_is_valid(current_expression_parameter, &local_record->accessor_code_);
         } else {
             SymbolRecord* current_expression_found_parameter = current_expression_parameter->get_root_node()->record_;
+           // current_expression_found_parameter->parameter_offset_address_ = current_func_parameter->offset_address_;
             if (check_if_variable_or_func_exist(current_expression_found_parameter)) {
                 if (current_expression_found_parameter->structure_ == "array" || current_func_parameter->structure_ == "array" || current_expression_found_parameter->structure_ == "class array" || current_func_parameter->structure_ == "class array") {
                     if (current_expression_found_parameter->structure_ != "array" && current_expression_found_parameter->structure_ != "class array")
@@ -631,7 +632,7 @@ void SymbolTable::determine_func_stack_variable_offsets(SymbolRecord *local_reco
             variable_size = found_class_record->record_size_;
         }
     } else {
-        if (local_record->kind_  == "parameter" && local_record->structure_ == "array")
+        if (local_record->kind_  == "parameter" && (local_record->structure_ == "array" || local_record->structure_ == "class array" || local_record->structure_ == "class"))
             variable_size = 4;
         else
             variable_size = local_record->compute_record_size();

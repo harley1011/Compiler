@@ -31,6 +31,7 @@ public:
     int current_array_position_ = 0;
     string address;
     int offset_address_;
+    int parameter_offset_address_ = 0;
     int record_size_;
     int data_member_offset_address_;
     bool size_calculated_;
