@@ -888,7 +888,7 @@ TEST(AssignIntVariableMultiVariableExpressionAndFunction, SemanticVerification)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 5);
-    EXPECT_EQ(parser.print_semantic_errors(), "Error: can't perform arithmetic operations with  c.b.funcTest that is not of type int or float:1:180\nError: can't perform arithmetic operations with variable a that is not of type int or float:1:180\nError: can't perform arithmetic operations with variable b that is not of type int or float:1:180\nError: can't perform arithmetic operations with variable c that is not of type int or float:1:180\nError: can't perform arithmetic operations with variable b.a that is not of type int or float:1:180\n");
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: can't perform arithmetic operations with variable c.b.funcTest that is not of type int or float:1:180\nError: can't perform arithmetic operations with variable a that is not of type int or float:1:180\nError: can't perform arithmetic operations with variable b that is not of type int or float:1:180\nError: can't perform arithmetic operations with variable c that is not of type int or float:1:180\nError: can't perform arithmetic operations with variable b.a that is not of type int or float:1:180\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 4);
     parser.global_symbol_table_->print(true);
@@ -1204,7 +1204,7 @@ TEST(ArrayEqualAccess, CodeGeneration)
     EXPECT_EQ(parser.print_semantic_errors(), "Error: array x is being accessed with too few dimensions:1:36\nError: array y is being accessed with too few dimensions:1:36\n");
 
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
 }
 

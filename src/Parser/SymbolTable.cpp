@@ -178,8 +178,12 @@ bool SymbolTable::check_indice_expression_is_valid(SymbolRecord* record, Express
         int variable_size = 4;
         get<0>(record->nested_array_parameters_[property]).push_back(tree);
         get<1>(record->nested_array_parameters_[property]) = nested_record->array_sizes;
-        if (record->structure_ == "class" || record->structure_ == "class array")
-            variable_size = search(record->type_)->record_size_;
+        if (record->structure_ == "class" || record->structure_ == "class array") {
+            SymbolRecord* class_record = search(record->type_);
+            if (class_record == NULL)
+                return true;
+            variable_size = class_record->record_size_;
+        }
         get<2>(record->nested_array_parameters_[property]) = variable_size;
         return true;
     }
@@ -315,12 +319,16 @@ bool SymbolTable::check_expression_tree_for_correct_type_and_create_assignment_c
 
     }
     else if (found_variable_record != NULL) {
-        SymbolRecord* assign_record = tree->get_root_node()->record_;
+        SymbolRecord *assign_record = tree->get_root_node()->record_;
 
-        if (variable_property != assign_record->type_ && (assign_record->type_ == "int" || assign_record->type_ == "float")) {
-            report_error_to_highest_symbol_table("Error: can't assign variable " + found_variable_record->name_ + " a value of type " + assign_record->type_ + " it needs type " + found_variable_record->type_ + ":");
+        if (variable_property != assign_record->type_ &&
+            ((assign_record->type_ == "int" && variable_property != "float") || (assign_record->type_ == "float" && variable_property != "int"))) {
+            report_error_to_highest_symbol_table(
+                    "Error: can't assign variable " + found_variable_record->name_ + " a value of type " +
+                    assign_record->type_ + " it needs type " + found_variable_record->type_ + ":");
         } else {
-            if ((assign_record->kind_ == "variable" || assign_record->kind_ == "function") && check_if_variable_or_func_exist(assign_record)) {
+            if ((assign_record->kind_ == "variable" || assign_record->kind_ == "function") &&
+                check_if_variable_or_func_exist(assign_record)) {
 
                 SymbolRecord *found_assign_record;
                 found_assign_record = search(assign_record->name_);
@@ -335,7 +343,7 @@ bool SymbolTable::check_expression_tree_for_correct_type_and_create_assignment_c
                                 "Error: can't assign variable " + found_variable_record->name_ + " a value of type " +
                                 found_assign_record->type_ + " it needs type " + found_variable_record->type_ + ":");
                     else if (found_assign_record->structure_ == "class") {
-                        SymbolRecord* class_record = search(found_variable_record->type_);
+                        SymbolRecord *class_record = search(found_variable_record->type_);
                         found_variable_record->record_size_ = class_record->record_size_;
                         copy_stored_record(assign_record, found_assign_record);
                         copy_stored_record(variable_record, found_variable_record);
@@ -349,14 +357,14 @@ bool SymbolTable::check_expression_tree_for_correct_type_and_create_assignment_c
                         check_correct_number_of_array_dimensions(search(assign_record->name_), assign_record);
                     }
                 }
-            }
-            else if (assign_record->kind_ != "variable" && assign_record->kind_ != "function") {
+            } else if (assign_record->kind_ != "variable" && assign_record->kind_ != "function") {
                 get_code_generator()->load_or_call_record_into_reg(assign_record, "r1");
                 copy_stored_record(variable_record, found_variable_record);
                 get_code_generator()->create_variable_assignment_with_register(variable_record, "r1");
             }
         }
     }
+
 
     return true;
 }
@@ -928,8 +936,8 @@ string SymbolTable::generate_symbol_table_string(SymbolTable *table, string tabl
         if (record->structure_.size() > structure_width_out)
             structure_width_out = record->structure_.size();
 
-        if (record->type_.size() > type_width_out)
-            type_width_out = record->type_.size();
+        if (record->type_with_array_dimensions().size() > type_width_out)
+            type_width_out = record->type_with_array_dimensions().size();
     }
 
     int horizontal_width_out = name_width_out + type_width_out + kind_width_out + structure_width_out + declared_width_out + 6;

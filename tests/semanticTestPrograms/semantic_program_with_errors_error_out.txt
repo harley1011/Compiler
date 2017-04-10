@@ -1,9 +1,11 @@
 Error: A variable with the name idx already exists within this scope:10:22
 Error: A variable with the name idx already exists within this scope:23:22
-Error: A variable with the name findMin already exists within this scope:32:16
+Error: A function with the name findMin already exists within this scope:32:16
 Error: A variable with the name idx already exists within this scope:37:26
-Error: A variable with the name randomize already exists within this scope:76:16
+Error: A function with the name randomize already exists within this scope:76:16
 Error: A variable with the name value already exists within this scope:87:16
-Error: maxValue variable is being used without being declared26:28
-Error: maxValue variable is being used without being declared40:32
-Error:Util is not a valid type:65:5
+Error: maxValue variable is being used without being declared:25:37
+Error: maxValue variable is being used without being declared:26:38
+Error: maxValue variable is being used without being declared:39:41
+Error: maxValue variable is being used without being declared:40:42
+Error: Util is not a valid type:65:5
