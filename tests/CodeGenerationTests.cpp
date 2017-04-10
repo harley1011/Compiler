@@ -1126,7 +1126,24 @@ TEST(ArrayOfObjects, CodeGeneration)
 {
     vector<Token*> tokens;
     Scanner scanner;
-    tokens = scanner.generate_tokens("class B { int p; int l; }; class A { int k; int y; B b; int p; }; program { A a[5];  a[0].b.p = 100; put(a[0].b.p); };", false);
+    tokens = scanner.generate_tokens("class B { int p; int l; }; class A { int k; int y; B b; int p; }; program { A a[5];  a[2].b.p = 100; put(a[2].b.p); };", false);
+
+    Parser parser;
+    parser.enable_double_pass_parse_ = true;
+
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    parser.global_symbol_table_->print(true);
+}
+TEST(ArrayOfObjectsInObjects, CodeGeneration)
+{
+    vector<Token*> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("class B { int p; int l; }; class A { int k; int y; B b[10][5]; int p; }; program { A a[5];  a[2].b[2][2].p = 100; put(a[2].b[2][2].p); };", false);
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;

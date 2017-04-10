@@ -175,9 +175,12 @@ bool SymbolTable::check_indice_expression_is_valid(SymbolRecord* record, Express
         nested_record = find_nested_record(record, found_record);
         if (nested_record == NULL)
             nested_record = record;
-
-        record->nested_array_parameters_[property].first.push_back(tree);
-        record->nested_array_parameters_[property].second = nested_record->array_sizes;
+        int variable_size = 0;
+        get<0>(record->nested_array_parameters_[property]).push_back(tree);
+        get<1>(record->nested_array_parameters_[property]) = nested_record->array_sizes;
+        if (record->structure_ == "class" || record->structure_ == "class array")
+            variable_size = search(record->type_)->record_size_;
+        get<2>(record->nested_array_parameters_[property]) = variable_size;
         return true;
     }
     return true;
@@ -383,7 +386,7 @@ bool SymbolTable::check_correct_number_of_array_dimensions(SymbolRecord* found_r
 
         int number_of_accessed_dimensions = 0;
         if (record->nested_array_parameters_.find(current_record->name_) != record->nested_array_parameters_.end())
-            number_of_accessed_dimensions = (int) record->nested_array_parameters_[current_record->name_].first.size();
+            number_of_accessed_dimensions = (int) get<0>(record->nested_array_parameters_[current_record->name_]).size();
 
         if (current_record->structure_ != "array" && current_record->array_sizes.size() == 0 &&
             number_of_accessed_dimensions > 0) {
@@ -730,7 +733,7 @@ bool SymbolTable::calculate_class_offsets() {
 
                     if (class_record->kind_ == "variable") {
 
-                        if (class_record->structure_ == "class") {
+                        if (class_record->structure_ == "class" || class_record->structure_ == "class array") {
                             SymbolRecord* found_class_record = search(class_record->type_);
                             if (found_class_record == NULL) {
                                 offset_calculation_remain = false;
@@ -742,7 +745,10 @@ bool SymbolTable::calculate_class_offsets() {
                                 break;
                             }
 
-                            offset_count += found_class_record->record_size_;
+                            if (class_record->structure_ == "class array")
+                                offset_count += found_class_record->record_size_ * class_record->compute_array_size() / 4;
+                            else
+                                offset_count += found_class_record->record_size_;
 
                         } else
                             offset_count += class_record->compute_record_size();

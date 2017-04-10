@@ -1,5 +1,6 @@
 #include <string>
 #include <vector>
+#include <tuple>
 #include "../Scanner/IntegerToken.h"
 
 using namespace std;
@@ -20,7 +21,7 @@ public:
     vector<string> single_operators_before_;
     vector<string> nested_properties_;
     vector<ExpressionTree*> function_parameters_;
-    map<string,pair< vector<ExpressionTree*>,vector<int>>> nested_array_parameters_;
+    map<string,tuple< vector<ExpressionTree*>,vector<int>,int>> nested_array_parameters_;
     string name_;
     string structure_;
     SymbolTable* symbol_table_;

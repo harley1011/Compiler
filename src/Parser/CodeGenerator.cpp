@@ -333,14 +333,17 @@ void CodeGenerator::create_variable_assignment_with_register(SymbolRecord *varia
                                  add_comment_string("load stack class data member offset"));
         }
         code_generation_.push_back("add r12,r12,r9");
-        code_generation_.push_back("add r9,r0,r0" + add_comment_string("clear array indices register"));
+       // code_generation_.push_back("add r9,r0,r0" + add_comment_string("clear array indices register"));
         code_generation_.push_back("sw 0(r12),r5" + add_comment_string("store register value into stack class data member"));
     } else if (variable_record->structure_ == "array" || variable_record->structure_ == "class array") {
         code_generation_.push_back("add r5,r0," + reg);
 
         create_array_index_calculation_code(variable_record);
 
-        code_generation_.push_back("subi r12,r13," + to_string(function_size -variable_record->offset_address_) + add_comment_string("load stack array  offset"));
+        if (variable_record->structure_ == "class array")
+            code_generation_.push_back("subi r12,r13," + to_string(function_size - variable_record->offset_address_ - variable_record->data_member_offset_address_) + add_comment_string("load stack array offset and data member offset"));
+        else
+            code_generation_.push_back("subi r12,r13," + to_string(function_size - variable_record->offset_address_) + add_comment_string("load stack array offset"));
 
         if (variable_record->kind_ == "parameter") {
             code_generation_.push_back("lw r12,0(r12)" + add_comment_string("load array address"));
@@ -348,7 +351,7 @@ void CodeGenerator::create_variable_assignment_with_register(SymbolRecord *varia
 
         code_generation_.push_back("add r12,r12,r9");
         code_generation_.push_back("sw 0(r12),r5" + add_comment_string("store register value in stack array index"));
-        code_generation_.push_back("add r9,r0,r0" + add_comment_string("clear array indices register"));
+      //  code_generation_.push_back("add r9,r0,r0" + add_comment_string("clear array indices register"));
     }
     else {
         //load offset address of variable i.e function start address + variable offset within function
@@ -386,22 +389,26 @@ void CodeGenerator::load_or_call_record_into_reg(SymbolRecord *load_record, stri
                                          add_comment_string("load stack class data member offset"));
                 }
                 code_generation_.push_back("add r12,r12,r9");
-                code_generation_.push_back("add r9,r0,r0" + add_comment_string("clear array indices register"));
+               // code_generation_.push_back("add r9,r0,r0" + add_comment_string("clear array indices register"));
                 code_generation_.push_back("lw " + load_reg + ",0(r12)" +
                                      add_comment_string("load stack class data member into register"));
             } else {
                 code_generation_.push_back("subi r1,r13," + to_string(function_size - load_record->offset_address_) + add_comment_string("load stack class address"));
             }
 
-        } else if (load_record->structure_ == "array") {
+        } else if (load_record->structure_ == "array" || load_record->structure_ == "class array") {
             if (load_record->nested_array_parameters_.size() > 0) {
 
                 create_array_index_calculation_code(load_record);
 
-                code_generation_.push_back("subi r12,r13," + to_string(function_size - load_record->offset_address_) + add_comment_string("load stack array  offset"));
+                if (load_record->structure_ == "class array")
+                    code_generation_.push_back("subi r12,r13," + to_string(function_size - load_record->offset_address_ - load_record->data_member_offset_address_) + add_comment_string("load stack array offset and data member offset"));
+                else
+                    code_generation_.push_back("subi r12,r13," + to_string(function_size - load_record->offset_address_) + add_comment_string("load stack array  offset"));
+
                 code_generation_.push_back("add r12,r12,r9");
                 code_generation_.push_back("lw " + load_reg + ",0(r12)" + add_comment_string("load stack array index value in function"));
-                code_generation_.push_back("add r9,r0,r0" + add_comment_string("clear array indices register"));
+             //   code_generation_.push_back("add r9,r0,r0" + add_comment_string("clear array indices register"));
             } else {
                 code_generation_.push_back("subi r1,r13," + to_string(function_size - load_record->offset_address_) + add_comment_string("load stack array address"));
                 //code_generation_.push_back("add " + load_reg + ",r12,r9" + add_comment_string("load array address"));
@@ -445,33 +452,35 @@ void CodeGenerator::create_single_operator_codes(SymbolRecord *record, string re
 void CodeGenerator::create_array_index_calculation_code(SymbolRecord *record) {
     if (!second_pass_ || record->nested_array_parameters_.size() == 0)
         return;
-
-    typedef map<string,pair< vector<ExpressionTree*>,vector<int>>>::iterator it_type;
+    code_generation_.push_back(add_comment_string("--- compute index value ---"));
+    code_generation_.push_back("add r9,r0,r0" + add_comment_string("clear array index register"));
+    typedef map<string,tuple< vector<ExpressionTree*>,vector<int>,int>>::iterator it_type;
     for(it_type iterator = record->nested_array_parameters_.begin(); iterator != record->nested_array_parameters_.end(); iterator++) {
 
         auto const current_pair = iterator->second;
+        code_generation_.push_back("add r7,r0,r0");
 
         int current_array_dimension = 0;
-        for (ExpressionTree *tree: current_pair.first ) {
-            int array_dimension_size = current_pair.second[current_array_dimension++];
+        for (ExpressionTree *tree: get<0>(current_pair)) {
+            int array_dimension_size = get<1>(current_pair)[current_array_dimension++];
 
-            code_generation_.push_back(add_comment_string("--- compute index value ---"));
+
 
             if (tree->get_root_node()->record_->kind_ == "RELOP") {
                 create_relational_expression_code(tree);
             } else
                 create_expression_code(tree->get_root_node());
 
-            code_generation_.push_back(add_comment_string("--- compute index over ---"));
-
-            code_generation_.push_back("muli r9,r9," + to_string(array_dimension_size));
-            code_generation_.push_back("muli r1,r1," + to_string(4) + add_comment_string(
+            code_generation_.push_back("muli r7,r7," + to_string(array_dimension_size));
+            code_generation_.push_back("muli r1,r1," + to_string(get<2>(current_pair)) + add_comment_string(
                     "multiply last evaluated expression stored in r1 by the arrays type size"));
             code_generation_.push_back(
-                    "add r9,r9,r1" + add_comment_string("add new dimension access to current offset counter"));
+                    "add r7,r7,r1" + add_comment_string("add new dimension access to current offset counter"));
 
         }
+        code_generation_.push_back("add r9,r9,r7" + add_comment_string("add array dimension calculation with other properties"));
     }
+    code_generation_.push_back(add_comment_string("--- compute index over ---"));
 
 }
 
