@@ -1,9 +1,12 @@
 Test cases can be found in the ParserTests.cpp and ScannerTest.cpp file.
 
-The example program files and their associated outputs are found in semanticTestPrograms
+The example program files and their associated outputs for semantic verification can be found in semanticTestPrograms
 - semantic_program.txt -> semantic_program_symbol_table.txt
 - semantic_program_with_errors.txt -> semantic_program_with_errors_symbol_table.txt, semantic_program_with_errors_error_out.txt
 - semantic_program_complex.txt -> semantic_program_complex_symbol_table.txt
+- semantic_program_with_verification_errors.txt -> semantic_program_with_verification_errors_out.txt
+
+The valid programs are in codeTestPrograms, the unit tests in CodeGenerationTests.cpp also contain valid programs
 
 COMPILATION AND EXECUTION INSTRUCTIONS
 
