@@ -5257,3 +5257,22 @@ TEST(ArrayOfObjectsInObjects, CodeGeneration)
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
     parser.global_symbol_table_->print(true);
 }
+
+
+
+// programs
+
+bool compare_files(string first_path, string second_path);
+
+TEST(FileTestCode, CodeGeneration) {
+    vector<Token *> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("code_prog.txt", true);
+
+
+    Parser parser("built_code_prog_parser_deriv_out.txt", "built_code_prog_syntax_error_report_out.txt");
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_EQ(parser.semantic_errors_.size(), 0);
+
+    EXPECT_TRUE(compare_files("given_program_parser_deriv_out.txt", "built_given_program_parser_deriv_out.txt"));
+}

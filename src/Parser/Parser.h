@@ -21,8 +21,11 @@ public:
     Parser();
     Parser(bool enable_derivation_output);
     Parser(vector<Token*> tokens);
-    Parser(string derivation_output_path, string symbol_table_output_path,  string syntax_error_output_path, string semantic_error_output_path);
+    Parser(string derivation_output_path, string symbol_table_output_path,  string syntax_error_output_path, string semantic_error_output_path, string code_output_path);
     Parser(string derivation_output_path, string syntax_error_output_path);
+
+    Parser(string derivation_output_path, string symbol_table_output_path, string syntax_error_output_path,
+               string semantic_error_output_path);
 
     SymbolTable *global_symbol_table_;
     CodeGenerator* code_generator_;
@@ -39,6 +42,7 @@ public:
     int current_token_position_;
     bool output_to_file_;
     string derivation_output_path_;
+    string code_output_path_;
     string symbol_table_output_path_;
     string syntax_error_output_path_;
     string semantic_error_output_path_;

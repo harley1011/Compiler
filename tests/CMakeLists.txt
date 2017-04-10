@@ -19,3 +19,7 @@ add_custom_command(TARGET runUnitTests PRE_BUILD
 add_custom_command(TARGET runUnitTests PRE_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${CMAKE_SOURCE_DIR}/tests/semanticTestPrograms $<TARGET_FILE_DIR:runUnitTests>)
+
+add_custom_command(TARGET runUnitTests PRE_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/tests/codeTestPrograms $<TARGET_FILE_DIR:runUnitTests>)

@@ -6,13 +6,16 @@ using namespace std;
 
 int main(int argc, char *argv[] ) {
     string input;
-    string token_output;
-    string token_error;
-    string syntax_output;
-    string semantic_output;
-    string syntax_error_output;
-    string semantic_error_output;
-    string code_output;
+    string token_output = "token_output.txt";
+    string token_error = "token_error.txt";
+    string syntax_output = "syntax_output.txt";
+    string semantic_output = "semantic_output.txt";
+    string syntax_error_output = "syntax_error_output.txt";
+    string semantic_error_output = "semantic_error_output.txt";
+    string code_output = "code_output.m";
+    string use_default;
+    string answer;
+
 
     if (argc < 3) {
         struct stat info;
@@ -29,12 +32,17 @@ int main(int argc, char *argv[] ) {
                 break;
 
         }
+        cout << "Do you want to use the default output files? y/n:";
+        getline(cin, use_default);
 
-        cout << "Enter token output path location: ";
-        getline(cin, token_output);
+        if (use_default == "N" || use_default == "n") {
 
-        cout << "Enter error output path location: ";
-        getline(cin, token_error);
+            cout << "Enter token output path location: ";
+            getline(cin, token_output);
+
+            cout << "Enter error output path location: ";
+            getline(cin, token_error);
+        }
     }
     else {
         input = argv[1];
@@ -45,38 +53,37 @@ int main(int argc, char *argv[] ) {
     Scanner scanner(token_output, token_error);
     vector<Token*> tokens = scanner.generate_tokens(input, true);
 
-    cout << "Lexical analyzer has converted the program to tokens, see syntax_output file" << endl;
+    cout << "Lexical analyzer has converted the program to tokens, see syntax output file" << endl;
 
-    string answer;
     cout << "Do you want to run the parser? y/n:";
     getline(cin, answer);
 
     if (answer == "Y" || answer == "y") {
 
-        std::cout << "Enter derivation syntax output path location:";
-        getline(cin, syntax_output);
+        if (use_default == "N" || use_default == "n") {
 
-        cout << "Enter syntax error output path location: ";
-        getline(cin, syntax_error_output);
+            std::cout << "Enter derivation syntax output path location:";
+            getline(cin, syntax_output);
 
-        std::cout << "Enter symbol table output path location:";
-        getline(cin, semantic_output);
+            cout << "Enter syntax error output path location: ";
+            getline(cin, syntax_error_output);
 
-        cout << "Enter semantic error output path location: ";
-        getline(cin, semantic_error_output);
+            std::cout << "Enter symbol table output path location:";
+            getline(cin, semantic_output);
 
-        cout << "Enter program code output path location: ";
-        getline(cin, code_output);
-        string yes_or_no;
+            cout << "Enter semantic error output path location: ";
+            getline(cin, semantic_error_output);
+
+            cout << "Enter program code output path location: ";
+            getline(cin, code_output);
+        }
+
         cout << "Do you want to append comments to the moon code?(y/n): ";
-        getline(cin, yes_or_no);
+        getline(cin, answer);
 
-        Parser syntaxParser(syntax_output, semantic_output, syntax_error_output, semantic_error_output);
+        Parser syntaxParser(syntax_output, semantic_output, syntax_error_output, semantic_error_output, code_output);
 
-        if (yes_or_no == "y")
-            syntaxParser.code_generator_->enable_comments_ = true;
-        else
-            syntaxParser.code_generator_->enable_comments_ = false;
+        syntaxParser.code_generator_->enable_comments_ = answer == "y" || answer == "Y";
 
 
         bool parse_result = syntaxParser.parse(tokens);
@@ -103,3 +110,5 @@ int main(int argc, char *argv[] ) {
 
     return 0;
 }
+
+

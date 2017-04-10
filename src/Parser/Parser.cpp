@@ -8,7 +8,9 @@ Parser::Parser() {
     global_symbol_table_ = new SymbolTable();
     enable_double_pass_parse_ = true;
     code_generator_ = new CodeGenerator();
+    code_output_path_ = "program_out.m";
 }
+
 
 Parser::Parser(string derivation_output_path, string symbol_table_output_path,  string syntax_error_output_path, string semantic_error_output_path) {
     current_rhs_derivation_ = "<classDeclLst> <progBody>";
@@ -18,6 +20,21 @@ Parser::Parser(string derivation_output_path, string symbol_table_output_path,  
     derivation_output_path_ = derivation_output_path;
     syntax_error_output_path_ = syntax_error_output_path;
     semantic_error_output_path_ = semantic_error_output_path;
+    code_output_path_ = "program_out.m";
+    output_to_file_ = true;
+    global_symbol_table_ = new SymbolTable();
+    enable_double_pass_parse_ = true;
+    code_generator_ = new CodeGenerator();
+}
+Parser::Parser(string derivation_output_path, string symbol_table_output_path,  string syntax_error_output_path, string semantic_error_output_path, string code_output_path) {
+    current_rhs_derivation_ = "<classDeclLst> <progBody>";
+    derivations_.push_back(current_rhs_derivation_);
+    enable_derivation_output_ = false;
+    symbol_table_output_path_ = symbol_table_output_path;
+    derivation_output_path_ = derivation_output_path;
+    syntax_error_output_path_ = syntax_error_output_path;
+    semantic_error_output_path_ = semantic_error_output_path;
+    code_output_path_ = code_output_path;
     output_to_file_ = true;
     global_symbol_table_ = new SymbolTable();
     enable_double_pass_parse_ = true;
@@ -34,6 +51,7 @@ Parser::Parser(string derivation_output_path,  string syntax_error_output_path) 
     global_symbol_table_ = new SymbolTable();
     enable_double_pass_parse_ = true;
     code_generator_ = new CodeGenerator();
+    code_output_path_ = "program_out.m";
 }
 
 Parser::Parser(bool enable_derivation_output) {
@@ -44,6 +62,7 @@ Parser::Parser(bool enable_derivation_output) {
     global_symbol_table_ = new SymbolTable();
     enable_double_pass_parse_ = true;
     code_generator_ = new CodeGenerator();
+    code_output_path_ = "program_out.m";
 }
 
 Parser::Parser(vector<Token*> tokens) {
@@ -112,7 +131,7 @@ bool Parser::parse(vector<Token*> tokens) {
     }
     if (syntax_errors.size() == 0 && semantic_errors_.size() == 0) {
         ofstream program_out;
-        program_out.open("C:\\Users\\Harley\\Desktop\\moon\\program_out.m");
+        program_out.open(code_output_path_);
         program_out << code_generator_->generate_code();
 
     }
@@ -444,7 +463,7 @@ bool Parser::statThenBlock(SymbolRecord* func_record) {
 }
 
 bool Parser::statElseBlock(SymbolRecord* func_record) {
-    if (!skip_errors({"ELSE", "DELI"}, {"DELI", "ELSE", "ID", "IF", "FOR", "GET", "PUT", "RETURN"}, false))
+    if (!skip_errors({"ELSE", "DELI"}, {"DELI", "ELSE", "ID", "IF", "FOR", "GET", "PUT", "RETURN"}, true))
         return false;
     if (lookahead_ == "ELSE") {
         form_derivation_string("<statElseBlock>", "else <statBlock>");
@@ -453,7 +472,7 @@ bool Parser::statElseBlock(SymbolRecord* func_record) {
     } else if (lookahead_ == "DELI" || lookahead_ == "ELSE" || lookahead_ == "ID" || lookahead_ == "IF" ||
                lookahead_ == "FOR" || lookahead_ == "GET" || lookahead_ == "PUT" || lookahead_ == "RETURN") {
         form_derivation_string("<statElseBlock>", "");
-        if (match("DELI") && code_generator_->create_if_else())
+        if (code_generator_->create_if_else())
             return true;
     }
     return true;
