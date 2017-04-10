@@ -308,7 +308,7 @@ bool SymbolTable::check_expression_tree_for_correct_type_and_create_assignment_c
         }
     }
 
-    if (tree->get_root_node()->record_->kind_ == "ADDOP" || tree->get_root_node()->record_->kind_ == "MULTOP" || tree->get_root_node()->record_->kind_ == "RELOP") {
+    if ((tree->get_root_node()->record_->kind_ == "ADDOP" || tree->get_root_node()->record_->kind_ == "MULTOP" || tree->get_root_node()->record_->kind_ == "RELOP") && found_variable_record != NULL) {
 
         if (variable_property != "float" && variable_property != "int") {
             report_error_to_highest_symbol_table("Error: can't assign variable " + found_variable_record->name_ + " of type " + found_variable_record->type_  + " an arithmetic expression, it must be of type int or float:");
@@ -718,7 +718,9 @@ void SymbolTable::determine_func_stack_variable_offsets(SymbolRecord *local_reco
             if (found_class_record == NULL)
                 return;
             local_record->offset_address_ = previous_record->offset_address_ + found_class_record->record_size_;
-        } else
+        } else if (previous_record->kind_ == "parameter" && (previous_record->structure_ == "array" || previous_record->structure_ == "class array"))
+            local_record->offset_address_ = previous_record->offset_address_ + 4;
+         else
             local_record->offset_address_ = previous_record->offset_address_ + previous_record->compute_record_size();
     } else if (parent_record->name_ != "program")
         local_record->offset_address_ = 4;

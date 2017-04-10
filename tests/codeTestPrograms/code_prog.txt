@@ -1,26 +1,25 @@
 program
 {
-    int x = 5;
-    int inputs[100];
-
-    for (int i = 0; i < x; i = i + 1) {
-        get(inputs[i]);
-    };
-
+    int x;
+    int inputs[5];
     int add;
     int k;
     add = 5;
 
-    k = addValueToArray(inputs, x, add);
+    x = 5;
+    for (int i = 0; i < 5; i = i + 1) {
+        inputs[i] = i + 5;
+    };
 
-    for (int t = 0; t < x; t = t + 1) {
+
+    for (int t = 0; t < 5; t = t + 1) {
             put(inputs[t]);
     };
 };
 
-int addValueToArray(int inputs[100], int x, int add) {
-    for (int i = 0; i < x; i = i + 1 ) {
-        inputs[i] = inputs[i] + add;
+int addValueToArray(int inputs[5], int x, int add) {
+    for (int m = 0; m < 5; m = m + 1 ) {
+        inputs[m] = inputs[m] + add;
     };
 
     return (0);
