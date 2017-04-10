@@ -21,12 +21,10 @@ public:
     bool errors_triggered_;
     CodeGenerator();
     vector<string> code_generation_;
-    vector<string> variable_declaration_generation_;
     stack<int> current_for_loop_;
     stack<int> current_if_;
     void create_variable_code(SymbolRecord** record);
 
-    string generate_variable_declaration();
     int loop_count_ = 0;
     int copy_object_count = 0;
     int if_count_ = 0;

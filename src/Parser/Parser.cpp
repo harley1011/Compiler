@@ -113,7 +113,6 @@ bool Parser::parse(vector<Token*> tokens) {
     if (syntax_errors.size() == 0 && semantic_errors_.size() == 0) {
         ofstream program_out;
         program_out.open("C:\\Users\\Harley\\Desktop\\moon\\program_out.m");
-        program_out << code_generator_->generate_variable_declaration();
         program_out << code_generator_->generate_code();
 
     }
@@ -205,7 +204,8 @@ bool Parser::postTypeId(SymbolRecord** record) {
         }
     } else if (lookahead_ == "OPENPARA") {
         form_derivation_string("<postTypeId>", "( <fParams> ) <funcBody> ;");
-        if (global_symbol_table_->current_symbol_record_->symbol_table_->create_function_class_entry_and_function_table(record) && match("OPENPARA") && fParams(*record) && match("CLOSEPARA") && funcBody(*record) && match("DELI")) {
+        if (global_symbol_table_->current_symbol_record_->symbol_table_->create_function_class_entry_and_function_table(record) && match("OPENPARA")
+            && fParams(*record) && match("CLOSEPARA") && funcBody(*record) && match("DELI")) {
             return true;
         }
     } else if (lookahead_ == "DELI") {
@@ -226,7 +226,8 @@ bool Parser::progBody() {
         return false;
     if (lookahead_ == "PROGRAM") {
         form_derivation_string("<progBody>", "program <funcBody> ; <funcDefLst>");
-        if (match("PROGRAM") && global_symbol_table_->create_program_entry_and_table() && funcBody(global_symbol_table_->current_symbol_record_) && code_generator_->create_program_halt(global_symbol_table_->second_pass_) && match("DELI") && funcDefLst())
+        if (match("PROGRAM") && global_symbol_table_->create_program_entry_and_table() && funcBody(global_symbol_table_->current_symbol_record_)
+            && code_generator_->create_program_halt(global_symbol_table_->second_pass_) && match("DELI") && funcDefLst())
             return true;
     }
     return false;
@@ -237,7 +238,8 @@ bool Parser::funcHead(SymbolRecord** record) {
         return false;
     if (is_lookahead_a_type()) {
         form_derivation_string("<funcHead>", "<type> id ( <fParams> )");
-        if (type(*record) && match("ID") && (*record)->set_name(get_last_token().lexeme_) && global_symbol_table_->create_function_entry_and_table(record) && match("OPENPARA") && fParams(*record) && match("CLOSEPARA"))
+        if (type(*record) && match("ID") && (*record)->set_name(get_last_token().lexeme_) && global_symbol_table_->create_function_entry_and_table(record)
+            && match("OPENPARA") && fParams(*record) && match("CLOSEPARA"))
             return true;
     }
     return false;
@@ -406,7 +408,7 @@ bool Parser::statementRes(SymbolRecord* func_record) {
     } else if (lookahead_ == "GET") {
         form_derivation_string("<statementRes>", "get ( <variable> ) ;");
         if (match("GET") && match("OPENPARA") && code_generator_->create_get_code() && variable(func_record, *local_record) && match("CLOSEPARA") && match("DELI")) {
-            func_record->symbol_table_->check_if_get_variable_is_int_or_float_and_exists(*local_record);
+            func_record->symbol_table_->check_if_get_variable_is_correct_type_and_create_code(*local_record);
 
             return true;
         }
@@ -418,23 +420,24 @@ bool Parser::statementRes(SymbolRecord* func_record) {
         }
     } else if (lookahead_ == "RETURN") {
         form_derivation_string("<statementRes>", "return ( <expr> ) ;");
-        if (match("RETURN") && match("OPENPARA") && expr(func_record, tree) && func_record->symbol_table_->check_if_return_type_is_correct_type(func_record, tree) && match("CLOSEPARA") && match("DELI")) {
+        if (match("RETURN") && match("OPENPARA") && expr(func_record, tree) &&
+                func_record->symbol_table_->check_if_return_type_is_correct_type_and_generate_code(func_record, tree) && match("CLOSEPARA") && match("DELI")) {
             return true;
         }
     }
     return false;
 }
 
-bool Parser::statIfElseBlock(SymbolRecord* func_record) {
-    if (!skip_errors({"ELSE", "DELI"}, {"DELI", "ELSE", "ID", "IF", "FOR", "GET", "PUT", "RETURN"}, false))
+bool Parser::statThenBlock(SymbolRecord* func_record) {
+    if (!skip_errors({"OPENCURL", "ID", "IF", "FOR", "GET", "PUT", "RETURN"}, {"ELSE", "DELI"}, true))
         return false;
-    if (lookahead_ == "ELSE") {
-        form_derivation_string("<statIfElseBlock>", "else <statBlock>");
-        if (code_generator_->create_if_else() && match("ELSE") && statBlock(func_record))
+    if (lookahead_ == "OPENCURL") {
+        form_derivation_string("<statThenBlock>", "{ <statementLst> } <statIfElseBlock>");
+        if (match("OPENCURL") && statementLst(func_record) && match("CLOSECURL") && statIfElseBlock(func_record))
             return true;
-    } else if (lookahead_ == "DELI") {
-        form_derivation_string("<statIfElseBlock>", "");
-        if (match("DELI") && code_generator_->create_if_else())
+    } else if (lookahead_ == "OPENCURL" || lookahead_ == "ID" || is_lookahead_a_statement()) {
+        form_derivation_string("<statThenBlock>", "<statement> <statElseBlock>");
+        if (statement(func_record) && statElseBlock(func_record))
             return true;
     }
     return false;
@@ -455,6 +458,22 @@ bool Parser::statElseBlock(SymbolRecord* func_record) {
     }
     return true;
 }
+
+bool Parser::statIfElseBlock(SymbolRecord* func_record) {
+    if (!skip_errors({"ELSE", "DELI"}, {"DELI", "ELSE", "ID", "IF", "FOR", "GET", "PUT", "RETURN"}, false))
+        return false;
+    if (lookahead_ == "ELSE") {
+        form_derivation_string("<statIfElseBlock>", "else <statBlock>");
+        if (code_generator_->create_if_else() && match("ELSE") && statBlock(func_record))
+            return true;
+    } else if (lookahead_ == "DELI") {
+        form_derivation_string("<statIfElseBlock>", "");
+        if (match("DELI") && code_generator_->create_if_else())
+            return true;
+    }
+    return false;
+}
+
 
 bool Parser::assignStat(SymbolRecord* func_record, SymbolRecord* record) {
     if (!skip_errors({"ID"}, {"CLOSEPARA", "DELI"}, false))
@@ -488,20 +507,7 @@ bool Parser::statBlock(SymbolRecord* func_record) {
     return false;
 }
 
-bool Parser::statThenBlock(SymbolRecord* func_record) {
-    if (!skip_errors({"OPENCURL", "ID", "IF", "FOR", "GET", "PUT", "RETURN"}, {"ELSE", "DELI"}, true))
-        return false;
-    if (lookahead_ == "OPENCURL") {
-        form_derivation_string("<statThenBlock>", "{ <statementLst> } <statIfElseBlock>");
-        if (match("OPENCURL") && statementLst(func_record) && match("CLOSECURL") && statIfElseBlock(func_record))
-            return true;
-    } else if (lookahead_ == "OPENCURL" || lookahead_ == "ID" || is_lookahead_a_statement()) {
-        form_derivation_string("<statThenBlock>", "<statement> <statElseBlock>");
-        if (statement(func_record) && statElseBlock(func_record))
-            return true;
-    }
-    return false;
-}
+
 
 bool Parser::expr(SymbolRecord* func_record, ExpressionTree* abstract_expression_tree) {
     if (!skip_errors({"ID", "INUM", "FNUM", "OPENPARA", "NOT", "ADD", "SUB"}, {"COM", "CLOSEPARA", "DELI"}, false))
@@ -953,13 +959,10 @@ bool Parser::aParams(SymbolRecord* func_record, SymbolRecord* record) {
         record->kind_ = "function";
         form_derivation_string("<aParams>", "<expr> <aParamsTail>");
         ExpressionTree* tree = new ExpressionTree();
-       // vector<ExpressionTree *> *function_expression_parameters = new vector<ExpressionTree*>;
-       // function_expression_parameters->push_back(tree);
         record->function_parameters_.push_back(tree);
         if (expr(func_record, tree) && aParamsTail(func_record, record, &record->function_parameters_))
             return true;
     } else if (lookahead_ == "CLOSEPARA") {
-      //  func_record->symbol_table_->check_if_func_exists(record);
         form_derivation_string("<aParams>", "");
         return true;
     }

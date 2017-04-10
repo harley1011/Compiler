@@ -393,7 +393,7 @@ TEST(UseNonDeclaredNestedFunc, SemanticVerification)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
-    EXPECT_EQ(parser.print_semantic_errors(), "Error: invalid nested function testFunc on variable util3:1:165\n");
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: invalid nested variable testFunc on variable util3:1:165\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 4);
     parser.global_symbol_table_->print(true);
@@ -888,7 +888,7 @@ TEST(AssignIntVariableMultiVariableExpressionAndFunction, SemanticVerification)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 5);
-    EXPECT_EQ(parser.print_semantic_errors(), "Error: can't perform arithmetic operations with function c.b.funcTest that is not of type int or float:1:180\nError: can't perform arithmetic operations with variable a that is not of type int or float:1:180\nError: can't perform arithmetic operations with variable b that is not of type int or float:1:180\nError: can't perform arithmetic operations with variable c that is not of type int or float:1:180\nError: can't perform arithmetic operations with variable b.a that is not of type int or float:1:180\n");
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: can't perform arithmetic operations with  c.b.funcTest that is not of type int or float:1:180\nError: can't perform arithmetic operations with variable a that is not of type int or float:1:180\nError: can't perform arithmetic operations with variable b that is not of type int or float:1:180\nError: can't perform arithmetic operations with variable c that is not of type int or float:1:180\nError: can't perform arithmetic operations with variable b.a that is not of type int or float:1:180\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 4);
     parser.global_symbol_table_->print(true);
@@ -913,14 +913,14 @@ TEST(FunctionCallWithInvalidExpression, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
-    tokens = scanner.generate_tokens("class A { }; class B { A testFunc() { A a; return (a); }; }; program { B b; int x; x = funcTest(b.testFunc * 5); }; int funcTest(int x) { return (x); };", false);
+    tokens = scanner.generate_tokens("class A { }; class B { A testFunc() { A a; return (a); }; }; program { B b; int x; x = funcTest(b.testFunc() * 5); }; int funcTest(int x) { return (x); };", false);
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
-    EXPECT_EQ(parser.print_semantic_errors(), "Error: can't perform arithmetic operations with variable b.testFunc that is not of type int or float:1:112\n");
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: can't perform arithmetic operations with variable b.testFunc that is not of type int or float:1:114\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 4);
     parser.global_symbol_table_->print(true);
@@ -986,7 +986,7 @@ TEST(AssignIntVariableWithMultiInvalidRelation, SemanticVerification)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 5);
-    EXPECT_EQ(parser.print_semantic_errors(), "Error: can't perform arithmetic operations with function c.b.funcTest that is not of type int or float:1:180\nError: can't perform arithmetic operations with variable a that is not of type int or float:1:180\nError: can't perform arithmetic operations with variable b that is not of type int or float:1:180\nError: can't perform arithmetic operations with variable c that is not of type int or float:1:180\nError: can't perform arithmetic operations with variable b.a that is not of type int or float:1:180\n");
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: can't perform arithmetic operations with variable c.b.funcTest that is not of type int or float:1:180\nError: can't perform arithmetic operations with variable a that is not of type int or float:1:180\nError: can't perform arithmetic operations with variable b that is not of type int or float:1:180\nError: can't perform arithmetic operations with variable c that is not of type int or float:1:180\nError: can't perform arithmetic operations with variable b.a that is not of type int or float:1:180\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 4);
     parser.global_symbol_table_->print(true);
@@ -1200,7 +1200,7 @@ TEST(ArrayEqualAccess, CodeGeneration)
     parser.enable_double_pass_parse_ = true;
 
     EXPECT_EQ(parser.parse(tokens), true);
-    EXPECT_EQ(parser.semantic_errors_.size(), 1);
+    EXPECT_EQ(parser.semantic_errors_.size(), 2);
     EXPECT_EQ(parser.print_semantic_errors(), "Error: array x is being accessed with too few dimensions:1:36\nError: array y is being accessed with too few dimensions:1:36\n");
 
 
@@ -1619,7 +1619,7 @@ TEST(FuncWithWrongParameterOfArray, SemanticVerification)
 
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 1);
-    EXPECT_EQ(parser.print_semantic_errors(), "Error: parameter idc needs an array of type int but type float is being passed:1:84\\n");
+    EXPECT_EQ(parser.print_semantic_errors(), "Error: parameter idc needs an array of type int but type float is being passed:1:84\n");
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
     parser.global_symbol_table_->print(true);

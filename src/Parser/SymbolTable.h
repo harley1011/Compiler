@@ -32,7 +32,7 @@ public:
     SymbolRecord* search(string name);
     void set_second_pass(bool second_pass);
     void set_properly_declared(SymbolRecord *record);
-    bool check_if_return_type_is_correct_type(SymbolRecord *func_record, ExpressionTree* expression);
+    bool check_if_return_type_is_correct_type_and_generate_code(SymbolRecord *func_record, ExpressionTree *expression);
     string generate_symbol_table_string(SymbolTable *table, string table_name, int indent_count);
     bool check_if_variable_or_func_exist(SymbolRecord *record);
     bool check_func_parameters(SymbolRecord *found_record,  SymbolRecord *func_record);
@@ -55,7 +55,7 @@ public:
     void determine_func_stack_variable_offsets(SymbolRecord *record);
     bool copy_stored_record(SymbolRecord *record);
     bool check_indice_expression_is_valid(SymbolRecord* record, ExpressionTree *tree);
-    bool check_if_get_variable_is_int_or_float_and_exists(SymbolRecord *record);
+    bool check_if_get_variable_is_correct_type_and_create_code(SymbolRecord *record);
     bool copy_stored_record(SymbolRecord *record, SymbolRecord *found_record);
     bool check_expression_is_valid(ExpressionTree *tree);
 };

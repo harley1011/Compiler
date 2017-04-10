@@ -9,15 +9,19 @@ TEST(IntDeclarationInFunction, CodeGeneration)
 {
     vector<Token*> tokens;
     Scanner scanner;
-    tokens = scanner.generate_tokens("program { int i; int k; int p; };", false);
+    tokens = scanner.generate_tokens("program { int i; float k; int p; };", false);
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
 
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,12 % allocate stack memory for program\n"
+            "hlt\n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "i_program dw 0\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
@@ -31,12 +35,18 @@ TEST(IntVariableAssignmentIntFunction, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,12\n"
+            "addi r1,r0,5\n"
+            "subi r12,r13,12\n"
+            "sw 0(r12),r1\n"
+            "hlt\n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "i_program dw 0\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\naddi r1,r0,5\nsw i_program(r0),r1\nhlt\n");
-
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
@@ -52,11 +62,15 @@ TEST(IntArrayDeclarationInFunction, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,20\n"
+            "hlt\n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "i_program res 40\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
@@ -70,11 +84,15 @@ TEST(IntDoubleArrayDeclarationInFunction, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,120\n"
+            "hlt\n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "i_program res 40\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
@@ -92,11 +110,15 @@ TEST(ClassDeclarationInFunction, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,24\n"
+            "hlt\n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
@@ -110,14 +132,18 @@ TEST(ClassDeclarationWithClassVariableInFunction, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,16\n"
+            "hlt\n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
     parser.global_symbol_table_->print(true);
 }
 
@@ -130,11 +156,89 @@ TEST(ClassAssignmentInFunction, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,16\n"
+            "addi r1,r0,100\n"
+            "add r5,r0,r1\n"
+            "subi r12,r13,16\n"
+            "add r12,r12,r9\n"
+            "sw 0(r12),r5\n"
+            "addi r1,r0,10202\n"
+            "add r5,r0,r1\n"
+            "subi r12,r13,12\n"
+            "add r12,r12,r9\n"
+            "sw 0(r12),r5\n"
+            "\n"
+            "subi r11,r13,16\n"
+            "add r1,r0,r0\n"
+            "subi r12,r13,8\n"
+            "copyclass0\n"
+            "ceqi r2,r1,8\n"
+            "bnz r2,copyclassend0\n"
+            "lw r2,0(r11)\n"
+            "sw 0(r12),r2\n"
+            "addi r1,r1,4\n"
+            "addi r12,r12,4\n"
+            "addi r11,r11,4\n"
+            "j copyclass0\n"
+            "copyclassend0\n"
+            "\n"
+            "subi r12,r13,4\n"
+            "add r12,r12,r9\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "addi r1,r0,120\n"
+            "add r5,r0,r1\n"
+            "subi r12,r13,16\n"
+            "add r12,r12,r9\n"
+            "sw 0(r12),r5\n"
+            "subi r12,r13,16\n"
+            "add r12,r12,r9\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "subi r12,r13,8\n"
+            "add r12,r12,r9\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
@@ -151,13 +255,90 @@ TEST(SimpleForLoopInFunc, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,8\n"
+            "addi r1,r0,0\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "for0\n"
+            "\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "add r2,r1,r0\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r2\n"
+            "addi r1,r0,10\n"
+            "lw r2,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "clt r1,r2,r1\n"
+            "\n"
+            "bz r1,forend0\n"
+            "\n"
+            "subi r12,r13,4\n"
+            "lw r2,0(r12)\n"
+            "addi r1,r0,1\n"
+            "add r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "\n"
+            "subi r12,r13,8\n"
+            "lw r2,0(r12)\n"
+            "addi r1,r0,10\n"
+            "add r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "subi r12,r13,8\n"
+            "sw 0(r12),r1\n"
+            "j for0\n"
+            "forend0\n"
+            "subi r12,r13,8\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
 }
 
@@ -173,13 +354,77 @@ TEST(SimpleIfInFunc, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,4\n"
+            "addi r1,r0,90\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "\n"
+            "addi r1,r0,10\n"
+            "add r2,r1,r0\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r2\n"
+            "addi r1,r0,10\n"
+            "lw r2,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "ceq r1,r2,r1\n"
+            "\n"
+            "bz r1,else0\n"
+            "\n"
+            "subi r12,r13,4\n"
+            "lw r2,0(r12)\n"
+            "addi r1,r0,10\n"
+            "add r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "j ifend0\n"
+            "else0\n"
+            "ifend0\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
 }
 TEST(SimpleIfElseInFunc, CodeGeneration)
@@ -190,13 +435,101 @@ TEST(SimpleIfElseInFunc, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,4\n"
+            "addi r1,r0,90\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "\n"
+            "addi r1,r0,10\n"
+            "add r2,r1,r0\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r2\n"
+            "addi r1,r0,9\n"
+            "lw r2,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "ceq r1,r2,r1\n"
+            "\n"
+            "bz r1,else0\n"
+            "\n"
+            "subi r12,r13,4\n"
+            "lw r2,0(r12)\n"
+            "addi r1,r0,40\n"
+            "add r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "\n"
+            "subi r12,r13,4\n"
+            "lw r2,0(r12)\n"
+            "addi r1,r0,20\n"
+            "sub r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "j ifend0\n"
+            "else0\n"
+            "\n"
+            "subi r12,r13,4\n"
+            "lw r2,0(r12)\n"
+            "addi r1,r0,20\n"
+            "add r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "ifend0\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
 }
 
@@ -208,13 +541,89 @@ TEST(SimpleIfElseOneLineInFunc, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,4\n"
+            "addi r1,r0,90\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "\n"
+            "addi r1,r0,10\n"
+            "add r2,r1,r0\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r2\n"
+            "addi r1,r0,9\n"
+            "lw r2,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "ceq r1,r2,r1\n"
+            "\n"
+            "bz r1,else0\n"
+            "\n"
+            "subi r12,r13,4\n"
+            "lw r2,0(r12)\n"
+            "addi r1,r0,10\n"
+            "add r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "j ifend0\n"
+            "else0\n"
+            "\n"
+            "subi r12,r13,4\n"
+            "lw r2,0(r12)\n"
+            "addi r1,r0,20\n"
+            "add r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "ifend0\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
 }
 //Input/output: read from keyboard, write to standard output
@@ -227,13 +636,47 @@ TEST(SimpleWriteIntInFunc, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,0\n"
+            "addi r1,r0,100\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
 }
 TEST(WriteExpressionInFunc, CodeGeneration)
@@ -244,13 +687,79 @@ TEST(WriteExpressionInFunc, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,0\n"
+            "\n"
+            "addi r2,r0,20\n"
+            "addi r1,r0,20\n"
+            "div r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "\n"
+            "addi r2,r0,200\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "mul r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "\n"
+            "lw r2,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "addi r1,r0,5\n"
+            "add r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "\n"
+            "addi r2,r0,100\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "add r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
 }
 TEST(SimpleWriteIntVarInFunc, CodeGeneration)
@@ -261,13 +770,51 @@ TEST(SimpleWriteIntVarInFunc, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,4\n"
+            "addi r1,r0,12000\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
 }
 TEST(SimpleReadIntVarInFunc, CodeGeneration)
@@ -278,13 +825,79 @@ TEST(SimpleReadIntVarInFunc, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,4\n"
+            "jl r15,getint\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "getint   add    r1,r0,r0         % n := 0 (result)\n"
+            "         add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "getint1  getc   r2               % read c\n"
+            "         ceqi   r4,r2,32\n"
+            "         bnz    r4,getint1       % skip blanks\n"
+            "         ceqi   r4,r2,43\n"
+            "         bnz    r4,getint2       % branch if c is '+'\n"
+            "         ceqi   r4,r2,45\n"
+            "         bz     r4,getint3       % branch if c is not '-'\n"
+            "         addi   r3,r0,1          % s := 1 (number is negative)\n"
+            "getint2  getc   r2               % read c\n"
+            "getint3  ceqi   r4,r2,10\n"
+            "         bnz    r4,getint5       % branch if c is \\n\n"
+            "         cgei   r4,r2,48\n"
+            "         bz     r4,getint4       % c < 0\n"
+            "         clei   r4,r2,57\n"
+            "         bz     r4,getint4       % c > 9\n"
+            "         muli   r1,r1,10         % n := 10 * n\n"
+            "         add    r1,r1,r2         % n := n + c\n"
+            "         subi   r1,r1,48         % n := n - '0'\n"
+            "         j      getint2\n"
+            "getint4  addi   r2,r0,63         % c := '?'\n"
+            "         putc   r2               % write c\n"
+            "         j      getint           % Try again\n"
+            "getint5  bz     r3,getint6       % branch if s = 0 (number is positive)\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "getint6  jr     r15              % return\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
 }
 
@@ -297,13 +910,52 @@ TEST(NotInFunction, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,4\n"
+            "addi r1,r0,0\n"
+            "not r1,r1\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
 }
 
@@ -315,13 +967,59 @@ TEST(SimpleAdditionInFunction, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,4\n"
+            "\n"
+            "addi r2,r0,20\n"
+            "addi r1,r0,85\n"
+            "add r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
 }
 
@@ -333,13 +1031,59 @@ TEST(SimpleSubInFunction, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,4\n"
+            "\n"
+            "addi r2,r0,20\n"
+            "addi r1,r0,85\n"
+            "sub r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
 }
 
@@ -351,13 +1095,60 @@ TEST(SimpleDivInFunction, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,4\n"
+            "\n"
+            "addi r2,r0,40\n"
+            "sub r2,r0,r2\n"
+            "addi r1,r0,5\n"
+            "div r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
 }
 
@@ -369,13 +1160,60 @@ TEST(SimpleMultInFunction, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,4\n"
+            "\n"
+            "addi r2,r0,40\n"
+            "sub r2,r0,r2\n"
+            "addi r1,r0,5\n"
+            "mul r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
 }
 
@@ -387,13 +1225,63 @@ TEST(SimpleAdditionWithVariableInFunction, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,8\n"
+            "addi r1,r0,20\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "\n"
+            "subi r12,r13,4\n"
+            "lw r2,0(r12)\n"
+            "addi r1,r0,85\n"
+            "add r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "subi r12,r13,8\n"
+            "sw 0(r12),r1\n"
+            "subi r12,r13,8\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
 }
 
@@ -405,13 +1293,79 @@ TEST(SimpleAdditionWithAllVariableInFunction, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,16\n"
+            "addi r1,r0,10\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "addi r1,r0,85\n"
+            "subi r12,r13,8\n"
+            "sw 0(r12),r1\n"
+            "addi r1,r0,20\n"
+            "subi r12,r13,12\n"
+            "sw 0(r12),r1\n"
+            "\n"
+            "subi r12,r13,8\n"
+            "lw r2,0(r12)\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "add r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "\n"
+            "subi r12,r13,12\n"
+            "lw r2,0(r12)\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "add r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "subi r12,r13,16\n"
+            "sw 0(r12),r1\n"
+            "subi r12,r13,16\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
 }
 
@@ -423,13 +1377,60 @@ TEST(SimpleEquivInFunction, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,4\n"
+            "\n"
+            "addi r1,r0,20\n"
+            "add r2,r1,r0\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r2\n"
+            "addi r1,r0,85\n"
+            "lw r2,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "ceq r1,r2,r1\n"
+            "\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
 }
 TEST(SimpleLessInFunction, CodeGeneration)
@@ -440,13 +1441,64 @@ TEST(SimpleLessInFunction, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,8\n"
+            "addi r1,r0,5\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "\n"
+            "addi r1,r0,2\n"
+            "add r2,r1,r0\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r2\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "lw r2,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "clt r1,r2,r1\n"
+            "\n"
+            "subi r12,r13,8\n"
+            "sw 0(r12),r1\n"
+            "subi r12,r13,8\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
 }
 
@@ -460,13 +1512,67 @@ TEST(MultipleAdditionInFunction, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,4\n"
+            "\n"
+            "addi r2,r0,85\n"
+            "addi r1,r0,5\n"
+            "add r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "\n"
+            "addi r2,r0,20\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "add r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
 }
 
@@ -478,13 +1584,67 @@ TEST(MultipleAdditionAndMultiInFunction, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,4\n"
+            "\n"
+            "addi r2,r0,85\n"
+            "addi r1,r0,5\n"
+            "mul r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "\n"
+            "addi r2,r0,20\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "add r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
 }
 
@@ -496,13 +1656,99 @@ TEST(ComplexExpressionInFunction, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,4\n"
+            "\n"
+            "addi r2,r0,10\n"
+            "addi r1,r0,12\n"
+            "add r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "\n"
+            "addi r2,r0,5\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "mul r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "\n"
+            "lw r2,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "addi r1,r0,200\n"
+            "sub r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "\n"
+            "addi r2,r0,112\n"
+            "addi r1,r0,21\n"
+            "add r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "\n"
+            "lw r2,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "addi r1,r0,32\n"
+            "mul r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "\n"
+            "lw r2,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "add r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
 }
 
@@ -516,11 +1762,26 @@ TEST(FunctionDeclaration, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,4\n"
+            "hlt\n"
+            "func0\n"
+            "subi r12,r13,8\n"
+            "sw 0(r12),r11\n"
+            "addi r1,r0,5\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "subi r12,r13,8\n"
+            "lw r11,0(r12)\n"
+            "jr r11\n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
     parser.global_symbol_table_->print(true);
@@ -533,13 +1794,28 @@ TEST(FunctionWithClassVariableDeclaration, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,4\n"
+            "hlt\n"
+            "func0\n"
+            "subi r12,r13,20\n"
+            "sw 0(r12),r11\n"
+            "addi r1,r0,5\n"
+            "subi r12,r13,16\n"
+            "sw 0(r12),r1\n"
+            "subi r12,r13,16\n"
+            "lw r1,0(r12)\n"
+            "subi r12,r13,20\n"
+            "lw r11,0(r12)\n"
+            "jr r11\n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 4);
     parser.global_symbol_table_->print(true);
 }
 
@@ -553,11 +1829,65 @@ TEST(FunctionCall, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,4\n"
+            "\n"
+            "addi r13,r13,8\n"
+            "jl r11,func0\n"
+            "subi r13,r13,8\n"
+            "add r1,r1,r0 % store return value in register\n"
+            "\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "func0\n"
+            "subi r12,r13,8\n"
+            "sw 0(r12),r11\n"
+            "addi r1,r0,100\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "subi r12,r13,8\n"
+            "lw r11,0(r12)\n"
+            "jr r11\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
     parser.global_symbol_table_->print(true);
@@ -572,13 +1902,83 @@ TEST(FunctionCallInFunctionCall, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,4\n"
+            "\n"
+            "addi r13,r13,8\n"
+            "jl r11,func0\n"
+            "subi r13,r13,8\n"
+            "add r1,r1,r0 % store return value in register\n"
+            "\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "func0\n"
+            "subi r12,r13,8\n"
+            "sw 0(r12),r11\n"
+            "\n"
+            "addi r13,r13,8\n"
+            "jl r11,func1\n"
+            "subi r13,r13,8\n"
+            "add r1,r1,r0 % store return value in register\n"
+            "\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "subi r12,r13,8\n"
+            "lw r11,0(r12)\n"
+            "jr r11\n"
+            "func1\n"
+            "subi r12,r13,8\n"
+            "sw 0(r12),r11\n"
+            "addi r1,r0,120\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "subi r12,r13,8\n"
+            "lw r11,0(r12)\n"
+            "jr r11\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
     parser.global_symbol_table_->print(true);
 }
 TEST(FunctionCallInExpression, CodeGeneration)
@@ -589,11 +1989,85 @@ TEST(FunctionCallInExpression, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,4\n"
+            "\n"
+            "addi r2,r0,95\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r2\n"
+            "\n"
+            "addi r13,r13,8\n"
+            "jl r11,func0\n"
+            "subi r13,r13,8\n"
+            "add r1,r1,r0 % store return value in register\n"
+            "\n"
+            "lw r2,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "add r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "func0\n"
+            "subi r12,r13,8\n"
+            "sw 0(r12),r11\n"
+            "\n"
+            "addi r2,r0,5\n"
+            "addi r1,r0,100\n"
+            "add r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "subi r12,r13,8\n"
+            "lw r11,0(r12)\n"
+            "jr r11\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
     parser.global_symbol_table_->print(true);
@@ -607,13 +2081,73 @@ TEST(FunctioCallnWithClassVariableDeclaration, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,4\n"
+            "\n"
+            "addi r13,r13,28\n"
+            "jl r11,func0\n"
+            "subi r13,r13,28\n"
+            "add r1,r1,r0 % store return value in register\n"
+            "\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "func0\n"
+            "subi r12,r13,28\n"
+            "sw 0(r12),r11\n"
+            "addi r1,r0,100\n"
+            "subi r12,r13,24\n"
+            "sw 0(r12),r1\n"
+            "addi r1,r0,120\n"
+            "add r5,r0,r1\n"
+            "subi r12,r13,16\n"
+            "add r12,r12,r9\n"
+            "sw 0(r12),r5\n"
+            "subi r12,r13,16\n"
+            "add r12,r12,r9\n"
+            "lw r1,0(r12)\n"
+            "subi r12,r13,28\n"
+            "lw r11,0(r12)\n"
+            "jr r11\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 4);
     parser.global_symbol_table_->print(true);
 }
 
@@ -625,11 +2159,86 @@ TEST(FunctioCallnWithArrayVariableDeclaration, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,4\n"
+            "\n"
+            "addi r13,r13,24\n"
+            "jl r11,func0\n"
+            "subi r13,r13,24\n"
+            "add r1,r1,r0 % store return value in register\n"
+            "\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "func0\n"
+            "subi r12,r13,24\n"
+            "sw 0(r12),r11\n"
+            "addi r1,r0,100\n"
+            "add r5,r0,r1\n"
+            "\n"
+            "add r9,r0,r0\n"
+            "add r7,r0,r0\n"
+            "addi r1,r0,2\n"
+            "muli r7,r7,5\n"
+            "muli r1,r1,4\n"
+            "add r7,r7,r1\n"
+            "add r9,r9,r7\n"
+            "\n"
+            "subi r12,r13,20\n"
+            "add r12,r12,r9\n"
+            "sw 0(r12),r5\n"
+            "\n"
+            "add r9,r0,r0\n"
+            "add r7,r0,r0\n"
+            "addi r1,r0,2\n"
+            "muli r7,r7,5\n"
+            "muli r1,r1,4\n"
+            "add r7,r7,r1\n"
+            "add r9,r9,r7\n"
+            "\n"
+            "subi r12,r13,20\n"
+            "add r12,r12,r9\n"
+            "lw r1,0(r12)\n"
+            "subi r12,r13,24\n"
+            "lw r11,0(r12)\n"
+            "jr r11\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
     parser.global_symbol_table_->print(true);
@@ -644,11 +2253,87 @@ TEST(FunctionCallWithIf, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,4\n"
+            "addi r1,r0,10\n"
+            "addi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "addi r1,r0,10\n"
+            "addi r12,r13,8\n"
+            "sw 0(r12),r1\n"
+            "\n"
+            "addi r13,r13,12\n"
+            "jl r11,func0\n"
+            "subi r13,r13,12\n"
+            "add r1,r1,r0 % store return value in register\n"
+            "\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "func0\n"
+            "subi r12,r13,12\n"
+            "sw 0(r12),r11\n"
+            "\n"
+            "subi r12,r13,8\n"
+            "lw r1,0(r12)\n"
+            "add r2,r1,r0\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r2\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "lw r2,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "clt r1,r2,r1\n"
+            "\n"
+            "bz r1,else0\n"
+            "addi r1,r0,100\n"
+            "subi r12,r13,12\n"
+            "lw r11,0(r12)\n"
+            "jr r11\n"
+            "j ifend0\n"
+            "else0\n"
+            "addi r1,r0,110\n"
+            "subi r12,r13,12\n"
+            "lw r11,0(r12)\n"
+            "jr r11\n"
+            "ifend0\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
     parser.global_symbol_table_->print(true);
@@ -662,11 +2347,111 @@ TEST(FunctionCallWithForLoop, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,4\n"
+            "addi r1,r0,10\n"
+            "addi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "addi r1,r0,0\n"
+            "addi r12,r13,8\n"
+            "sw 0(r12),r1\n"
+            "\n"
+            "addi r13,r13,16\n"
+            "jl r11,func0\n"
+            "subi r13,r13,16\n"
+            "add r1,r1,r0 % store return value in register\n"
+            "\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "func0\n"
+            "subi r12,r13,16\n"
+            "sw 0(r12),r11\n"
+            "addi r1,r0,0\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "for0\n"
+            "\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "add r2,r1,r0\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r2\n"
+            "addi r1,r0,10\n"
+            "lw r2,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "clt r1,r2,r1\n"
+            "\n"
+            "bz r1,forend0\n"
+            "\n"
+            "subi r12,r13,4\n"
+            "lw r2,0(r12)\n"
+            "addi r1,r0,1\n"
+            "add r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "\n"
+            "subi r12,r13,12\n"
+            "lw r2,0(r12)\n"
+            "subi r12,r13,8\n"
+            "lw r1,0(r12)\n"
+            "add r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "subi r12,r13,8\n"
+            "sw 0(r12),r1\n"
+            "j for0\n"
+            "forend0\n"
+            "subi r12,r13,8\n"
+            "lw r1,0(r12)\n"
+            "subi r12,r13,16\n"
+            "lw r11,0(r12)\n"
+            "jr r11\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
     parser.global_symbol_table_->print(true);
@@ -680,13 +2465,142 @@ TEST(FunctionCallReturnClass, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,12\n"
+            "\n"
+            "addi r1,r0,10\n"
+            "addi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "addi r1,r0,777\n"
+            "addi r12,r13,8\n"
+            "sw 0(r12),r1\n"
+            "\n"
+            "addi r13,r13,24\n"
+            "jl r11,func0\n"
+            "subi r13,r13,24\n"
+            "add r1,r1,r0 % store return value in register\n"
+            "\n"
+            "add r11,r0,r1\n"
+            "add r1,r0,r0\n"
+            "subi r12,r13,12\n"
+            "copyclass0\n"
+            "ceqi r2,r1,12\n"
+            "bnz r2,copyclassend0\n"
+            "lw r2,0(r11)\n"
+            "sw 0(r12),r2\n"
+            "addi r1,r1,4\n"
+            "addi r12,r12,4\n"
+            "addi r11,r11,4\n"
+            "j copyclass0\n"
+            "copyclassend0\n"
+            "\n"
+            "subi r12,r13,12\n"
+            "add r12,r12,r9\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "subi r12,r13,8\n"
+            "add r12,r12,r9\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "subi r12,r13,4\n"
+            "add r12,r12,r9\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "func0\n"
+            "subi r12,r13,24\n"
+            "sw 0(r12),r11\n"
+            "subi r12,r13,20\n"
+            "lw r1,0(r12)\n"
+            "add r5,r0,r1\n"
+            "subi r12,r13,12\n"
+            "add r12,r12,r9\n"
+            "sw 0(r12),r5\n"
+            "subi r12,r13,16\n"
+            "lw r1,0(r12)\n"
+            "add r5,r0,r1\n"
+            "subi r12,r13,8\n"
+            "add r12,r12,r9\n"
+            "sw 0(r12),r5\n"
+            "\n"
+            "subi r12,r13,12\n"
+            "add r12,r12,r9\n"
+            "lw r2,0(r12)\n"
+            "subi r12,r13,8\n"
+            "add r12,r12,r9\n"
+            "lw r1,0(r12)\n"
+            "add r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "add r5,r0,r1\n"
+            "subi r12,r13,4\n"
+            "add r12,r12,r9\n"
+            "sw 0(r12),r5\n"
+            "subi r12,r13,12\n"
+            "add r12,r12,r9\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "subi r12,r13,8\n"
+            "add r12,r12,r9\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "subi r12,r13,4\n"
+            "add r12,r12,r9\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "subi r1,r13,12\n"
+            "subi r12,r13,24\n"
+            "lw r11,0(r12)\n"
+            "jr r11\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
     parser.global_symbol_table_->print(true);
 }
 
@@ -700,11 +2614,85 @@ TEST(FunctionParameter, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,8\n"
+            "addi r1,r0,40\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "addi r1,r0,60\n"
+            "addi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "addi r12,r13,8\n"
+            "sw 0(r12),r1\n"
+            "\n"
+            "addi r13,r13,16\n"
+            "jl r11,func0\n"
+            "subi r13,r13,16\n"
+            "add r1,r1,r0 % store return value in register\n"
+            "\n"
+            "subi r12,r13,8\n"
+            "sw 0(r12),r1\n"
+            "subi r12,r13,8\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "func0\n"
+            "subi r12,r13,16\n"
+            "sw 0(r12),r11\n"
+            "\n"
+            "subi r12,r13,12\n"
+            "lw r2,0(r12)\n"
+            "subi r12,r13,8\n"
+            "lw r1,0(r12)\n"
+            "add r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "subi r12,r13,16\n"
+            "lw r11,0(r12)\n"
+            "jr r11\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
     parser.global_symbol_table_->print(true);
@@ -719,13 +2707,90 @@ TEST(FunctionClassNestedParameter, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,12\n"
+            "addi r1,r0,100\n"
+            "add r5,r0,r1\n"
+            "subi r12,r13,12\n"
+            "add r12,r12,r9\n"
+            "sw 0(r12),r5\n"
+            "addi r1,r0,60\n"
+            "addi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "subi r12,r13,12\n"
+            "add r12,r12,r9\n"
+            "lw r1,0(r12)\n"
+            "addi r12,r13,8\n"
+            "sw 0(r12),r1\n"
+            "\n"
+            "addi r13,r13,16\n"
+            "jl r11,func0\n"
+            "subi r13,r13,16\n"
+            "add r1,r1,r0 % store return value in register\n"
+            "\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "func0\n"
+            "subi r12,r13,16\n"
+            "sw 0(r12),r11\n"
+            "\n"
+            "subi r12,r13,12\n"
+            "lw r2,0(r12)\n"
+            "subi r12,r13,8\n"
+            "lw r1,0(r12)\n"
+            "add r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "subi r12,r13,16\n"
+            "lw r11,0(r12)\n"
+            "jr r11\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
     parser.global_symbol_table_->print(true);
 }
 TEST(FunctionFunctionCallParameter, CodeGeneration)
@@ -736,13 +2801,101 @@ TEST(FunctionFunctionCallParameter, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,12\n"
+            "addi r1,r0,100\n"
+            "add r5,r0,r1\n"
+            "subi r12,r13,12\n"
+            "add r12,r12,r9\n"
+            "sw 0(r12),r5\n"
+            "addi r1,r0,100\n"
+            "addi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "addi r1,r0,50\n"
+            "addi r12,r13,8\n"
+            "sw 0(r12),r1\n"
+            "\n"
+            "addi r13,r13,16\n"
+            "jl r11,func0\n"
+            "subi r13,r13,16\n"
+            "add r1,r1,r0 % store return value in register\n"
+            "\n"
+            "addi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "subi r12,r13,12\n"
+            "add r12,r12,r9\n"
+            "lw r1,0(r12)\n"
+            "addi r12,r13,8\n"
+            "sw 0(r12),r1\n"
+            "\n"
+            "addi r13,r13,16\n"
+            "jl r11,func0\n"
+            "subi r13,r13,16\n"
+            "add r1,r1,r0 % store return value in register\n"
+            "\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "func0\n"
+            "subi r12,r13,16\n"
+            "sw 0(r12),r11\n"
+            "\n"
+            "subi r12,r13,12\n"
+            "lw r2,0(r12)\n"
+            "subi r12,r13,8\n"
+            "lw r1,0(r12)\n"
+            "add r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "subi r12,r13,16\n"
+            "lw r11,0(r12)\n"
+            "jr r11\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
     parser.global_symbol_table_->print(true);
 }
 
@@ -755,11 +2908,104 @@ TEST(MultiFunctionCallWithParameter, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,8\n"
+            "addi r1,r0,40\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "\n"
+            "\n"
+            "addi r2,r0,60\n"
+            "addi r1,r0,20\n"
+            "sub r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "addi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "\n"
+            "addi r13,r13,8\n"
+            "jl r11,func0\n"
+            "subi r13,r13,8\n"
+            "add r2,r1,r0 % store return value in register\n"
+            "\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r2\n"
+            "\n"
+            "addi r2,r0,60\n"
+            "addi r1,r0,40\n"
+            "sub r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "addi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "\n"
+            "addi r13,r13,8\n"
+            "jl r11,func0\n"
+            "subi r13,r13,8\n"
+            "add r1,r1,r0 % store return value in register\n"
+            "\n"
+            "lw r2,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "add r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "subi r12,r13,8\n"
+            "sw 0(r12),r1\n"
+            "subi r12,r13,8\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "func0\n"
+            "subi r12,r13,8\n"
+            "sw 0(r12),r11\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "subi r12,r13,8\n"
+            "lw r11,0(r12)\n"
+            "jr r11\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
     parser.global_symbol_table_->print(true);
@@ -774,11 +3020,109 @@ TEST(FunctionParameterExpression, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,8\n"
+            "addi r1,r0,40\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "\n"
+            "addi r2,r0,100\n"
+            "addi r1,r0,20\n"
+            "mul r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "\n"
+            "addi r2,r0,60\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "add r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "addi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "\n"
+            "subi r12,r13,4\n"
+            "lw r2,0(r12)\n"
+            "addi r1,r0,10\n"
+            "add r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "addi r12,r13,8\n"
+            "sw 0(r12),r1\n"
+            "\n"
+            "addi r13,r13,16\n"
+            "jl r11,func0\n"
+            "subi r13,r13,16\n"
+            "add r1,r1,r0 % store return value in register\n"
+            "\n"
+            "subi r12,r13,8\n"
+            "sw 0(r12),r1\n"
+            "subi r12,r13,8\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "func0\n"
+            "subi r12,r13,16\n"
+            "sw 0(r12),r11\n"
+            "\n"
+            "subi r12,r13,12\n"
+            "lw r2,0(r12)\n"
+            "subi r12,r13,8\n"
+            "lw r1,0(r12)\n"
+            "add r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "subi r12,r13,16\n"
+            "lw r11,0(r12)\n"
+            "jr r11\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
     parser.global_symbol_table_->print(true);
@@ -792,13 +3136,111 @@ TEST(FunctionToOtherParameter, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,8\n"
+            "addi r1,r0,40\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "addi r1,r0,60\n"
+            "addi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "addi r12,r13,8\n"
+            "sw 0(r12),r1\n"
+            "\n"
+            "addi r13,r13,16\n"
+            "jl r11,func0\n"
+            "subi r13,r13,16\n"
+            "add r1,r1,r0 % store return value in register\n"
+            "\n"
+            "subi r12,r13,8\n"
+            "sw 0(r12),r1\n"
+            "subi r12,r13,8\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "func0\n"
+            "subi r12,r13,16\n"
+            "sw 0(r12),r11\n"
+            "\n"
+            "subi r12,r13,12\n"
+            "lw r2,0(r12)\n"
+            "subi r12,r13,8\n"
+            "lw r1,0(r12)\n"
+            "add r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "addi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "\n"
+            "addi r13,r13,8\n"
+            "jl r11,func1\n"
+            "subi r13,r13,8\n"
+            "add r1,r1,r0 % store return value in register\n"
+            "\n"
+            "subi r12,r13,16\n"
+            "lw r11,0(r12)\n"
+            "jr r11\n"
+            "func1\n"
+            "subi r12,r13,8\n"
+            "sw 0(r12),r11\n"
+            "\n"
+            "subi r12,r13,4\n"
+            "lw r2,0(r12)\n"
+            "addi r1,r0,10\n"
+            "div r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "subi r12,r13,8\n"
+            "lw r11,0(r12)\n"
+            "jr r11\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
     parser.global_symbol_table_->print(true);
 }
 
@@ -812,13 +3254,72 @@ TEST(ArrayAccess, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,20\n"
+            "addi r1,r0,100\n"
+            "add r5,r0,r1\n"
+            "\n"
+            "add r9,r0,r0\n"
+            "add r7,r0,r0\n"
+            "addi r1,r0,4\n"
+            "muli r7,r7,5\n"
+            "muli r1,r1,4\n"
+            "add r7,r7,r1\n"
+            "add r9,r9,r7\n"
+            "\n"
+            "subi r12,r13,20\n"
+            "add r12,r12,r9\n"
+            "sw 0(r12),r5\n"
+            "\n"
+            "add r9,r0,r0\n"
+            "add r7,r0,r0\n"
+            "addi r1,r0,4\n"
+            "muli r7,r7,5\n"
+            "muli r1,r1,4\n"
+            "add r7,r7,r1\n"
+            "add r9,r9,r7\n"
+            "\n"
+            "subi r12,r13,20\n"
+            "add r12,r12,r9\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
 }
 
@@ -830,13 +3331,130 @@ TEST(ArrayAddAccess, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,20\n"
+            "addi r1,r0,200\n"
+            "add r5,r0,r1\n"
+            "\n"
+            "add r9,r0,r0\n"
+            "add r7,r0,r0\n"
+            "addi r1,r0,3\n"
+            "muli r7,r7,5\n"
+            "muli r1,r1,4\n"
+            "add r7,r7,r1\n"
+            "add r9,r9,r7\n"
+            "\n"
+            "subi r12,r13,20\n"
+            "add r12,r12,r9\n"
+            "sw 0(r12),r5\n"
+            "addi r1,r0,100\n"
+            "add r5,r0,r1\n"
+            "\n"
+            "add r9,r0,r0\n"
+            "add r7,r0,r0\n"
+            "addi r1,r0,2\n"
+            "muli r7,r7,5\n"
+            "muli r1,r1,4\n"
+            "add r7,r7,r1\n"
+            "add r9,r9,r7\n"
+            "\n"
+            "subi r12,r13,20\n"
+            "add r12,r12,r9\n"
+            "sw 0(r12),r5\n"
+            "\n"
+            "\n"
+            "add r9,r0,r0\n"
+            "add r7,r0,r0\n"
+            "addi r1,r0,3\n"
+            "muli r7,r7,5\n"
+            "muli r1,r1,4\n"
+            "add r7,r7,r1\n"
+            "add r9,r9,r7\n"
+            "\n"
+            "subi r12,r13,20\n"
+            "add r12,r12,r9\n"
+            "lw r2,0(r12)\n"
+            "\n"
+            "add r9,r0,r0\n"
+            "add r7,r0,r0\n"
+            "addi r1,r0,2\n"
+            "muli r7,r7,5\n"
+            "muli r1,r1,4\n"
+            "add r7,r7,r1\n"
+            "add r9,r9,r7\n"
+            "\n"
+            "subi r12,r13,20\n"
+            "add r12,r12,r9\n"
+            "lw r1,0(r12)\n"
+            "add r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "add r5,r0,r1\n"
+            "\n"
+            "add r9,r0,r0\n"
+            "add r7,r0,r0\n"
+            "addi r1,r0,4\n"
+            "muli r7,r7,5\n"
+            "muli r1,r1,4\n"
+            "add r7,r7,r1\n"
+            "add r9,r9,r7\n"
+            "\n"
+            "subi r12,r13,20\n"
+            "add r12,r12,r9\n"
+            "sw 0(r12),r5\n"
+            "\n"
+            "add r9,r0,r0\n"
+            "add r7,r0,r0\n"
+            "addi r1,r0,4\n"
+            "muli r7,r7,5\n"
+            "muli r1,r1,4\n"
+            "add r7,r7,r1\n"
+            "add r9,r9,r7\n"
+            "\n"
+            "subi r12,r13,20\n"
+            "add r12,r12,r9\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
 }
 
@@ -848,13 +3466,76 @@ TEST(ArrayAccessWithVar, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,24\n"
+            "addi r1,r0,4\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "addi r1,r0,100\n"
+            "add r5,r0,r1\n"
+            "\n"
+            "add r9,r0,r0\n"
+            "add r7,r0,r0\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "muli r7,r7,5\n"
+            "muli r1,r1,4\n"
+            "add r7,r7,r1\n"
+            "add r9,r9,r7\n"
+            "\n"
+            "subi r12,r13,24\n"
+            "add r12,r12,r9\n"
+            "sw 0(r12),r5\n"
+            "\n"
+            "add r9,r0,r0\n"
+            "add r7,r0,r0\n"
+            "addi r1,r0,4\n"
+            "muli r7,r7,5\n"
+            "muli r1,r1,4\n"
+            "add r7,r7,r1\n"
+            "add r9,r9,r7\n"
+            "\n"
+            "subi r12,r13,24\n"
+            "add r12,r12,r9\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
 }
 
@@ -866,13 +3547,144 @@ TEST(ArrayForLoopAccess, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,88\n"
+            "addi r1,r0,0\n"
+            "subi r12,r13,8\n"
+            "sw 0(r12),r1\n"
+            "for0\n"
+            "\n"
+            "subi r12,r13,8\n"
+            "lw r1,0(r12)\n"
+            "add r2,r1,r0\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r2\n"
+            "addi r1,r0,20\n"
+            "lw r2,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "clt r1,r2,r1\n"
+            "\n"
+            "bz r1,forend0\n"
+            "\n"
+            "subi r12,r13,8\n"
+            "lw r2,0(r12)\n"
+            "addi r1,r0,1\n"
+            "add r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "subi r12,r13,8\n"
+            "sw 0(r12),r1\n"
+            "\n"
+            "subi r12,r13,8\n"
+            "lw r2,0(r12)\n"
+            "subi r12,r13,8\n"
+            "lw r1,0(r12)\n"
+            "mul r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "add r5,r0,r1\n"
+            "\n"
+            "add r9,r0,r0\n"
+            "add r7,r0,r0\n"
+            "subi r12,r13,8\n"
+            "lw r1,0(r12)\n"
+            "muli r7,r7,20\n"
+            "muli r1,r1,4\n"
+            "add r7,r7,r1\n"
+            "add r9,r9,r7\n"
+            "\n"
+            "subi r12,r13,88\n"
+            "add r12,r12,r9\n"
+            "sw 0(r12),r5\n"
+            "j for0\n"
+            "forend0\n"
+            "addi r1,r0,0\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "for1\n"
+            "\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "add r2,r1,r0\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r2\n"
+            "addi r1,r0,20\n"
+            "lw r2,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "clt r1,r2,r1\n"
+            "\n"
+            "bz r1,forend1\n"
+            "\n"
+            "subi r12,r13,4\n"
+            "lw r2,0(r12)\n"
+            "addi r1,r0,1\n"
+            "add r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "\n"
+            "add r9,r0,r0\n"
+            "add r7,r0,r0\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "muli r7,r7,20\n"
+            "muli r1,r1,4\n"
+            "add r7,r7,r1\n"
+            "add r9,r9,r7\n"
+            "\n"
+            "subi r12,r13,88\n"
+            "add r12,r12,r9\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "j for1\n"
+            "forend1\n"
+            "hlt\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
 }
 
@@ -884,11 +3696,157 @@ TEST(ArrayForLoopAccessInExternalFunc, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,4\n"
+            "\n"
+            "addi r13,r13,92\n"
+            "jl r11,func0\n"
+            "subi r13,r13,92\n"
+            "add r1,r1,r0 % store return value in register\n"
+            "\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "hlt\n"
+            "func0\n"
+            "subi r12,r13,92\n"
+            "sw 0(r12),r11\n"
+            "addi r1,r0,0\n"
+            "subi r12,r13,8\n"
+            "sw 0(r12),r1\n"
+            "for0\n"
+            "\n"
+            "subi r12,r13,8\n"
+            "lw r1,0(r12)\n"
+            "add r2,r1,r0\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r2\n"
+            "addi r1,r0,20\n"
+            "lw r2,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "clt r1,r2,r1\n"
+            "\n"
+            "bz r1,forend0\n"
+            "\n"
+            "subi r12,r13,8\n"
+            "lw r2,0(r12)\n"
+            "addi r1,r0,1\n"
+            "add r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "subi r12,r13,8\n"
+            "sw 0(r12),r1\n"
+            "\n"
+            "subi r12,r13,8\n"
+            "lw r2,0(r12)\n"
+            "subi r12,r13,8\n"
+            "lw r1,0(r12)\n"
+            "mul r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "add r5,r0,r1\n"
+            "\n"
+            "add r9,r0,r0\n"
+            "add r7,r0,r0\n"
+            "subi r12,r13,8\n"
+            "lw r1,0(r12)\n"
+            "muli r7,r7,20\n"
+            "muli r1,r1,4\n"
+            "add r7,r7,r1\n"
+            "add r9,r9,r7\n"
+            "\n"
+            "subi r12,r13,88\n"
+            "add r12,r12,r9\n"
+            "sw 0(r12),r5\n"
+            "j for0\n"
+            "forend0\n"
+            "addi r1,r0,0\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "for1\n"
+            "\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "add r2,r1,r0\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r2\n"
+            "addi r1,r0,20\n"
+            "lw r2,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "clt r1,r2,r1\n"
+            "\n"
+            "bz r1,forend1\n"
+            "\n"
+            "subi r12,r13,4\n"
+            "lw r2,0(r12)\n"
+            "addi r1,r0,1\n"
+            "add r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "\n"
+            "add r9,r0,r0\n"
+            "add r7,r0,r0\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "muli r7,r7,20\n"
+            "muli r1,r1,4\n"
+            "add r7,r7,r1\n"
+            "add r9,r9,r7\n"
+            "\n"
+            "subi r12,r13,88\n"
+            "add r12,r12,r9\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "j for1\n"
+            "forend1\n"
+            "addi r1,r0,0\n"
+            "subi r12,r13,92\n"
+            "lw r11,0(r12)\n"
+            "jr r11\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
     parser.global_symbol_table_->print(true);
@@ -903,13 +3861,80 @@ TEST(DoubleArrayAccess, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,48\n"
+            "addi r1,r0,120\n"
+            "add r5,r0,r1\n"
+            "\n"
+            "add r9,r0,r0\n"
+            "add r7,r0,r0\n"
+            "addi r1,r0,3\n"
+            "muli r7,r7,4\n"
+            "muli r1,r1,4\n"
+            "add r7,r7,r1\n"
+            "addi r1,r0,2\n"
+            "muli r7,r7,3\n"
+            "muli r1,r1,4\n"
+            "add r7,r7,r1\n"
+            "add r9,r9,r7\n"
+            "\n"
+            "subi r12,r13,48\n"
+            "add r12,r12,r9\n"
+            "sw 0(r12),r5\n"
+            "\n"
+            "add r9,r0,r0\n"
+            "add r7,r0,r0\n"
+            "addi r1,r0,3\n"
+            "muli r7,r7,4\n"
+            "muli r1,r1,4\n"
+            "add r7,r7,r1\n"
+            "addi r1,r0,2\n"
+            "muli r7,r7,3\n"
+            "muli r1,r1,4\n"
+            "add r7,r7,r1\n"
+            "add r9,r9,r7\n"
+            "\n"
+            "subi r12,r13,48\n"
+            "add r12,r12,r9\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 1);
     parser.global_symbol_table_->print(true);
 }
 
@@ -922,11 +3947,58 @@ TEST(ClassDataMemberAccess, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,12\n"
+            "addi r1,r0,110\n"
+            "add r5,r0,r1\n"
+            "subi r12,r13,4\n"
+            "add r12,r12,r9\n"
+            "sw 0(r12),r5\n"
+            "subi r12,r13,4\n"
+            "add r12,r12,r9\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "subi r12,r13,8\n"
+            "add r12,r12,r9\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
     parser.global_symbol_table_->print(true);
@@ -941,13 +4013,54 @@ TEST(ClassInClassDataMemberAccess, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,20\n"
+            "addi r1,r0,100\n"
+            "add r5,r0,r1\n"
+            "subi r12,r13,8\n"
+            "add r12,r12,r9\n"
+            "sw 0(r12),r5\n"
+            "subi r12,r13,8\n"
+            "add r12,r12,r9\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
     parser.global_symbol_table_->print(true);
 }
 TEST(ClassInClassArrayDataMemberAccess, CodeGeneration)
@@ -958,13 +4071,72 @@ TEST(ClassInClassArrayDataMemberAccess, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,72\n"
+            "addi r1,r0,100\n"
+            "add r5,r0,r1\n"
+            "\n"
+            "add r9,r0,r0\n"
+            "add r7,r0,r0\n"
+            "addi r1,r0,5\n"
+            "muli r7,r7,10\n"
+            "muli r1,r1,68\n"
+            "add r7,r7,r1\n"
+            "add r9,r9,r7\n"
+            "\n"
+            "subi r12,r13,44\n"
+            "add r12,r12,r9\n"
+            "sw 0(r12),r5\n"
+            "\n"
+            "add r9,r0,r0\n"
+            "add r7,r0,r0\n"
+            "addi r1,r0,5\n"
+            "muli r7,r7,10\n"
+            "muli r1,r1,68\n"
+            "add r7,r7,r1\n"
+            "add r9,r9,r7\n"
+            "\n"
+            "subi r12,r13,44\n"
+            "add r12,r12,r9\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
     parser.global_symbol_table_->print(true);
 }
 
@@ -977,11 +4149,70 @@ TEST(ClassArrayDataMemberAccess, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,24\n"
+            "addi r1,r0,1200\n"
+            "add r5,r0,r1\n"
+            "\n"
+            "add r9,r0,r0\n"
+            "add r7,r0,r0\n"
+            "addi r1,r0,3\n"
+            "muli r7,r7,5\n"
+            "muli r1,r1,24\n"
+            "add r7,r7,r1\n"
+            "add r9,r9,r7\n"
+            "\n"
+            "subi r12,r13,20\n"
+            "add r12,r12,r9\n"
+            "sw 0(r12),r5\n"
+            "\n"
+            "add r9,r0,r0\n"
+            "add r7,r0,r0\n"
+            "addi r1,r0,3\n"
+            "muli r7,r7,5\n"
+            "muli r1,r1,24\n"
+            "add r7,r7,r1\n"
+            "add r9,r9,r7\n"
+            "\n"
+            "subi r12,r13,20\n"
+            "add r12,r12,r9\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
     parser.global_symbol_table_->print(true);
@@ -994,11 +4225,115 @@ TEST(ClassDoubleArrayDataMemberAccess, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,104\n"
+            "addi r1,r0,1200\n"
+            "add r5,r0,r1\n"
+            "\n"
+            "add r9,r0,r0\n"
+            "add r7,r0,r0\n"
+            "addi r1,r0,3\n"
+            "muli r7,r7,5\n"
+            "muli r1,r1,104\n"
+            "add r7,r7,r1\n"
+            "addi r1,r0,2\n"
+            "muli r7,r7,5\n"
+            "muli r1,r1,104\n"
+            "add r7,r7,r1\n"
+            "add r9,r9,r7\n"
+            "\n"
+            "subi r12,r13,100\n"
+            "add r12,r12,r9\n"
+            "sw 0(r12),r5\n"
+            "addi r1,r0,2100\n"
+            "add r5,r0,r1\n"
+            "\n"
+            "add r9,r0,r0\n"
+            "add r7,r0,r0\n"
+            "addi r1,r0,2\n"
+            "muli r7,r7,5\n"
+            "muli r1,r1,104\n"
+            "add r7,r7,r1\n"
+            "addi r1,r0,2\n"
+            "muli r7,r7,5\n"
+            "muli r1,r1,104\n"
+            "add r7,r7,r1\n"
+            "add r9,r9,r7\n"
+            "\n"
+            "subi r12,r13,100\n"
+            "add r12,r12,r9\n"
+            "sw 0(r12),r5\n"
+            "\n"
+            "add r9,r0,r0\n"
+            "add r7,r0,r0\n"
+            "addi r1,r0,3\n"
+            "muli r7,r7,5\n"
+            "muli r1,r1,104\n"
+            "add r7,r7,r1\n"
+            "addi r1,r0,2\n"
+            "muli r7,r7,5\n"
+            "muli r1,r1,104\n"
+            "add r7,r7,r1\n"
+            "add r9,r9,r7\n"
+            "\n"
+            "subi r12,r13,100\n"
+            "add r12,r12,r9\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "\n"
+            "add r9,r0,r0\n"
+            "add r7,r0,r0\n"
+            "addi r1,r0,2\n"
+            "muli r7,r7,5\n"
+            "muli r1,r1,104\n"
+            "add r7,r7,r1\n"
+            "addi r1,r0,2\n"
+            "muli r7,r7,5\n"
+            "muli r1,r1,104\n"
+            "add r7,r7,r1\n"
+            "add r9,r9,r7\n"
+            "\n"
+            "subi r12,r13,100\n"
+            "add r12,r12,r9\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
     parser.global_symbol_table_->print(true);
@@ -1012,13 +4347,88 @@ TEST(ClassArrayDataMemberAccessInFunc, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,4\n"
+            "\n"
+            "addi r13,r13,28\n"
+            "jl r11,func0\n"
+            "subi r13,r13,28\n"
+            "add r1,r1,r0 % store return value in register\n"
+            "\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "func0\n"
+            "subi r12,r13,28\n"
+            "sw 0(r12),r11\n"
+            "addi r1,r0,1200\n"
+            "add r5,r0,r1\n"
+            "\n"
+            "add r9,r0,r0\n"
+            "add r7,r0,r0\n"
+            "addi r1,r0,3\n"
+            "muli r7,r7,5\n"
+            "muli r1,r1,24\n"
+            "add r7,r7,r1\n"
+            "add r9,r9,r7\n"
+            "\n"
+            "subi r12,r13,20\n"
+            "add r12,r12,r9\n"
+            "sw 0(r12),r5\n"
+            "\n"
+            "add r9,r0,r0\n"
+            "add r7,r0,r0\n"
+            "addi r1,r0,3\n"
+            "muli r7,r7,5\n"
+            "muli r1,r1,24\n"
+            "add r7,r7,r1\n"
+            "add r9,r9,r7\n"
+            "\n"
+            "subi r12,r13,20\n"
+            "add r12,r12,r9\n"
+            "lw r1,0(r12)\n"
+            "subi r12,r13,28\n"
+            "lw r11,0(r12)\n"
+            "jr r11\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
     parser.global_symbol_table_->print(true);
 }
 
@@ -1034,11 +4444,114 @@ TEST(PassArrayParameter, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,20\n"
+            "addi r1,r0,100\n"
+            "add r5,r0,r1\n"
+            "\n"
+            "add r9,r0,r0\n"
+            "add r7,r0,r0\n"
+            "addi r1,r0,0\n"
+            "muli r7,r7,5\n"
+            "muli r1,r1,4\n"
+            "add r7,r7,r1\n"
+            "add r9,r9,r7\n"
+            "\n"
+            "subi r12,r13,20\n"
+            "add r12,r12,r9\n"
+            "sw 0(r12),r5\n"
+            "subi r1,r13,20\n"
+            "addi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "\n"
+            "addi r13,r13,8\n"
+            "jl r11,func0\n"
+            "subi r13,r13,8\n"
+            "add r1,r1,r0 % store return value in register\n"
+            "\n"
+            "add r5,r0,r1\n"
+            "\n"
+            "add r9,r0,r0\n"
+            "add r7,r0,r0\n"
+            "addi r1,r0,3\n"
+            "muli r7,r7,5\n"
+            "muli r1,r1,4\n"
+            "add r7,r7,r1\n"
+            "add r9,r9,r7\n"
+            "\n"
+            "subi r12,r13,20\n"
+            "add r12,r12,r9\n"
+            "sw 0(r12),r5\n"
+            "\n"
+            "add r9,r0,r0\n"
+            "add r7,r0,r0\n"
+            "addi r1,r0,2\n"
+            "muli r7,r7,5\n"
+            "muli r1,r1,4\n"
+            "add r7,r7,r1\n"
+            "add r9,r9,r7\n"
+            "\n"
+            "subi r12,r13,20\n"
+            "add r12,r12,r9\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "func0\n"
+            "subi r12,r13,8\n"
+            "sw 0(r12),r11\n"
+            "addi r1,r0,5\n"
+            "add r5,r0,r1\n"
+            "\n"
+            "add r9,r0,r0\n"
+            "add r7,r0,r0\n"
+            "addi r1,r0,2\n"
+            "muli r7,r7,5\n"
+            "muli r1,r1,4\n"
+            "add r7,r7,r1\n"
+            "add r9,r9,r7\n"
+            "\n"
+            "subi r12,r13,4\n"
+            "lw r12,0(r12)\n"
+            "add r12,r12,r9\n"
+            "sw 0(r12),r5\n"
+            "addi r1,r0,4\n"
+            "subi r12,r13,8\n"
+            "lw r11,0(r12)\n"
+            "jr r11\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
     parser.global_symbol_table_->print(true);
@@ -1052,13 +4565,85 @@ TEST(PassObjectParameter, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,12\n"
+            "addi r1,r0,100\n"
+            "add r5,r0,r1\n"
+            "subi r12,r13,8\n"
+            "add r12,r12,r9\n"
+            "sw 0(r12),r5\n"
+            "subi r1,r13,8\n"
+            "addi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "\n"
+            "addi r13,r13,8\n"
+            "jl r11,func0\n"
+            "subi r13,r13,8\n"
+            "add r1,r1,r0 % store return value in register\n"
+            "\n"
+            "add r5,r0,r1\n"
+            "subi r12,r13,4\n"
+            "add r12,r12,r9\n"
+            "sw 0(r12),r5\n"
+            "subi r12,r13,8\n"
+            "add r12,r12,r9\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "func0\n"
+            "subi r12,r13,8\n"
+            "sw 0(r12),r11\n"
+            "addi r1,r0,150\n"
+            "add r5,r0,r1\n"
+            "subi r12,r13,4\n"
+            "lw r12,0(r12)\n"
+            "addi r12,r12,0\n"
+            "add r12,r12,r9\n"
+            "sw 0(r12),r5\n"
+            "subi r12,r13,4\n"
+            "lw r12,0(r12)\n"
+            "addi r12,r12,0\n"
+            "add r12,r12,r9\n"
+            "lw r1,0(r12)\n"
+            "subi r12,r13,8\n"
+            "lw r11,0(r12)\n"
+            "jr r11\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
     parser.global_symbol_table_->print(true);
 }
 
@@ -1072,11 +4657,113 @@ TEST(RecursiveFunctionCall, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,4\n"
+            "addi r1,r0,10\n"
+            "addi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "\n"
+            "addi r13,r13,8\n"
+            "jl r11,func0\n"
+            "subi r13,r13,8\n"
+            "add r1,r1,r0 % store return value in register\n"
+            "\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "func0\n"
+            "subi r12,r13,8\n"
+            "sw 0(r12),r11\n"
+            "\n"
+            "addi r1,r0,0\n"
+            "add r2,r1,r0\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r2\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "lw r2,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "ceq r1,r2,r1\n"
+            "\n"
+            "bz r1,else0\n"
+            "addi r1,r0,0\n"
+            "subi r12,r13,8\n"
+            "lw r11,0(r12)\n"
+            "jr r11\n"
+            "j ifend0\n"
+            "else0\n"
+            "\n"
+            "subi r12,r13,4\n"
+            "lw r2,0(r12)\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r2\n"
+            "\n"
+            "subi r12,r13,4\n"
+            "lw r2,0(r12)\n"
+            "addi r1,r0,1\n"
+            "sub r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "addi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "\n"
+            "addi r13,r13,8\n"
+            "jl r11,func0\n"
+            "subi r13,r13,8\n"
+            "add r1,r1,r0 % store return value in register\n"
+            "\n"
+            "lw r2,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "add r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "subi r12,r13,8\n"
+            "lw r11,0(r12)\n"
+            "jr r11\n"
+            "ifend0\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
     parser.global_symbol_table_->print(true);
@@ -1089,11 +4776,129 @@ TEST(FibFunctionCall, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,4\n"
+            "addi r1,r0,19\n"
+            "addi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "\n"
+            "addi r13,r13,8\n"
+            "jl r11,func0\n"
+            "subi r13,r13,8\n"
+            "add r1,r1,r0 % store return value in register\n"
+            "\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "func0\n"
+            "subi r12,r13,8\n"
+            "sw 0(r12),r11\n"
+            "\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "add r2,r1,r0\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r2\n"
+            "addi r1,r0,2\n"
+            "lw r2,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "cle r1,r2,r1\n"
+            "\n"
+            "bz r1,else0\n"
+            "addi r1,r0,1\n"
+            "subi r12,r13,8\n"
+            "lw r11,0(r12)\n"
+            "jr r11\n"
+            "j ifend0\n"
+            "else0\n"
+            "\n"
+            "\n"
+            "subi r12,r13,4\n"
+            "lw r2,0(r12)\n"
+            "addi r1,r0,1\n"
+            "sub r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "addi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "\n"
+            "addi r13,r13,8\n"
+            "jl r11,func0\n"
+            "subi r13,r13,8\n"
+            "add r2,r1,r0 % store return value in register\n"
+            "\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r2\n"
+            "\n"
+            "subi r12,r13,4\n"
+            "lw r2,0(r12)\n"
+            "addi r1,r0,2\n"
+            "sub r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "addi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "\n"
+            "addi r13,r13,8\n"
+            "jl r11,func0\n"
+            "subi r13,r13,8\n"
+            "add r1,r1,r0 % store return value in register\n"
+            "\n"
+            "lw r2,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "add r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "subi r12,r13,8\n"
+            "lw r11,0(r12)\n"
+            "jr r11\n"
+            "ifend0\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
     parser.global_symbol_table_->print(true);
@@ -1106,13 +4911,171 @@ TEST(CircularFunctionalCall, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,4\n"
+            "addi r1,r0,10\n"
+            "addi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "\n"
+            "addi r13,r13,8\n"
+            "jl r11,func0\n"
+            "subi r13,r13,8\n"
+            "add r1,r1,r0 % store return value in register\n"
+            "\n"
+            "subi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "func0\n"
+            "subi r12,r13,8\n"
+            "sw 0(r12),r11\n"
+            "\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "add r2,r1,r0\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r2\n"
+            "addi r1,r0,0\n"
+            "lw r2,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "cle r1,r2,r1\n"
+            "\n"
+            "bz r1,else0\n"
+            "addi r1,r0,0\n"
+            "subi r12,r13,8\n"
+            "lw r11,0(r12)\n"
+            "jr r11\n"
+            "j ifend0\n"
+            "else0\n"
+            "\n"
+            "subi r12,r13,4\n"
+            "lw r2,0(r12)\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r2\n"
+            "\n"
+            "subi r12,r13,4\n"
+            "lw r2,0(r12)\n"
+            "addi r1,r0,1\n"
+            "sub r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "addi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "\n"
+            "addi r13,r13,8\n"
+            "jl r11,func1\n"
+            "subi r13,r13,8\n"
+            "add r1,r1,r0 % store return value in register\n"
+            "\n"
+            "lw r2,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "add r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "subi r12,r13,8\n"
+            "lw r11,0(r12)\n"
+            "jr r11\n"
+            "ifend0\n"
+            "func1\n"
+            "subi r12,r13,8\n"
+            "sw 0(r12),r11\n"
+            "\n"
+            "subi r12,r13,4\n"
+            "lw r1,0(r12)\n"
+            "add r2,r1,r0\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r2\n"
+            "addi r1,r0,0\n"
+            "lw r2,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "cle r1,r2,r1\n"
+            "\n"
+            "bz r1,else1\n"
+            "addi r1,r0,0\n"
+            "subi r12,r13,8\n"
+            "lw r11,0(r12)\n"
+            "jr r11\n"
+            "j ifend1\n"
+            "else1\n"
+            "\n"
+            "subi r12,r13,4\n"
+            "lw r2,0(r12)\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r2\n"
+            "\n"
+            "subi r12,r13,4\n"
+            "lw r2,0(r12)\n"
+            "addi r1,r0,2\n"
+            "sub r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "addi r12,r13,4\n"
+            "sw 0(r12),r1\n"
+            "\n"
+            "addi r13,r13,8\n"
+            "jl r11,func0\n"
+            "subi r13,r13,8\n"
+            "add r1,r1,r0 % store return value in register\n"
+            "\n"
+            "lw r2,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "add r1,r2,r1\n"
+            "subi r8,r8,4\n"
+            "sw topaddr(r8),r1\n"
+            "\n"
+            "lw r1,topaddr(r8)\n"
+            "addi r8,r8,4\n"
+            "subi r12,r13,8\n"
+            "lw r11,0(r12)\n"
+            "jr r11\n"
+            "ifend1\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
     parser.global_symbol_table_->print(true);
 }
 
@@ -1130,13 +5093,72 @@ TEST(ArrayOfObjects, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,100\n"
+            "addi r1,r0,100\n"
+            "add r5,r0,r1\n"
+            "\n"
+            "add r9,r0,r0\n"
+            "add r7,r0,r0\n"
+            "addi r1,r0,2\n"
+            "muli r7,r7,5\n"
+            "muli r1,r1,20\n"
+            "add r7,r7,r1\n"
+            "add r9,r9,r7\n"
+            "\n"
+            "subi r12,r13,92\n"
+            "add r12,r12,r9\n"
+            "sw 0(r12),r5\n"
+            "\n"
+            "add r9,r0,r0\n"
+            "add r7,r0,r0\n"
+            "addi r1,r0,2\n"
+            "muli r7,r7,5\n"
+            "muli r1,r1,20\n"
+            "add r7,r7,r1\n"
+            "add r9,r9,r7\n"
+            "\n"
+            "subi r12,r13,92\n"
+            "add r12,r12,r9\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
     parser.global_symbol_table_->print(true);
 }
 TEST(ArrayOfObjectsInObjects, CodeGeneration)
@@ -1147,12 +5169,91 @@ TEST(ArrayOfObjectsInObjects, CodeGeneration)
 
     Parser parser;
     parser.enable_double_pass_parse_ = true;
-
+    parser.code_generator_->enable_comments_ = false;
+    string result = "program entry\n"
+            "addi r13,r0,stack\n"
+            "addi r13,r13,2060\n"
+            "addi r1,r0,100\n"
+            "add r5,r0,r1\n"
+            "\n"
+            "add r9,r0,r0\n"
+            "add r7,r0,r0\n"
+            "addi r1,r0,2\n"
+            "muli r7,r7,5\n"
+            "muli r1,r1,412\n"
+            "add r7,r7,r1\n"
+            "add r9,r9,r7\n"
+            "add r7,r0,r0\n"
+            "addi r1,r0,2\n"
+            "muli r7,r7,10\n"
+            "muli r1,r1,412\n"
+            "add r7,r7,r1\n"
+            "addi r1,r0,2\n"
+            "muli r7,r7,5\n"
+            "muli r1,r1,412\n"
+            "add r7,r7,r1\n"
+            "add r9,r9,r7\n"
+            "\n"
+            "subi r12,r13,2052\n"
+            "add r12,r12,r9\n"
+            "sw 0(r12),r5\n"
+            "\n"
+            "add r9,r0,r0\n"
+            "add r7,r0,r0\n"
+            "addi r1,r0,2\n"
+            "muli r7,r7,5\n"
+            "muli r1,r1,412\n"
+            "add r7,r7,r1\n"
+            "add r9,r9,r7\n"
+            "add r7,r0,r0\n"
+            "addi r1,r0,2\n"
+            "muli r7,r7,10\n"
+            "muli r1,r1,412\n"
+            "add r7,r7,r1\n"
+            "addi r1,r0,2\n"
+            "muli r7,r7,5\n"
+            "muli r1,r1,412\n"
+            "add r7,r7,r1\n"
+            "add r9,r9,r7\n"
+            "\n"
+            "subi r12,r13,2052\n"
+            "add r12,r12,r9\n"
+            "lw r1,0(r12)\n"
+            "jl r15,putint\n"
+            "addi r1,r0,10\n"
+            "putc r1\n"
+            "hlt\n"
+            "putint   add    r2,r0,r0         % c := 0 (character)\n"
+            "         add    r3,r0,r0         % s := 0 (sign)\n"
+            "         addi   r4,r0,endbuf     % p is the buffer pointer\n"
+            "         cge    r5,r1,r0\n"
+            "         bnz    r5,putint1       % branch if n >= 0\n"
+            "         addi   r3,r0,1          % s := 1\n"
+            "         sub    r1,r0,r1         % n := -n\n"
+            "putint1  modi   r2,r1,10         % c := n mod 10\n"
+            "         addi   r2,r2,48         % c := c + '0'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "         divi   r1,r1,10         % n := n div 10\n"
+            "         bnz    r1,putint1       % do next digit\n"
+            "         bz     r3,putint2       % branch if n >= 0\n"
+            "         addi   r2,r0,45         % c := '-'\n"
+            "         subi   r4,r4,1          % p := p - 1\n"
+            "         sb     0(r4),r2         % buf[p] := c\n"
+            "putint2  lb     r2,0(r4)         % c := buf[p]\n"
+            "         putc   r2               % write c\n"
+            "         addi   r4,r4,1          % p := p + 1\n"
+            "         cgei   r5,r4,endbuf\n"
+            "         bz     r5,putint2       % branch if more digits\n"
+            "         jr     r15              % return\n"
+            "\n"
+            "         res    20               % digit buffer\n"
+            "endbuf\t \n"
+            "stack";
     EXPECT_EQ(parser.parse(tokens), true);
     EXPECT_EQ(parser.semantic_errors_.size(), 0);
-    EXPECT_EQ(parser.code_generator_->generate_variable_declaration(), "a_program res 16\n");
-    EXPECT_EQ(parser.code_generator_->generate_code(), "program entry\nhlt\n");
+    EXPECT_EQ(parser.code_generator_->generate_code(), result);
 
-    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 2);
+    EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
     parser.global_symbol_table_->print(true);
 }

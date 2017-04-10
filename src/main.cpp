@@ -67,8 +67,16 @@ int main(int argc, char *argv[] ) {
 
         cout << "Enter program code output path location: ";
         getline(cin, code_output);
+        string yes_or_no;
+        cout << "Do you want to append comments to the moon code?(y/n): ";
+        getline(cin, yes_or_no);
 
         Parser syntaxParser(syntax_output, semantic_output, syntax_error_output, semantic_error_output);
+
+        if (yes_or_no == "y")
+            syntaxParser.code_generator_->enable_comments_ = true;
+        else
+            syntaxParser.code_generator_->enable_comments_ = false;
 
 
         bool parse_result = syntaxParser.parse(tokens);

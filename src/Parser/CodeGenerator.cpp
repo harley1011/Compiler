@@ -31,6 +31,8 @@ bool CodeGenerator::create_program_halt(bool double_pass) {
 
 }
 void CodeGenerator::create_relational_expression_code(ExpressionTree * expression) {
+    if (errors_triggered_)
+        return;
     ExpressionNode* left_expression = expression->get_root_node()->left_tree_;
 
     string operator_type = expression->get_root_node()->record_->type_;
@@ -140,12 +142,16 @@ void CodeGenerator::create_expression_code(ExpressionNode *expression) {
 }
 
 void CodeGenerator::load_function_parameters_into_stack_memory_code(SymbolRecord* record) {
+    if (errors_triggered_)
+        return;
     code_generation_.push_back("addi r12,r13," + to_string(record->parameter_offset_address_) + add_comment_string("loading parameter offset"));
     code_generation_.push_back("sw 0(r12),r1" + add_comment_string("storing value in function parameter stack"));
 
 }
 
 void CodeGenerator::load_record_into_register(SymbolRecord *record, string reg) {
+    if (errors_triggered_)
+        return;
     if (record->kind_ == "stack_variable") {
         code_generation_.push_back("lw " + reg + ",topaddr(r8)");
         code_generation_.push_back("addi r8,r8,4" + add_comment_string("remove stack variable from arithmetic expression"));
@@ -156,7 +162,8 @@ void CodeGenerator::load_record_into_register(SymbolRecord *record, string reg) 
 }
 
 bool CodeGenerator::create_put_code() {
-    if (!second_pass_)
+
+    if (!second_pass_ || errors_triggered_)
         return true;
 
     int_and_string_converter.put_int_required = true;
@@ -270,7 +277,7 @@ string CodeGenerator::add_comment_string(string comment) {
 
 void CodeGenerator::create_function_call_code(SymbolRecord* func_record, string return_register) {
     //r13 is start of stack
-    if (!second_pass_)
+    if (!second_pass_ || errors_triggered_)
         return;
     create_array_index_calculation_code(func_record);
 
@@ -282,7 +289,8 @@ void CodeGenerator::create_function_call_code(SymbolRecord* func_record, string 
 
 
 void CodeGenerator::create_copy_class_values(SymbolRecord* variable_record, SymbolRecord* assign_record) {
-
+    if (errors_triggered_)
+        return;
     int function_size = variable_record->symbol_table_->parent_symbol_table_->symbol_record_->record_size_;
 
     code_generation_.push_back(add_comment_string("--- copying class variable ---"));
@@ -363,6 +371,8 @@ void CodeGenerator::create_variable_assignment_with_register(SymbolRecord *varia
 
 }
 void CodeGenerator::load_or_call_record_into_reg(SymbolRecord *load_record, string load_reg) {
+    if (errors_triggered_)
+        return;
 
     if (load_record->type_ == "int" && load_record->structure_ == "")
         code_generation_.push_back("addi " + load_reg + ",r0," + to_string(load_record->integer_value_) + add_comment_string("load integer value"));
@@ -373,6 +383,10 @@ void CodeGenerator::load_or_call_record_into_reg(SymbolRecord *load_record, stri
         code_generation_.push_back(add_comment_string("---- function call code end ----"));
     }
     else {
+
+        if (load_record->symbol_table_->parent_symbol_table_ == NULL || load_record->symbol_table_->parent_symbol_table_->symbol_record_ == NULL) // for class functions which aren't supported
+            return;
+
         int function_size = load_record->symbol_table_->parent_symbol_table_->symbol_record_->record_size_;
         if (load_record->structure_ == "class") {
             if (load_record->type_ == "int" || load_record->type_ == "float") {
@@ -482,13 +496,6 @@ void CodeGenerator::create_array_index_calculation_code(SymbolRecord *record) {
     }
     code_generation_.push_back(add_comment_string("--- compute index over ---"));
 
-}
-
-string CodeGenerator::generate_variable_declaration() {
-    string result = "";
-    for (string declaration: variable_declaration_generation_)
-        result += declaration + "\n";
-    return result;
 }
 
 string CodeGenerator::generate_code() {

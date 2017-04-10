@@ -18,7 +18,7 @@ SymbolTable::SymbolTable() {
 }
 
 
-bool SymbolTable::check_if_get_variable_is_int_or_float_and_exists(SymbolRecord * record) {
+bool SymbolTable::check_if_get_variable_is_correct_type_and_create_code(SymbolRecord *record) {
     if (!second_pass_)
         return true;
     if (check_if_variable_or_func_exist(record)) {
@@ -53,7 +53,7 @@ bool SymbolTable::check_if_variable_or_func_exist(SymbolRecord *record) {
                 return false;
         }
         copy_stored_record(record);
-        if (record->kind_ == "function") {
+        if (found_record->kind_ == "function") {
             check_func_parameters(found_record, record);
         }
 
@@ -175,7 +175,7 @@ bool SymbolTable::check_indice_expression_is_valid(SymbolRecord* record, Express
         nested_record = find_nested_record(record, found_record);
         if (nested_record == NULL)
             nested_record = record;
-        int variable_size = 0;
+        int variable_size = 4;
         get<0>(record->nested_array_parameters_[property]).push_back(tree);
         get<1>(record->nested_array_parameters_[property]) = nested_record->array_sizes;
         if (record->structure_ == "class" || record->structure_ == "class array")
@@ -345,7 +345,7 @@ bool SymbolTable::check_expression_tree_for_correct_type_and_create_assignment_c
                         copy_stored_record(assign_record, found_assign_record);
                         copy_stored_record(variable_record, found_variable_record);
                         get_code_generator()->load_or_call_record_into_reg(assign_record, "r1");
-                        get_code_generator()->create_variable_assignment_with_register(found_variable_record, "r1");
+                        get_code_generator()->create_variable_assignment_with_register(variable_record, "r1");
                         check_correct_number_of_array_dimensions(search(assign_record->name_), assign_record);
                     }
                 }
@@ -420,7 +420,8 @@ bool SymbolTable::check_correct_number_of_array_dimensions(SymbolRecord* found_r
     return true;
 }
 
-bool SymbolTable::check_if_return_type_is_correct_type(SymbolRecord *func_record, ExpressionTree* expression) {
+bool SymbolTable::check_if_return_type_is_correct_type_and_generate_code(SymbolRecord *func_record,
+                                                                         ExpressionTree *expression) {
     if (!second_pass_)
         return true;
     check_expression_is_valid_and_generate_code(expression);
@@ -470,7 +471,7 @@ bool SymbolTable::check_func_parameters(SymbolRecord *func_found_record, SymbolR
             if (current_func_parameter->type_ != "float" && current_func_parameter->type_ != "int") {
                 report_error_to_highest_symbol_table("Error: parameter " + current_func_parameter->name_ + " is of type " + current_func_parameter->type_  + " and an arithmetic expression is being passed that evaluates to a int or float:");
             }
-            check_expression_is_valid_and_generate_code(current_expression_parameter);
+            check_expression_is_valid(current_expression_parameter);
         } else {
             SymbolRecord* current_expression_found_parameter = current_expression_parameter->get_root_node()->record_;
             if (check_if_variable_or_func_exist(current_expression_found_parameter)) {
