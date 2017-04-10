@@ -9,12 +9,12 @@ program
 
     int add;
     int k;
-    get(add);
+    add = 5;
 
     k = addValueToArray(inputs, x, add);
 
     for (int t = 0; t < x; t = t + 1) {
-            put(inputs[k]);
+            put(inputs[t]);
     };
 };
 
