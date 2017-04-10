@@ -2,7 +2,7 @@
 // Created by Harley on 3/21/2017.
 //
 
-#include "SemanticVerification.h"
+#include "SemanticVerificationTest.h"
 #include "gtest/gtest.h"
 #include "../src/Parser/Parser.h"
 Parser common_setup(string test_program, string derivation_string);
