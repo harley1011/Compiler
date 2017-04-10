@@ -856,7 +856,7 @@ TEST(FullProgramFromFileWithErrorsTest, SemanticTests)
 
     parser.enable_double_pass_parse_ = true;
     EXPECT_EQ(parser.parse(tokens), true);
-    EXPECT_EQ(parser.semantic_errors_.size(), 9);
+    EXPECT_EQ(parser.semantic_errors_.size(), 11);
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 4);
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_[0]->symbol_table_->symbol_records_.size(), 4);
