@@ -1,0 +1,18 @@
+Error: A variable with the name idx already exists within this scope:4:5
+Error: A variable with the name b already exists within this scope:8:14
+Error: A function with the name testFunc already exists within this scope:15:17
+Error: A variable with the name b already exists within this scope:16:14
+Error: A function with the name testFunc3 already exists within this scope:71:14
+Error: circular reference in class B variable c is of type C which also has one or more variables or nested variables of type B25:9
+Error: circular reference in class C variable b is of type B which also has one or more variables or nested variables of type C27:9
+Error: D is not a valid type:31:5
+Error: testFunc2 function is being used without being declared:35:20
+Error: can't place get value into variable a not of type int or float:41:5
+Error: invalid nested variable p on variable a:41:12
+Error: variable k is not an array but is being accessed as one:43:18
+Error: invalid nested variable p on variable a:43:18
+Error: can't assign variable k a value of type A it needs type int:45:10
+Error: can't perform arithmetic operations with variable a that is not of type int or float:47:18
+Error: array p is being accessed with too few dimensions:47:18
+Error: testFunc is being invoked with 0 parameters but needs 2:49:19
+Error: parameter x is of type int but type A is being passed on function call testFunc:51:23

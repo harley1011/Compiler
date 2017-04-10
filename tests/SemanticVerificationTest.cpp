@@ -1663,7 +1663,7 @@ TEST(FuncWithWrongParameterArrayType, SemanticVerification)
 }
 
 
-TEST(PassInvalidClassParameter, CodeGeneration)
+TEST(PassInvalidClassParameter, SemanticVerification)
 {
     vector<Token*> tokens;
     Scanner scanner;
@@ -1678,4 +1678,16 @@ TEST(PassInvalidClassParameter, CodeGeneration)
 
     EXPECT_EQ(parser.global_symbol_table_->symbol_records_.size(), 3);
     parser.global_symbol_table_->print(true);
+}
+
+bool compare_files(string first_path, string second_path);
+
+TEST(SmenaticVerificationFileTest, SemanticVerification) {
+    vector<Token *> tokens;
+    Scanner scanner;
+    tokens = scanner.generate_tokens("semantic_program_with_verification_errors.txt", true);
+
+    Parser parser("built_semantic_program_with_verification_errors_deriv_out.txt", "built_symbol.txt",  "built_syntax_error.txt", "build_semantic_program_with_verification_errors.txt");
+    EXPECT_EQ(parser.parse(tokens), true);
+    EXPECT_TRUE(compare_files("semantic_program_with_verification_errors_out.txt", "build_semantic_program_with_verification_errors.txt"));
 }

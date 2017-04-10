@@ -1,0 +1,78 @@
+class A {
+    int idx;
+    int idx;
+    int idc;
+    int b;
+
+    int testFunc(int x, int y) {
+        int b;
+        int sum;
+        for (int l = 0; l < 10; l = l + 1 ) {
+            get(b);
+            sum = b + sum;
+        };
+    };
+    int testFunc(int x, int y) {
+        int b;
+        int sum;
+        for (int l = 0; l < 10; l = l + 1 ) {
+            get(b);
+            sum = b + sum;
+        };
+    };
+};
+
+class B { C c; };
+
+class C { int k; B b; };
+
+program {
+    D d;
+    A a;
+    int k;
+    int p[5];
+
+    k = testFunc2();
+
+    put(p);
+
+    get(a);
+
+    k = a.p;
+
+    k[2] = a.p[2];
+
+    k = a;
+
+    k = a + k + p;
+
+    k = testFunc();
+
+    k = testFunc(a,10);
+
+};
+
+int testFunc(int x, int y) {
+        int b;
+        int sum;
+        for (int l = 0; l < 10; l = l + 1 ) {
+            get(b);
+            sum = b + sum;
+        };
+};
+int testFunc3(int x, int y) {
+        int b;
+        int sum;
+        for (int l = 0; l < 10; l = l + 1 ) {
+            get(b);
+            sum = b + sum;
+        };
+};
+int testFunc3(int x, int y) {
+        int b;
+        int sum;
+        for (int l = 0; l < 10; l = l + 1 ) {
+            get(b);
+            sum = b + sum;
+        };
+};
